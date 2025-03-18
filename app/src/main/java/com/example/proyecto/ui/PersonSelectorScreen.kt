@@ -1,8 +1,9 @@
 package com.example.proyecto.ui
 
-import android.preference.PreferenceActivity.Header
+import android.os.Parcelable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,12 +20,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.proyecto.R
+import com.example.proyecto.Screen
+import kotlinx.parcelize.Parcelize
 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun UserListScreen() {
+fun UserListScreen(navController: NavController){
     val grandparents = ListStarter()
     Surface (
         color = MaterialTheme.colorScheme.background
@@ -40,7 +44,7 @@ fun UserListScreen() {
 
             items(grandparents) { grandParent ->
                 // Aquí mostramos la info de cada abuelo
-                UserListItem(grandP = grandParent)
+                UserListItem(grandP = grandParent, navController)
                 }
 
         }
@@ -63,11 +67,15 @@ fun HeaderG() {
 //Composable para crear item en la lista, se usa ListItem de Material3
 
 @Composable
-fun UserListItem(grandP: GrandParent ) {
+fun UserListItem(grandP: GrandParent, navController: NavController ) {
 
     Column (
         modifier = Modifier
             .fillMaxWidth()
+            .clickable {
+                navController.currentBackStackEntry?.savedStateHandle?.set("grandP", grandP)
+                navController.navigate(Screen.Menu.route)
+            }
     ) {
         ListItem(
             modifier = Modifier.padding(5.dp),
@@ -97,6 +105,7 @@ fun UserListItem(grandP: GrandParent ) {
     }
 }
 
+@Parcelize
 data class GrandParent(
     var firstName: String,
     var lastName: String,
@@ -106,7 +115,7 @@ data class GrandParent(
     var height: Double,
     var weight: Double,
 
-    )
+    ):Parcelable
 
 fun ListStarter(): List<GrandParent>{
 

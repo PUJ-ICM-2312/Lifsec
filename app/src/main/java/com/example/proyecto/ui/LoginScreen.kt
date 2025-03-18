@@ -20,12 +20,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.proyecto.R
+import com.example.proyecto.Screen
 import com.example.proyecto.ui.theme.backgroundLight
 import com.example.proyecto.ui.theme.primaryLight
 
 @Composable
-fun LogScreen() {
+fun LogScreen(navController: NavController) {
         Column(
 
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -40,15 +42,15 @@ fun LogScreen() {
 
             )
             //Ingreso de numero de celular
-            LogPhone()
+            LogPhone(navController)
 
             //boton de registro
-            ButtonRegistry()
+            ButtonRegistry(navController)
         }
 
 }
 @Composable
-fun LogPhone(){
+fun LogPhone(navController: NavController){
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -66,7 +68,7 @@ fun LogPhone(){
         )
 
         Button(
-            onClick = { /*nav pero todavia no lo hacemos */ },
+            onClick = { navController.navigate(route = Screen.PersonSelector.route) },
             modifier = Modifier
                 .padding(horizontal = 32.dp),
             shape = RoundedCornerShape(16.dp), // Bordes redondeados
@@ -81,9 +83,9 @@ fun LogPhone(){
 }
 
 @Composable
-fun ButtonRegistry(){
+fun ButtonRegistry(navController: NavController){
     Button(
-        onClick = { /*nav pero todavia no lo hacemos */ },
+        onClick = { /*nav pero todavia no lo hacemos para registrarse*/ },
         modifier = Modifier
             .padding(horizontal = 32.dp),
         shape = RoundedCornerShape(16.dp), // Bordes redondeados

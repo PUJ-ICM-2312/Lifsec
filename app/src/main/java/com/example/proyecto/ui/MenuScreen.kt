@@ -35,13 +35,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.proyecto.ui.theme.outlineLight
 
 @Composable
-fun MenuScreen() {
+fun MenuScreen(navController: NavController) {
+    val g= navController.previousBackStackEntry
+        ?.savedStateHandle // accede al usuario guardado
+        ?.get<GrandParent>("grandP")
     Surface(
         color = MaterialTheme.colorScheme.background
-    ) {  Column(
+    ) {
+        Column(
         modifier = Modifier
             .fillMaxSize(),
 
@@ -58,7 +63,7 @@ fun MenuScreen() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Cuidadores Activos: 0",
+                text = "Cuidadores Activos: 0 para ${g?.firstName}",
                 style = MaterialTheme.typography.bodyLarge,
                 fontSize = 28.sp,
                 textAlign = TextAlign.Center ,
@@ -114,8 +119,10 @@ fun MenuScreen() {
 
         // Barra de navegación inferior
         BottomNavigationBar()
+        }
+
     }
-    }}
+}
 
 
 @Composable
