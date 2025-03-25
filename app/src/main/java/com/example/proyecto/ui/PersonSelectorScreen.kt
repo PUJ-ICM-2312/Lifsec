@@ -73,7 +73,6 @@ fun UserListItem(grandP: GrandParent, navController: NavController ) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                navController.currentBackStackEntry?.savedStateHandle?.set("grandP", grandP)
                 navController.navigate(Screen.Menu.route)
             }
     ) {
