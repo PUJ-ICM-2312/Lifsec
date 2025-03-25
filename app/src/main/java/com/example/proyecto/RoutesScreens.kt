@@ -18,6 +18,7 @@ sealed class Screen(val route: String) {
 fun NavegationStack(){
     val navController = rememberNavController()
 
+    //Para navegacion entre pantallas
     NavHost(navController = navController, startDestination = Screen.Login.route){
         composable(route = Screen.Login.route) { LogScreen( navController) }
         composable(route = Screen.PersonSelector.route) { UserListScreen(navController) }
