@@ -23,9 +23,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 
 import androidx.compose.material3.Text
@@ -39,90 +41,84 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.proyecto.ui.theme.outlineLight
+
 
 @Composable
-fun MenuScreen(navController: NavController) {
-    Surface(
-        color = MaterialTheme.colorScheme.background,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Column(
-        modifier = Modifier
-            .fillMaxSize(),
-
-
-    ) {
-        // Header con texto
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.outline) // Color de fondo header
-                .padding(16.dp, top = 50.dp, end = 20.dp),
-
-            horizontalArrangement = Arrangement.spacedBy(28.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Cuidadores Activos: 0 ",
-                style = MaterialTheme.typography.bodyLarge,
-                fontSize = 28.sp,
-                textAlign = TextAlign.Center ,
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.background
-
-            )
-
-        }
-        // A PARTIR DE ACA FALTA MODIFICAR (FALTA CENTRAR LAS 4 FUNCIONES, AMPLIAR IMAGENES Y CAMBIAR LOS COLORES)
-        // Cards en dos filas
-        Column(
+fun MenuOldPersonScreen(navController: NavController) {
+    Scaffold(
+        topBar = { MyTopBar() },
+        bottomBar = { BottomNavigationBar() },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        // El contenido se ajusta con el innerPadding para que no se solape con los top/bottom bars
+        Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .weight(1f) // Ocupa espacio disponible
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center
+                .padding(innerPadding),
+            color = MaterialTheme.colorScheme.background
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                MenuCard(
-                    title = "Notificar Emergencia",
-
-                    icon = Icons.Default.KeyboardArrowRight, // Cambia por un ícono adecuado
-
-
-                )
-                MenuCard(
-                    title = "Registrar Actividad",
-                    icon = Icons.Default.Create, // Cambia por un ícono adecuado
-
-                )
-            }
-            Spacer(modifier = Modifier.padding(20.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                MenuCard(
-                    title = "Crear Recordatorio",
-                    icon = Icons.Default.Notifications, // Cambia por un ícono adecuado
-
-                )
-                MenuCard(
-                    title = "Ajustes",
-                    icon = Icons.Default.Settings,
-
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f) // Ocupa el espacio disponible
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        MenuCard(
+                            title = "Notificar Emergencia",
+                            icon = Icons.Default.KeyboardArrowRight
+                        )
+                        MenuCard(
+                            title = "Registrar Actividad",
+                            icon = Icons.Default.Create
+                        )
+                    }
+                    Spacer(modifier = Modifier.padding(20.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        MenuCard(
+                            title = "Crear Recordatorio",
+                            icon = Icons.Default.Notifications
+                        )
+                        MenuCard(
+                            title = "Ajustes",
+                            icon = Icons.Default.Settings
+                        )
+                    }
+                }
             }
         }
-
-        // Barra de navegación inferior
-        BottomNavigationBar()
-        }
-
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyTopBar() {
+    // Usamos TopAppBar de Material3 para definir el topBar
+    androidx.compose.material3.TopAppBar(
+        title = {
+            Text(
+                text = "Cuidadores Activos: 0",
+                style = MaterialTheme.typography.bodyLarge,
+                fontSize = 28.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.background
+            )
+        },
+        colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.outline
+        )
+    )
 }
 
 
