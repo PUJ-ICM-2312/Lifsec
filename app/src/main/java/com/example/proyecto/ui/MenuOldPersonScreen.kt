@@ -41,69 +41,87 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.proyecto.InternalNavegationStack
+import com.example.proyecto.InternalScreen
 
 
 @Composable
 fun MenuOldPersonScreen(navController: NavController) {
+    // NavController interno para la navegación anidada
+    val internalNavController = rememberNavController()
+
     Scaffold(
-        topBar = { MyTopBar() },
-        bottomBar = { BottomNavigationBar() },
+        bottomBar = { BottomNavigationBar(internalNavController) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        // El contenido se ajusta con el innerPadding para que no se solape con los top/bottom bars
         Surface(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
             color = MaterialTheme.colorScheme.background
         ) {
+            // Aquí se carga el grafo de navegación interno
+            InternalNavegationStack(navController = internalNavController)
+        }
+    }
+}
+
+
+@Composable
+fun mainScreen() {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Insert the top bar at the top of the screen.
+            TopBarHome()
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f) // Ocupa el espacio disponible
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Center
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        MenuCard(
-                            title = "Notificar Emergencia",
-                            icon = Icons.Default.KeyboardArrowRight
-                        )
-                        MenuCard(
-                            title = "Registrar Actividad",
-                            icon = Icons.Default.Create
-                        )
-                    }
-                    Spacer(modifier = Modifier.padding(20.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        MenuCard(
-                            title = "Crear Recordatorio",
-                            icon = Icons.Default.Notifications
-                        )
-                        MenuCard(
-                            title = "Ajustes",
-                            icon = Icons.Default.Settings
-                        )
-                    }
+                    MenuCard(
+                        title = "Notificar Emergencia",
+                        icon = Icons.Default.KeyboardArrowRight
+                    )
+                    MenuCard(
+                        title = "Registrar Actividad",
+                        icon = Icons.Default.Create
+                    )
+                }
+                Spacer(modifier = Modifier.padding(20.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    MenuCard(
+                        title = "Crear Recordatorio",
+                        icon = Icons.Default.Notifications
+                    )
+                    MenuCard(
+                        title = "Ajustes",
+                        icon = Icons.Default.Settings
+                    )
                 }
             }
         }
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyTopBar() {
+fun TopBarHome() {
     // Usamos TopAppBar de Material3 para definir el topBar
+    // TODO: Colocar icono de usuario al extremo derecho
     androidx.compose.material3.TopAppBar(
         title = {
             Text(
@@ -149,7 +167,7 @@ fun MenuCard(title: String, icon: ImageVector) {
 }
 
 @Composable
-fun BottomNavigationBar() {
+fun BottomNavigationBar(navController: NavController) {
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface
@@ -170,7 +188,7 @@ fun BottomNavigationBar() {
                 )
             },
             selected = false,
-            onClick = { /* Acción */ },
+            onClick = { navController.navigate(InternalScreen.MainScreen.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -195,7 +213,7 @@ fun BottomNavigationBar() {
                 )
             },
             selected = false,
-            onClick = { /* Acción */ },
+            onClick = { navController.navigate(InternalScreen.LocationCaretaker.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -220,7 +238,7 @@ fun BottomNavigationBar() {
                 )
             },
             selected = false,
-            onClick = { /* Acción */ },
+            onClick = { navController.navigate(InternalScreen.ActivityList.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -245,7 +263,7 @@ fun BottomNavigationBar() {
                 )
             },
             selected = false,
-            onClick = { /* Acción */ },
+            onClick = { navController.navigate(InternalScreen.ReminderList.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
