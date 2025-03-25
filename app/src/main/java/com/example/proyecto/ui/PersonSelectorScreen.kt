@@ -73,7 +73,8 @@ fun UserListItem(grandP: GrandParent, navController: NavController ) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                navController.navigate(Screen.Menu.route)
+                // Debe ir a la pantalla principal del cuidador
+                navController.navigate(Screen.MenuOldPerson.route)
             }
     ) {
         ListItem(
