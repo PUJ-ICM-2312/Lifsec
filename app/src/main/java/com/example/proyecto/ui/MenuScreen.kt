@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Surface
 
 import androidx.compose.material3.Text
@@ -153,31 +155,109 @@ fun MenuCard(title: String, icon: ImageVector) {
 @Composable
 fun BottomNavigationBar() {
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.outline
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Menu, contentDescription = "Menu Principal",tint =MaterialTheme.colorScheme.background ) },
-            label = { Text("Menu Principal") },
-            selected = true,
-            onClick = { /* Acción */ }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.LocationOn, contentDescription = "Ubicación", tint =MaterialTheme.colorScheme.background ) },
-            label = { Text("Ubicación") },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Menú",
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            label = {
+                Text(
+                    text = "Menú",
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1 // Prevenir que el texto se extienda
+                )
+            },
             selected = false,
-            onClick = { /* Acción */ }
+            onClick = { /* Acción */ },
+            alwaysShowLabel = true,
+            colors = NavigationBarItemDefaults.colors(
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            modifier = Modifier.height(56.dp)
         )
+
         NavigationBarItem(
-            icon = { Icon(Icons.Default.List, contentDescription = "Actividades",tint =MaterialTheme.colorScheme.background ) },
-            label = { Text("Actividades") },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Ubicación",
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            label = {
+                Text(
+                    text = "Ubicación",
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1
+                )
+            },
             selected = false,
-            onClick = { /* Acción */ }
+            onClick = { /* Acción */ },
+            alwaysShowLabel = true,
+            colors = NavigationBarItemDefaults.colors(
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            modifier = Modifier.height(56.dp)
         )
+
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Notifications, contentDescription = "Recordatorios",tint =MaterialTheme.colorScheme.background ) },
-            label = { Text("Recordatorios") },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.List,
+                    contentDescription = "Actividades",
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            label = {
+                Text(
+                    text = "Actividades",
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1
+                )
+            },
             selected = false,
-            onClick = { /* Acción */ }
+            onClick = { /* Acción */ },
+            alwaysShowLabel = true,
+            colors = NavigationBarItemDefaults.colors(
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            modifier = Modifier.height(56.dp)
+        )
+
+        NavigationBarItem(
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "Recordatorios",
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            label = {
+                Text(
+                    text = "Recordatorios",
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1
+                )
+            },
+            selected = false,
+            onClick = { /* Acción */ },
+            alwaysShowLabel = true,
+            colors = NavigationBarItemDefaults.colors(
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            modifier = Modifier.height(56.dp)
         )
     }
 }
+
+
