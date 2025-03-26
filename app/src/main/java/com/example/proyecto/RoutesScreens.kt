@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.ui.LogScreen
+import com.example.proyecto.ui.MenuCaretakersScreen
 import com.example.proyecto.ui.MenuOldPersonScreen
 import com.example.proyecto.ui.UserListScreen
 
@@ -24,6 +25,7 @@ fun NavegationStack(){
         composable(route = Screen.Login.route) { LogScreen( navController) }
         composable(route = Screen.PersonSelector.route) { UserListScreen(navController) }
         composable(route = Screen.MenuOldPerson.route) { MenuOldPersonScreen( navController) }
+        composable (route = Screen.MenuCaretaker.route) { MenuCaretakersScreen( navController) }
     }
 
 }

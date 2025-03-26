@@ -7,16 +7,22 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 
@@ -67,16 +73,14 @@ fun HeaderG() {
 }
 
 //Composable para crear item en la lista, se usa ListItem de Material3
-
 @Composable
-fun UserListItem(grandP: GrandParent, navController: NavController ) {
-
-    Column (
+fun UserListItem(grandP: GrandParent, navController: NavController) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                // Debe ir a la pantalla principal del cuidador
-                navController.navigate(Screen.MenuOldPerson.route)
+                // Navega a la pantalla principal del cuidador
+                navController.navigate(Screen.MenuCaretaker.route)
             }
     ) {
         ListItem(
@@ -84,10 +88,9 @@ fun UserListItem(grandP: GrandParent, navController: NavController ) {
             leadingContent = {
                 Image(
                     painter = painterResource(id = R.drawable.ejemploperfil),
-                    contentDescription = ""
-
+                    contentDescription = "",
+                    modifier = Modifier.size(100.dp)
                 )
-
             },
             headlineContent = {
                 Text(
@@ -98,14 +101,20 @@ fun UserListItem(grandP: GrandParent, navController: NavController ) {
             },
             supportingContent = {
                 Text(
-                    text = "${grandP.age} anios",
+                    text = "${grandP.age} años",
                     style = MaterialTheme.typography.bodyMedium
                 )
+            },
+            trailingContent = {
+                Icon(Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = Color.Gray)
             }
         )
         HorizontalDivider(thickness = 1.dp)
     }
 }
+
 
 @Parcelize
 data class GrandParent(

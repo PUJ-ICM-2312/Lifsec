@@ -1,5 +1,7 @@
 package com.example.proyecto
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -23,6 +25,9 @@ sealed class InternalScreen(val route: String) {
     object CreateActivity: Screen("create_activity_screen")
 }
 
+// La anotación @RequiresApi indica que este código requiere Android Oreo (API 26) o superior,
+// ya que utiliza funcionalidades que se introdujeron a partir de esa versión
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InternalNavegationStack(navController: NavHostController){
     //Para navegacion entre pantallas
