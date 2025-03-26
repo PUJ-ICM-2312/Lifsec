@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import com.example.proyecto.ui.ListActivitiesOldPersonScreen
 import com.example.proyecto.ui.LocationCaretakerScreen
 import com.example.proyecto.ui.ReminderListScreen
+import com.example.proyecto.ui.SOSScreen
 import com.example.proyecto.ui.mainScreen
 
 sealed class InternalScreen(val route: String) {
@@ -15,6 +16,7 @@ sealed class InternalScreen(val route: String) {
     object LocationCaretaker: Screen("location_caretaker_screen")
     object ReminderList: Screen("reminder_list_screen")
     object ActivityList: Screen("activity_list_screen")
+    object SosScreen: Screen("sos_screen")
 }
 
 @Composable
@@ -25,6 +27,7 @@ fun InternalNavegationStack(navController: NavHostController){
         composable(InternalScreen.LocationCaretaker.route) { LocationCaretakerScreen() }
         composable(InternalScreen.ReminderList.route) { ReminderListScreen() }
         composable(InternalScreen.ActivityList.route) { ListActivitiesOldPersonScreen() }
+        composable(InternalScreen.SosScreen.route) { SOSScreen(navController)  }
     }
 }
 

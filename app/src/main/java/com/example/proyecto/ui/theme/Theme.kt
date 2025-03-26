@@ -6,7 +6,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 
+val SOSButtonColor = Color(0xFFFF0000)
+val SOSBackgroundColor = Color(0xFF000000)
 
 private val DarkColorScheme = darkColorScheme(
     primary = primaryDark,
