@@ -34,7 +34,7 @@ fun InternalNavegationStack(navController: NavHostController){
     NavHost(navController = navController, startDestination = InternalScreen.MainScreen.route) {
         composable(InternalScreen.MainScreen.route) { MainScreen(navController) }
         composable(InternalScreen.LocationCaretaker.route) { LocationCaretakerScreen() }
-        composable(InternalScreen.ReminderList.route) { ReminderListScreen() }
+        composable(InternalScreen.ReminderList.route) { ReminderListScreen(navController) }
         composable(InternalScreen.ActivityList.route) { ListActivitiesOldPersonScreen() }
         composable(InternalScreen.SosScreen.route) { SOSScreen(navController) }
         composable(InternalScreen.CreateReminder.route) { CreateReminderScreen(navController) }
