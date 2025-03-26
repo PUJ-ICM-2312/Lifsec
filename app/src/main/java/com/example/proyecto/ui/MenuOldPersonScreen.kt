@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -22,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -54,9 +52,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.InternalNavegationStack
 import com.example.proyecto.InternalScreen
 import com.example.proyecto.ui.theme.primaryContainerLight
-import androidx.compose.material.icons.outlined.Menu
-
-import com.example.proyecto.ui.theme.surfaceContainerLight
 import com.example.proyecto.ui.theme.secondaryContainerLight
 
 
@@ -85,13 +80,13 @@ fun MenuOldPersonScreen(navController: NavController) {
 
 
 @Composable
-fun MainScreen() {
+fun MainScreen(navController: NavController) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Inserta tu TopBar
+
             TopBarHome()
 
             Column(
@@ -110,14 +105,14 @@ fun MainScreen() {
                         title = "Notificar Emergencia",
                         icon = Icons.Default.Warning,
                         onClick = {
-                            // Acción al hacer clic
+                            navController.navigate(InternalScreen.SosScreen.route)
                         }
                     )
                     MenuCard(
                         title = "Registrar Actividad",
                         icon = Icons.Default.Create,
                         onClick = {
-                            // Acción al hacer clic
+                            navController.navigate(InternalScreen.CreateActivity.route)
                         }
                     )
                 }
@@ -133,7 +128,7 @@ fun MainScreen() {
                         title = "Crear Recordatorio",
                         icon = Icons.Default.Notifications,
                         onClick = {
-                            // Acción al hacer clic
+                            navController.navigate(InternalScreen.CreateReminder.route)
                         }
                     )
                     MenuCard(
@@ -198,7 +193,6 @@ fun MenuCard(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Icono más grande
             Icon(
                 imageVector = icon,
                 contentDescription = null,
@@ -206,7 +200,6 @@ fun MenuCard(
                 modifier = Modifier.size(64.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            // Texto centrado
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
@@ -251,7 +244,7 @@ fun BottomNavigationBar(navController: NavController) {
             onClick = { navController.navigate(InternalScreen.MainScreen.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
-                indicatorColor = secondaryContainerLight, // Aquí se define el color del indicador
+                indicatorColor = secondaryContainerLight, //color del indicador
                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
             ),

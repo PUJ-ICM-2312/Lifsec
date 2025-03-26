@@ -18,9 +18,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.R
 import com.example.proyecto.Screen
 import kotlinx.parcelize.Parcelize
@@ -125,4 +127,10 @@ fun ListStarter(): List<GrandParent>{
     val lista: List<GrandParent> = listOf(grandParent1, grandParent2)
 
     return lista
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun UserListScreenPreview() {
+    UserListScreen(navController = rememberNavController())
 }
