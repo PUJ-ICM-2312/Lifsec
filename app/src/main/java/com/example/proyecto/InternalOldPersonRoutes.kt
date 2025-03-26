@@ -9,7 +9,7 @@ import com.example.proyecto.ui.ListActivitiesOldPersonScreen
 import com.example.proyecto.ui.LocationCaretakerScreen
 import com.example.proyecto.ui.ReminderListScreen
 import com.example.proyecto.ui.SOSScreen
-import com.example.proyecto.ui.mainScreen
+import com.example.proyecto.ui.MainScreen
 
 sealed class InternalScreen(val route: String) {
     object MainScreen: Screen("main_screen")
@@ -23,7 +23,7 @@ sealed class InternalScreen(val route: String) {
 fun InternalNavegationStack(navController: NavHostController){
     //Para navegacion entre pantallas
     NavHost(navController = navController, startDestination = InternalScreen.MainScreen.route) {
-        composable(InternalScreen.MainScreen.route) { mainScreen() }
+        composable(InternalScreen.MainScreen.route) { MainScreen() }
         composable(InternalScreen.LocationCaretaker.route) { LocationCaretakerScreen() }
         composable(InternalScreen.ReminderList.route) { ReminderListScreen() }
         composable(InternalScreen.ActivityList.route) { ListActivitiesOldPersonScreen() }
