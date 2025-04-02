@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.proyecto.R
@@ -69,6 +72,14 @@ fun RegistryPhone(navController: NavController){
                 }
             },
             label = { Text("Ingrese número registrado", color = MaterialTheme.colorScheme.secondary) }
+        )
+        var contra = remember { mutableStateOf("") }
+        OutlinedTextField(
+            value = contra.value,
+            onValueChange = { contra.value = it },
+            label = { Text("Ingrese contraseña", color = MaterialTheme.colorScheme.secondary) } ,
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
 
 

@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.proyecto.R
@@ -68,9 +69,17 @@ fun LogPhone(navController: NavController){
                     num.value = newValue
                 }
             },
-            label = { Text("Ingrese número registrado", color = MaterialTheme.colorScheme.secondary) }
+            label = { Text("Ingrese número a registrar", color = MaterialTheme.colorScheme.secondary) }
         )
 
+        var contra = remember { mutableStateOf("") }
+        OutlinedTextField(
+            value = contra.value,
+            onValueChange = { contra.value = it },
+            label = { Text("Ingrese contraseña", color = MaterialTheme.colorScheme.secondary) },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+        )
 
         /*
         * Esos dos botones son para probar el d1111213233iseño
