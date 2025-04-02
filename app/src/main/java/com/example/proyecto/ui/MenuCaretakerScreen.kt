@@ -1,5 +1,7 @@
 package com.example.proyecto.ui
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -30,6 +32,7 @@ import com.example.proyecto.InternalCaretakerRoutes
 import com.example.proyecto.InternalCaretakerRoutesStack
 import com.example.proyecto.ui.theme.secondaryContainerLight
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MenuCaretakersScreen(navController: NavController) {
     val internalNavController = rememberNavController()
@@ -61,7 +64,7 @@ fun BottomNavigationBarCareTaker(navController: NavController) {
 
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface
+        contentColor = MaterialTheme.colorScheme.primary
     ) {
         NavigationBarItem(
             icon = { Icon(imageVector = Icons.Default.LocationOn, contentDescription = "Ubicación") },
@@ -70,9 +73,11 @@ fun BottomNavigationBarCareTaker(navController: NavController) {
             onClick = { navController.navigate(InternalCaretakerRoutes.LocationOldPerson.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
-                indicatorColor = secondaryContainerLight,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                indicatorColor = MaterialTheme.colorScheme.secondary,
+                unselectedIconColor = MaterialTheme.colorScheme.background,
+                unselectedTextColor = MaterialTheme.colorScheme.background,
+                selectedIconColor = MaterialTheme.colorScheme.surface,
+                selectedTextColor = MaterialTheme.colorScheme.secondary,
             )
         )
 
@@ -83,9 +88,12 @@ fun BottomNavigationBarCareTaker(navController: NavController) {
             onClick = { navController.navigate(InternalCaretakerRoutes.RemindersCaretaker.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
-                indicatorColor = secondaryContainerLight,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                indicatorColor = MaterialTheme.colorScheme.secondary,
+                unselectedIconColor = MaterialTheme.colorScheme.background,
+                unselectedTextColor = MaterialTheme.colorScheme.background,
+                selectedIconColor = MaterialTheme.colorScheme.surface,
+                selectedTextColor = MaterialTheme.colorScheme.secondary,
+
             )
         )
 
@@ -96,9 +104,11 @@ fun BottomNavigationBarCareTaker(navController: NavController) {
             onClick = { navController.navigate(InternalCaretakerRoutes.ActivitiesCaretaker.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
-                indicatorColor = secondaryContainerLight,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                indicatorColor = MaterialTheme.colorScheme.secondary,
+                unselectedIconColor = MaterialTheme.colorScheme.background,
+                unselectedTextColor = MaterialTheme.colorScheme.background,
+                selectedIconColor = MaterialTheme.colorScheme.surface,
+                selectedTextColor = MaterialTheme.colorScheme.secondary,
             )
         )
     }

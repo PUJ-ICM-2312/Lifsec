@@ -83,9 +83,9 @@ fun RegistryPhone(navController: NavController){
             },
             colors = SwitchDefaults.colors(
                 checkedThumbColor = MaterialTheme.colorScheme.primary,
-                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
+                checkedTrackColor = MaterialTheme.colorScheme.surface,
                 uncheckedThumbColor = MaterialTheme.colorScheme.secondary,
-                uncheckedTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+                uncheckedTrackColor = MaterialTheme.colorScheme.surface,
             )
         )
         // Iniciar sesion como cuidador (MOCKUP)
