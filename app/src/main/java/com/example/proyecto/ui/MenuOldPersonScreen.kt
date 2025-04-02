@@ -1,5 +1,7 @@
 package com.example.proyecto.ui
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -57,6 +59,7 @@ import com.example.proyecto.ui.theme.secondaryContainerLight
 
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MenuOldPersonScreen(navController: NavController) {
     // NavController interno para la navegación anidada
@@ -182,7 +185,7 @@ fun MenuCard(
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = primaryContainerLight
+            containerColor = MaterialTheme.colorScheme.secondary
         )
     ) {
         // Contenido de la Card
@@ -244,9 +247,11 @@ fun BottomNavigationBar(navController: NavController) {
             onClick = { navController.navigate(InternalScreen.MainScreen.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
-                indicatorColor = secondaryContainerLight, //color del indicador
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                indicatorColor = MaterialTheme.colorScheme.secondary,
+                unselectedIconColor = MaterialTheme.colorScheme.background,
+                unselectedTextColor = MaterialTheme.colorScheme.background,
+                selectedIconColor = MaterialTheme.colorScheme.surface,
+                selectedTextColor = MaterialTheme.colorScheme.secondary,
             ),
             modifier = Modifier.height(56.dp)
         )
@@ -270,9 +275,11 @@ fun BottomNavigationBar(navController: NavController) {
             onClick = { navController.navigate(InternalScreen.LocationCaretaker.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
-                indicatorColor = secondaryContainerLight,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                indicatorColor = MaterialTheme.colorScheme.secondary,
+                unselectedIconColor = MaterialTheme.colorScheme.background,
+                unselectedTextColor = MaterialTheme.colorScheme.background,
+                selectedIconColor = MaterialTheme.colorScheme.surface,
+                selectedTextColor = MaterialTheme.colorScheme.secondary,
             ),
             modifier = Modifier.height(56.dp)
         )
@@ -296,9 +303,11 @@ fun BottomNavigationBar(navController: NavController) {
             onClick = { navController.navigate(InternalScreen.ActivityList.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
-                indicatorColor = secondaryContainerLight,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                indicatorColor = MaterialTheme.colorScheme.secondary,
+                unselectedIconColor = MaterialTheme.colorScheme.background,
+                unselectedTextColor = MaterialTheme.colorScheme.background,
+                selectedIconColor = MaterialTheme.colorScheme.surface,
+                selectedTextColor = MaterialTheme.colorScheme.secondary,
             ),
             modifier = Modifier.height(56.dp)
         )
@@ -322,22 +331,17 @@ fun BottomNavigationBar(navController: NavController) {
             onClick = { navController.navigate(InternalScreen.ReminderList.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
-                indicatorColor = secondaryContainerLight,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                indicatorColor = MaterialTheme.colorScheme.secondary,
+                unselectedIconColor = MaterialTheme.colorScheme.background,
+                unselectedTextColor = MaterialTheme.colorScheme.background,
+                selectedIconColor = MaterialTheme.colorScheme.surface,
+                selectedTextColor = MaterialTheme.colorScheme.secondary,
             ),
             modifier = Modifier.height(56.dp)
         )
     }
 }
 
-
-
-@Composable
-@Preview(showBackground = true, showSystemUi = true)
-fun MenuOldPersonScreenPreview() {
-    MenuOldPersonScreen(navController = rememberNavController())
-}
 
 
 
