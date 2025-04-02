@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.proyecto.R
@@ -57,14 +59,21 @@ fun LogPhone(navController: NavController){
 
             )
         var num = remember { mutableStateOf("") }
+
         OutlinedTextField(
             value = num.value,
-            onValueChange = { num.value = it },
-            label = { Text("ingrese numero registrado", color = MaterialTheme.colorScheme.secondary)}
+            onValueChange = { newValue ->
+                // Solo permite números
+                if (newValue.all { it.isDigit() }) {
+                    num.value = newValue
+                }
+            },
+            label = { Text("Ingrese número registrado", color = MaterialTheme.colorScheme.secondary) }
         )
 
+
         /*
-        * Esos dos botones son para probar el diseño
+        * Esos dos botones son para probar el d1111213233iseño
         * Cuando se coloque la funcionalidad debe detectar
         * a partir de los datos dados que tipo de usuario es
          */

@@ -62,8 +62,13 @@ fun RegistryPhone(navController: NavController){
         var num = remember { mutableStateOf("") }
         OutlinedTextField(
             value = num.value,
-            onValueChange = { num.value = it },
-            label = { Text("ingrese numero a registrar", color = MaterialTheme.colorScheme.secondary)}
+            onValueChange = { newValue ->
+                // Solo permite números
+                if (newValue.all { it.isDigit() }) {
+                    num.value = newValue
+                }
+            },
+            label = { Text("Ingrese número registrado", color = MaterialTheme.colorScheme.secondary) }
         )
 
 
