@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.ui.LogScreen
 import com.example.proyecto.ui.MenuCaretakersScreen
 import com.example.proyecto.ui.MenuOldPersonScreen
+import com.example.proyecto.ui.RegistryScreen
 import com.example.proyecto.ui.UserListScreen
 
 sealed class Screen(val route: String) {
@@ -14,6 +15,7 @@ sealed class Screen(val route: String) {
     object PersonSelector: Screen("person_selector_screen")
     object MenuOldPerson: Screen("menu_old_person_screen")
     object MenuCaretaker: Screen("menu_caretaker_screen")
+    object Registry: Screen("Registry_screen")
 }
 
 @Composable
@@ -26,6 +28,7 @@ fun NavegationStack(){
         composable(route = Screen.PersonSelector.route) { UserListScreen(navController) }
         composable(route = Screen.MenuOldPerson.route) { MenuOldPersonScreen( navController) }
         composable (route = Screen.MenuCaretaker.route) { MenuCaretakersScreen( navController) }
+        composable(route = Screen.Registry.route) { RegistryScreen(navController) }
     }
 
 }

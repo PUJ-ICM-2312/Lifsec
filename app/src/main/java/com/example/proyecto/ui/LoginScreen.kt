@@ -102,7 +102,7 @@ fun LogPhone(navController: NavController){
 @Composable
 fun ButtonRegistry(navController: NavController){
     Button(
-        onClick = { /*nav pero todavia no lo hacemos para registrarse*/ },
+        onClick = { navController.navigate(route = Screen.Registry.route) },
         modifier = Modifier
             .padding(horizontal = 32.dp),
         shape = RoundedCornerShape(16.dp), // Bordes redondeados
