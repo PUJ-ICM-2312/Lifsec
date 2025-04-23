@@ -22,6 +22,7 @@ import com.example.proyecto.R
 import com.example.proyecto.ui.theme.SOSButtonColor
 import com.example.proyecto.ui.theme.SOSBackgroundColor
 import kotlinx.coroutines.launch
+import androidx.compose.material3.OutlinedTextFieldDefaults
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,13 +80,8 @@ fun SOSScreen(navController: NavController) {
                 onValueChange = { emergencyType = it },
                 label = { Text("Tipo de emergencia (opcional)") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    containerColor = Color.Transparent, // Elimina el fondo rosado
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    cursorColor = MaterialTheme.colorScheme.primary,
-                    focusedTextColor = MaterialTheme.colorScheme.onBackground
-                )
+
+
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -95,13 +91,6 @@ fun SOSScreen(navController: NavController) {
                 onValueChange = { emergencyMessage = it },
                 label = { Text("Mensaje (opcional)") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    containerColor = Color.Transparent, // Elimina el fondo rosado
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    cursorColor = MaterialTheme.colorScheme.primary,
-                    focusedTextColor = MaterialTheme.colorScheme.onBackground
-                )
             )
         }
 

@@ -1,5 +1,6 @@
 package com.example.proyecto.ui
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,20 +9,23 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.proyecto.InternalScreen
 import com.example.proyecto.R
+import com.example.proyecto.ui.theme.SharedViewModel
 
 @Composable
-fun CreateActivityScreen(navController: NavController) {
+fun CreateActivityScreen(navController: NavController, sharedViewModel: SharedViewModel) {
     var activityText by remember { mutableStateOf("") }
     var locationText by remember { mutableStateOf("") }
     var additionalInfoText by remember { mutableStateOf("") }
-    var imageSelected by remember { mutableStateOf(false) }
-
+    var imageSelected by remember { mutableStateOf<Bitmap?>(null) }
+    imageSelected = sharedViewModel.capturedImage
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -52,7 +56,7 @@ fun CreateActivityScreen(navController: NavController) {
                     activityText = it
                 }
 
-                InputField(label = "Ubicación actual", value = locationText) {
+                InputField(label = "¿Donde fue?", value = locationText) {
                     locationText = it
                 }
 
@@ -65,15 +69,26 @@ fun CreateActivityScreen(navController: NavController) {
                 Box(
                     modifier = Modifier
                         .size(140.dp)
-                        .clickable { imageSelected = true }
+                        .clickable { navController.navigate(InternalScreen.CamaraActivityScreen.route)}
                         .padding(8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_placeholder),
-                        contentDescription = "Seleccionar imagen",
-                        modifier = Modifier.size(100.dp)
-                    )
+                    if (imageSelected==null){
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_placeholder),
+                            contentDescription = "Seleccionar imagen",
+                            modifier = Modifier.size(100.dp)
+                        )
+                    }else{
+
+                        Image(
+                            bitmap = imageSelected!!.asImageBitmap(),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                        )
+                    }
+
                 }
 
                 InputField(label = "Información adicional (opcional)", value = additionalInfoText) {
