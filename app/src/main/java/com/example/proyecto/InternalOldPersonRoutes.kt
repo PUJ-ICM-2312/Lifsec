@@ -3,6 +3,7 @@ package com.example.proyecto
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -12,6 +13,7 @@ import com.example.proyecto.ui.CamaraScreen
 import com.example.proyecto.ui.CreateActivityScreen
 import com.example.proyecto.ui.CreateReminderScreen
 import com.example.proyecto.ui.ListActivitiesOldPersonScreen
+import com.example.proyecto.ui.LocatCareViewModel
 import com.example.proyecto.ui.LocationCaretakerScreen
 import com.example.proyecto.ui.ReminderListScreen
 import com.example.proyecto.ui.SOSScreen
@@ -35,11 +37,20 @@ sealed class InternalScreen(val route: String) {
 @Composable
 fun InternalNavegationStack(navController: NavHostController){
     val sharedViewModel: SharedViewModel = viewModel()
+    val context = LocalContext.current
 
     //Para navegacion entre pantallas
     NavHost(navController = navController, startDestination = InternalScreen.MainScreen.route) {
         composable(InternalScreen.MainScreen.route) { MainScreen(navController) }
-        composable(InternalScreen.LocationCaretaker.route) { LocationCaretakerScreen() }
+        composable(InternalScreen.LocationCaretaker.route) {
+            val locatCareViewModel: LocatCareViewModel = viewModel(
+                factory = LocatCareViewModelFactory(context)
+            )
+            LocationCaretakerScreen(
+                locatCareViewModel = locatCareViewModel,
+                navController = navController
+            )
+        }
         composable(InternalScreen.ReminderList.route) { ReminderListScreen(navController) }
         composable(InternalScreen.ActivityList.route) { ListActivitiesOldPersonScreen() }
         composable(InternalScreen.SosScreen.route) { SOSScreen(navController) }
