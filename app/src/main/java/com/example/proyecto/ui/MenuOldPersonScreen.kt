@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -39,29 +41,30 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.InternalNavegationStack
-import com.example.proyecto.InternalScreen
-import com.example.proyecto.ui.theme.primaryContainerLight
-import com.example.proyecto.ui.theme.secondaryContainerLight
-
-
+import com.example.proyecto.Screen
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MenuOldPersonScreen(navController: NavController) {
+fun MenuOldPersonScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
     // NavController interno para la navegación anidada
     val internalNavController = rememberNavController()
 
@@ -76,21 +79,36 @@ fun MenuOldPersonScreen(navController: NavController) {
             color = MaterialTheme.colorScheme.background
         ) {
             // Aquí se carga el grafo de navegación interno
-            InternalNavegationStack(navController = internalNavController)
+            InternalNavegationStack(navController = internalNavController, rootNavController = navController, authViewModel = authViewModel)
         }
     }
 }
 
 
 @Composable
-fun MainScreen(navController: NavController) {
+fun MainScreen(
+    navController: NavController,
+    rootNavController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
+    // Observar el estado del usuario. Si cambia a null, navegar.
+    val currentUser by authViewModel.currentUser.collectAsState()
+    LaunchedEffect(currentUser) {
+        if (currentUser == null) {
+            rootNavController.navigate(Screen.Login.route) {
+                popUpTo(Screen.MenuOldPerson.route) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
-            TopBarHome()
+            TopBarHome(authViewModel)
 
             Column(
                 modifier = Modifier
@@ -108,14 +126,14 @@ fun MainScreen(navController: NavController) {
                         title = "Notificar Emergencia",
                         icon = Icons.Default.Warning,
                         onClick = {
-                            navController.navigate(InternalScreen.SosScreen.route)
+                            navController.navigate(Screen.SosScreen.route)
                         }
                     )
                     MenuCard(
                         title = "Registrar Actividad",
                         icon = Icons.Default.Create,
                         onClick = {
-                            navController.navigate(InternalScreen.CreateActivity.route)
+                            navController.navigate(Screen.CreateActivity.route)
                         }
                     )
                 }
@@ -131,7 +149,7 @@ fun MainScreen(navController: NavController) {
                         title = "Crear Recordatorio",
                         icon = Icons.Default.Notifications,
                         onClick = {
-                            navController.navigate(InternalScreen.CreateReminder.route)
+                            navController.navigate(Screen.CreateReminder.route)
                         }
                     )
                     MenuCard(
@@ -150,9 +168,7 @@ fun MainScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBarHome() {
-    // Usamos TopAppBar de Material3 para definir el topBar
-    // TODO: Colocar icono de usuario al extremo derecho
+fun TopBarHome(authViewModel: AuthViewModel = viewModel()) {
     TopAppBar(
         title = {
             Text(
@@ -166,7 +182,20 @@ fun TopBarHome() {
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.outline
-        )
+        ),
+        actions = {
+            // User icon button at the end (trailing)
+            IconButton(
+                onClick = { authViewModel.signOut() },
+                modifier = Modifier.padding(end = 8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ExitToApp,
+                    contentDescription = "Cerrar Sesión",
+                    tint = MaterialTheme.colorScheme.background
+                )
+            }
+        }
     )
 }
 
@@ -243,8 +272,8 @@ fun BottomNavigationBar(navController: NavController) {
                     maxLines = 1
                 )
             },
-            selected = isSelected(InternalScreen.MainScreen.route),
-            onClick = { navController.navigate(InternalScreen.MainScreen.route) },
+            selected = isSelected(Screen.MainScreen.route),
+            onClick = { navController.navigate(Screen.MainScreen.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,
@@ -271,8 +300,8 @@ fun BottomNavigationBar(navController: NavController) {
                     maxLines = 1
                 )
             },
-            selected = isSelected(InternalScreen.LocationCaretaker.route),
-            onClick = { navController.navigate(InternalScreen.LocationCaretaker.route) },
+            selected = isSelected(Screen.LocationCaretaker.route),
+            onClick = { navController.navigate(Screen.LocationCaretaker.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,
@@ -299,8 +328,8 @@ fun BottomNavigationBar(navController: NavController) {
                     maxLines = 1
                 )
             },
-            selected = isSelected(InternalScreen.ActivityList.route),
-            onClick = { navController.navigate(InternalScreen.ActivityList.route) },
+            selected = isSelected(Screen.ActivityList.route),
+            onClick = { navController.navigate(Screen.ActivityList.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,
@@ -327,8 +356,8 @@ fun BottomNavigationBar(navController: NavController) {
                     maxLines = 1
                 )
             },
-            selected = isSelected(InternalScreen.ReminderList.route),
-            onClick = { navController.navigate(InternalScreen.ReminderList.route) },
+            selected = isSelected(Screen.ReminderList.route),
+            onClick = { navController.navigate(Screen.ReminderList.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,

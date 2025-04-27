@@ -5,6 +5,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -14,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -85,6 +89,14 @@ fun LocationCaretakerScreen(
             )
             isInitialCameraMoveDone = true // Marca que el movimiento inicial ya se hizo
         }
+    }
+
+    if (!hasPermission) {
+        Text("Se requiere permiso de ubicación para usar el mapa.",
+            modifier = Modifier.padding(16.dp).fillMaxSize().statusBarsPadding(),
+            textAlign = TextAlign.Center,
+        )
+        return
     }
 
     Box(modifier = Modifier.fillMaxSize()) {

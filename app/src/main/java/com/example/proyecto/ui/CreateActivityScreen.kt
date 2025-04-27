@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.proyecto.InternalScreen
+import com.example.proyecto.Screen
 import com.example.proyecto.R
 import com.example.proyecto.ui.theme.SharedViewModel
 
@@ -69,7 +69,7 @@ fun CreateActivityScreen(navController: NavController, sharedViewModel: SharedVi
                 Box(
                     modifier = Modifier
                         .size(140.dp)
-                        .clickable { navController.navigate(InternalScreen.CamaraActivityScreen.route)}
+                        .clickable { navController.navigate(Screen.CamaraActivityScreen.route)}
                         .padding(8.dp),
                     contentAlignment = Alignment.Center
                 ) {
