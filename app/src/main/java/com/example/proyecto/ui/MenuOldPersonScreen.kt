@@ -62,7 +62,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.InternalNavegationStack
 import com.example.proyecto.Screen
-import com.example.proyecto.InternalScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.permissions.rememberPermissionState
@@ -323,8 +322,8 @@ fun BottomNavigationBar(navController: NavController) {
                     maxLines = 1
                 )
             },
-            selected = isSelected(InternalScreen.LocationCaretaker.route),
-            onClick = { navController.navigate(InternalScreen.LocationCaretaker.route) },
+            selected = isSelected(Screen.LocationCaretaker.route),
+            onClick = { navController.navigate(Screen.LocationCaretaker.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,
@@ -351,8 +350,8 @@ fun BottomNavigationBar(navController: NavController) {
                     maxLines = 1
                 )
             },
-            selected = isSelected(InternalScreen.ActivityList.route),
-            onClick = { navController.navigate(InternalScreen.ActivityList.route) },
+            selected = isSelected(Screen.ActivityList.route),
+            onClick = { navController.navigate(Screen.ActivityList.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,

@@ -30,7 +30,7 @@ fun InternalNavegationStack(
     authViewModel: AuthViewModel,
     rootNavController: NavController
 ){
-    val sharedViewModel: SharedViewModel = viewModel()
+    val sharedViewModel: SharedImageViewModel = viewModel()
     val context = LocalContext.current
     val sharedImageViewModel: SharedImageViewModel = viewModel()
 
@@ -56,15 +56,6 @@ fun InternalNavegationStack(
         composable(Screen.CreateReminder.route) { CreateReminderScreen(navController) }
         composable(Screen.CreateActivity.route) { CreateActivityScreen(navController,sharedViewModel) }
         composable(Screen.CamaraActivityScreen.route) { CamaraScreen(navController,sharedViewModel) }
-//    NavHost(navController = navController, startDestination = InternalScreen.MainScreen.route) {
-//        composable(InternalScreen.MainScreen.route) { MainScreen(navController) }
-//        composable(InternalScreen.LocationCaretaker.route) { LocationCaretakerScreen() }
-//        composable(InternalScreen.ReminderList.route) { ReminderListScreen(navController) }
-//        composable(InternalScreen.ActivityList.route) { ListActivitiesOldPersonScreen() }
-//        composable(InternalScreen.SosScreen.route) { SOSScreen(navController) }
-//        composable(InternalScreen.CreateReminder.route) { CreateReminderScreen(navController) }
-//        composable(InternalScreen.CreateActivity.route) { CreateActivityScreen(navController,sharedImageViewModel) }
-//        composable(InternalScreen.CamaraActivityScreen.route) { CamaraScreen(navController,sharedImageViewModel) }
     }
 }
 
