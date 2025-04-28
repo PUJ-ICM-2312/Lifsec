@@ -1,5 +1,7 @@
 package com.example.proyecto
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,8 +18,18 @@ sealed class Screen(val route: String) {
     object MenuOldPerson: Screen("menu_old_person_screen")
     object MenuCaretaker: Screen("menu_caretaker_screen")
     object Registry: Screen("Registry_screen")
+
+    object MainScreen: Screen("main_screen_elder")
+    object LocationCaretaker: Screen("location_caretaker_screen_elder")
+    object ReminderList: Screen("reminder_list_screen_elder")
+    object ActivityList: Screen("activity_list_screen_elder")
+    object SosScreen: Screen("sos_screen")
+    object CreateReminder: Screen("create_reminder_screen")
+    object CreateActivity: Screen("create_activity_screen")
+    object CamaraActivityScreen: Screen("camara_activity_screen")
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavegationStack(){
     val navController = rememberNavController()
