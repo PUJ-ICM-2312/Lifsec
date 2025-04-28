@@ -16,7 +16,6 @@ import com.example.proyecto.ui.LocationCaretakerScreen
 import com.example.proyecto.ui.ReminderListScreen
 import com.example.proyecto.ui.SOSScreen
 import com.example.proyecto.ui.MainScreen
-import com.example.proyecto.ui.theme.SharedViewModel
 
 sealed class InternalScreen(val route: String) {
     object MainScreen: Screen("main_screen")
@@ -34,7 +33,7 @@ sealed class InternalScreen(val route: String) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun InternalNavegationStack(navController: NavHostController){
-    val sharedViewModel: SharedViewModel = viewModel()
+    val sharedImageViewModel: SharedImageViewModel = viewModel()
 
     //Para navegacion entre pantallas
     NavHost(navController = navController, startDestination = InternalScreen.MainScreen.route) {
@@ -44,8 +43,8 @@ fun InternalNavegationStack(navController: NavHostController){
         composable(InternalScreen.ActivityList.route) { ListActivitiesOldPersonScreen() }
         composable(InternalScreen.SosScreen.route) { SOSScreen(navController) }
         composable(InternalScreen.CreateReminder.route) { CreateReminderScreen(navController) }
-        composable(InternalScreen.CreateActivity.route) { CreateActivityScreen(navController,sharedViewModel) }
-        composable(InternalScreen.CamaraActivityScreen.route) { CamaraScreen(navController,sharedViewModel) }
+        composable(InternalScreen.CreateActivity.route) { CreateActivityScreen(navController,sharedImageViewModel) }
+        composable(InternalScreen.CamaraActivityScreen.route) { CamaraScreen(navController,sharedImageViewModel) }
     }
 }
 

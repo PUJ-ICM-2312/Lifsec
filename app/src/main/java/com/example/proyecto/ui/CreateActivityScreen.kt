@@ -17,15 +17,15 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.proyecto.InternalScreen
 import com.example.proyecto.R
-import com.example.proyecto.ui.theme.SharedViewModel
+import com.example.proyecto.SharedImageViewModel
 
 @Composable
-fun CreateActivityScreen(navController: NavController, sharedViewModel: SharedViewModel) {
+fun CreateActivityScreen(navController: NavController, sharedImageViewModel: SharedImageViewModel) {
     var activityText by remember { mutableStateOf("") }
     var locationText by remember { mutableStateOf("") }
     var additionalInfoText by remember { mutableStateOf("") }
     var imageSelected by remember { mutableStateOf<Bitmap?>(null) }
-    imageSelected = sharedViewModel.capturedImage
+    imageSelected = sharedImageViewModel.capturedImage
     Box(
         modifier = Modifier
             .fillMaxSize()
