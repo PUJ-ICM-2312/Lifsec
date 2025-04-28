@@ -25,6 +25,7 @@ class LocatCareViewModel(context: Context) : ViewModel() {
 
     private val _uiLocState = MutableStateFlow(LocatCareState())
     val uiLocState: StateFlow<LocatCareState> = _uiLocState.asStateFlow()
+
     /**
      * Obtains the current user's location asynchronously.
      */
