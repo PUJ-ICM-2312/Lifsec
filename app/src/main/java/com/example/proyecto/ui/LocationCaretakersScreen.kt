@@ -13,10 +13,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -34,8 +37,11 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.Polyline
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.log
 import kotlin.random.Random
 
 @Composable
@@ -45,6 +51,7 @@ fun LocationCaretakerScreen(
     navController: NavController
 ) {
     val uiLocState by locatCareViewModel.uiLocState.collectAsStateWithLifecycle()
+    val isEmergency by authViewModel.emergencia.collectAsState()
     val context = LocalContext.current
 
     var hasPermission by remember { mutableStateOf(false) }
@@ -71,6 +78,10 @@ fun LocationCaretakerScreen(
                 durationMs = 1000
             )
             isInitialCameraMoveDone = true
+        }
+
+        if (authViewModel.emergencia.value) {
+            Log.i("authVM","Emergencia: ${authViewModel.emergencia.value}")
         }
     }
 
@@ -107,58 +118,75 @@ fun LocationCaretakerScreen(
 
             // Cuidadores
             uiLocState.caretakerMarkers.forEachIndexed { index, markerState ->
+                // Pasamos isEmergency a AnimatedMarker
                 AnimatedMarker(
                     markerState = markerState,
-                    baseLocation = uiLocState.location ?: LatLng(4.7110, -74.0721),
-                    durationMs = 30000
+                    baseLocation = uiLocState.location ?: markerState.position,
+                    durationMs = 30000,
+                    isEmergency = isEmergency
                 )
                 Marker(
                     state = markerState,
                     title = "Cuidador #${index + 1}"
                 )
             }
+
+            if (isEmergency && uiLocState.location != null) {
+                // Dibujar rutas para cada cuidador en emergencia
+                uiLocState.caretakerMarkers.forEachIndexed { _, markerState ->
+                    val routePoints by produceState(
+                        initialValue = emptyList<LatLng>(),
+                        key1 = markerState.position,
+                        key2 = uiLocState.location
+                    ) {
+                        value = locatCareViewModel.getRouteBetweenPoints(
+                            origin = markerState.position,
+                            destination = uiLocState.location!!
+                        )
+                    }
+                    if (routePoints.isNotEmpty()) {
+                        Polyline(
+                            points = routePoints,
+                            clickable = false,
+                            width = 8f
+                        )
+                    }
+                }
+            }
         }
     }
 }
-
 
 @Composable
 fun AnimatedMarker(
     markerState: MarkerState,
     baseLocation: LatLng,
-    durationMs: Int = 10000
+    durationMs: Int = 10000,
+    isEmergency: Boolean
 ) {
-    // Inicializamos justo donde esté el MarkerState
+    // usamos rememberUpdatedState para leer siempre el último valor
+    val emergencyState by rememberUpdatedState(newValue = isEmergency)
     val animLat = remember { Animatable(markerState.position.latitude.toFloat()) }
     val animLng = remember { Animatable(markerState.position.longitude.toFloat()) }
 
-    // Coroutine que corre indefinidamente
-    LaunchedEffect(Unit) {
-        while (true) {
-            // Genera un nuevo objetivo alrededor de baseLocation
-            val nextLat = (baseLocation.latitude  + Random.nextDouble(-0.005, 0.005)).toFloat()
+    LaunchedEffect(emergencyState) {
+        // Si hay emergencia no iniciamos el loop
+        if (emergencyState) return@LaunchedEffect
+        while (isActive && !emergencyState) {
+            val nextLat = (baseLocation.latitude + Random.nextDouble(-0.005, 0.005)).toFloat()
             val nextLng = (baseLocation.longitude + Random.nextDouble(-0.005, 0.005)).toFloat()
-
-            // Animar lat y lng en paralelo
             coroutineScope {
                 launch {
-                    animLat.animateTo(
-                        nextLat,
-                        animationSpec = tween(durationMillis = durationMs)
-                    )
+                    animLat.animateTo(nextLat, animationSpec = tween(durationMillis = durationMs))
                 }
                 launch {
-                    animLng.animateTo(
-                        nextLng,
-                        animationSpec = tween(durationMillis = durationMs)
-                    )
+                    animLng.animateTo(nextLng, animationSpec = tween(durationMillis = durationMs))
                 }
             }
-            // Al terminar la animación, el bucle vuelve a generar otro destino
         }
     }
 
-    // En cada frame Compose re-lee estos valores
+    // Actualizamos la posición en cada frame
     markerState.position = LatLng(
         animLat.value.toDouble(),
         animLng.value.toDouble()

@@ -53,7 +53,7 @@ fun InternalNavegationStack(
         }
         composable(Screen.ReminderList.route) { ReminderListScreen(navController) }
         composable(Screen.ActivityList.route) { ListActivitiesOldPersonScreen() }
-        composable(Screen.SosScreen.route) { SOSScreen(navController) }
+        composable(Screen.SosScreen.route) { SOSScreen(navController, authViewModel) }
         composable(Screen.CreateReminder.route) { CreateReminderScreen(navController) }
         composable(Screen.CreateActivity.route) { CreateActivityScreen(navController,sharedViewModel) }
         composable(Screen.CamaraActivityScreen.route) { CamaraScreen(navController,sharedViewModel) }
