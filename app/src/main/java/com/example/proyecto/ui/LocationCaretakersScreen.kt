@@ -41,6 +41,7 @@ import kotlin.random.Random
 @Composable
 fun LocationCaretakerScreen(
     locatCareViewModel: LocatCareViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel(),
     navController: NavController
 ) {
     val uiLocState by locatCareViewModel.uiLocState.collectAsStateWithLifecycle()

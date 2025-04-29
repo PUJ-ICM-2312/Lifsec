@@ -37,6 +37,10 @@ class AuthViewModel: ViewModel() {
     val currentAnciano: Anciano?
         get() = _currentEntity.value as? Anciano
 
+    //Expone si ha ocurrido una emergencia o no
+    private val _emergencia = MutableStateFlow(false)
+    val emergencia: StateFlow<Boolean> = _emergencia.asStateFlow()
+
     // Otro helper para cuidadores:
     val currentCuidador: Cuidador?
         get() = _currentEntity.value as? Cuidador
@@ -62,6 +66,8 @@ class AuthViewModel: ViewModel() {
                         elderlyUsers.firstOrNull { it.email == email }
                             ?: caretakersList.firstOrNull { it.email == email }
                     }
+
+                _emergencia.value = (currentAnciano?.emergencia ?: false)
             }
         }
     }
@@ -88,6 +94,11 @@ class AuthViewModel: ViewModel() {
         } else {
             return false
         }
+    }
+
+    fun setEmergencia(value: Boolean) {
+        (currentAnciano ?: return).emergencia = value
+        _emergencia.value = value
     }
 
     fun signInUser() {

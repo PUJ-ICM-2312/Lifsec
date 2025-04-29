@@ -1,6 +1,8 @@
 package com.example.proyecto.data
 
-class Anciano(override val email: String) : Usuario(email) {
+class Anciano(
+    override val email: String
+) : Usuario(email) {
     companion object {
         fun ancianoListStarter(): List<Anciano> {
             return listOf(
@@ -13,4 +15,9 @@ class Anciano(override val email: String) : Usuario(email) {
             )
         }
     }
+
+    var emergencia: Boolean = false
+        set(value) {
+            field = value
+        }
 }

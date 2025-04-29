@@ -47,6 +47,7 @@ fun InternalNavegationStack(
             )
             LocationCaretakerScreen(
                 locatCareViewModel = locatCareViewModel,
+                authViewModel= authViewModel,
                 navController = navController
             )
         }

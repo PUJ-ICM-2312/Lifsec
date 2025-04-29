@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Looper
 import androidx.lifecycle.ViewModel
 import com.example.proyecto.data.location.LocatCareState
+import com.example.proyecto.data.location.RoutesService
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -91,6 +92,14 @@ class LocatCareViewModel(
 
     fun unregisterLocationUpdates(locationCallback: LocationCallback) {
         fusedLocationClient.removeLocationUpdates(locationCallback)
+    }
+
+    /**
+     * Trae la ruta deserializada de google maps entre dos puntos.
+     */
+    suspend fun getRouteBetweenPoints(origin: LatLng, destination: LatLng): List<LatLng> {
+        val routesService = RoutesService()
+        return routesService.getRoutePoints(origin, destination)
     }
 
     //TODO: Metodo para cargar de la BD los cuidadores y colocarlos en el mapa

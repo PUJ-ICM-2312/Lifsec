@@ -1,5 +1,6 @@
 package com.example.proyecto.ui
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,10 +24,15 @@ import com.example.proyecto.ui.theme.SOSButtonColor
 import com.example.proyecto.ui.theme.SOSBackgroundColor
 import kotlinx.coroutines.launch
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SOSScreen(navController: NavController) {
+fun SOSScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
     var emergencyType by remember { mutableStateOf(TextFieldValue("")) }
     var emergencyMessage by remember { mutableStateOf(TextFieldValue("")) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -55,9 +61,14 @@ fun SOSScreen(navController: NavController) {
                 .clip(RoundedCornerShape(24.dp))
                 .background(SOSBackgroundColor)
                 .clickable {
+                    authViewModel.setEmergencia(true)
+                    authViewModel.currentAnciano?.let {
+                        anciano -> Log.d("AuthVM", "Emergencia Anciano: ${anciano.email}")
+                    }
                     scope.launch {
                         snackbarHostState.showSnackbar("¡Mensaje de emergencia enviado!")
                     }
+                    navController.navigate(Screen.LocationCaretaker.route)
                 },
             contentAlignment = Alignment.Center
         ) {
