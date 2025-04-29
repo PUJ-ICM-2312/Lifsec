@@ -20,6 +20,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -39,10 +40,9 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.math.log
 import kotlin.random.Random
 
 @Composable
@@ -54,6 +54,7 @@ fun LocationCaretakerScreen(
     val uiLocState by locatCareViewModel.uiLocState.collectAsStateWithLifecycle()
     val isEmergency by authViewModel.emergencia.collectAsState()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var hasPermission by remember { mutableStateOf(false) }
     LocationPermissionHandler { hasPermission = true }
@@ -113,59 +114,119 @@ fun LocationCaretakerScreen(
                 )
             }
 
-            // Cuidadores
+            // Cuidadores y sus rutas
             uiLocState.caretakerMarkers.forEachIndexed { index, markerState ->
-                // Pasamos isEmergency a AnimatedMarker
-                AnimatedMarker(
-                    markerState = markerState,
-                    baseLocation = uiLocState.location ?: markerState.position,
-                    durationMs = 30000,
-                    isEmergency = isEmergency
-                )
+                // Visualizamos los cuidadores
                 Marker(
                     state = markerState,
                     title = "Cuidador #${index + 1}"
                 )
-            }
 
-            if (isEmergency && uiLocState.location != null) {
-                uiLocState.caretakerMarkers.forEachIndexed { index, markerState ->
-                    // Genera un color aleatorio (evitando blanco o negro)
+                // Si hay emergencia, calculamos y mostramos la ruta
+                if (isEmergency && uiLocState.location != null) {
+                    // Genera un color aleatorio para la ruta (evitando blanco o negro)
                     val lineColor = remember(markerState.position) {
-                        mutableListOf<Color>().apply {
-                            var color: Color
-                            do {
-                                color = Color(
-                                    Random.nextFloat().coerceIn(0.1f, 0.9f),
-                                    Random.nextFloat().coerceIn(0.1f, 0.9f),
-                                    Random.nextFloat().coerceIn(0.1f, 0.9f)
-                                )
-                            } while (color == Color.Black || color == Color.White)
-                            add(color)
-                        }.first()
+                        Color(
+                            Random.nextFloat().coerceIn(0.1f, 0.9f),
+                            Random.nextFloat().coerceIn(0.1f, 0.9f),
+                            Random.nextFloat().coerceIn(0.1f, 0.9f)
+                        )
                     }
+
+                    // Obtenemos los puntos de la ruta
                     val routePoints by produceState(
                         initialValue = emptyList<LatLng>(),
                         key1 = markerState.position,
-                        key2 = uiLocState.location
+                        key2 = uiLocState.location,
+                        key3 = isEmergency
                     ) {
                         value = locatCareViewModel.getRouteBetweenPoints(
                             origin = markerState.position,
                             destination = uiLocState.location!!
                         )
                     }
+
                     if (routePoints.isNotEmpty()) {
+                        // Dibujamos la ruta
                         Polyline(
                             points = routePoints,
                             clickable = false,
                             width = 8f,
                             color = lineColor
                         )
+
+                        // Animamos el marcador a lo largo de la ruta
+                        LaunchedEffect(routePoints, isEmergency) {
+                            animateMarkerAlongRoute(
+                                markerState = markerState,
+                                route = routePoints
+                            )
+                        }
                     }
+                } else {
+                    // Si no hay emergencia, animamos el marcador con movimiento aleatorio
+                    AnimatedMarker(
+                        markerState = markerState,
+                        baseLocation = uiLocState.location ?: markerState.position,
+                        durationMs = 30000,
+                        isEmergency = isEmergency
+                    )
                 }
             }
         }
     }
+}
+
+// Función para animar un marcador a lo largo de una ruta
+suspend fun animateMarkerAlongRoute(
+    markerState: MarkerState,
+    route: List<LatLng>
+) {
+    // Si la ruta está vacía, no hacemos nada
+    if (route.isEmpty()) return
+
+    // Tiempo total para recorrer la ruta (en milisegundos)
+    val totalDuration = 60000L // 1 minuto
+
+    // Calculamos el tiempo que debe demorar entre cada punto
+    val pointDuration = totalDuration / route.size
+
+    // Animamos el marcador a través de cada punto de la ruta
+    for (i in 0 until route.size - 1) {
+        val start = route[i]
+        val end = route[i + 1]
+
+        // Calculamos la distancia entre los puntos para determinar la duración
+        val segmentDuration = (pointDuration * distanceBetween(start, end) / 0.0001).toLong()
+            .coerceAtLeast(100) // Al menos 100ms por segmento
+            .coerceAtMost(5000) // Máximo 5 segundos por segmento
+
+        // Interpolamos la posición entre los puntos
+        val steps = (segmentDuration / 16).toInt().coerceAtLeast(2) // 16ms por frame ~ 60fps
+
+        for (step in 1..steps) {
+            val fraction = step.toFloat() / steps
+            val lat = start.latitude + (end.latitude - start.latitude) * fraction
+            val lng = start.longitude + (end.longitude - start.longitude) * fraction
+
+            // Actualizamos la posición del marcador
+            markerState.position = LatLng(lat, lng)
+
+            // Pequeña pausa para la animación
+            delay(16) // ~60fps
+        }
+    }
+
+    // Aseguramos que el marcador llegue al punto final
+    markerState.position = route.last()
+}
+
+// Función para calcular la distancia aproximada entre dos puntos (para uso en animación)
+private fun distanceBetween(p1: LatLng, p2: LatLng): Double {
+    // Calculamos la distancia euclidiana (suficiente para comparar distancias relativas)
+    val dx = p1.latitude - p2.latitude
+    val dy = p1.longitude - p2.longitude
+    return Math.sqrt(dx * dx + dy * dy)
 }
 
 @Composable
@@ -179,21 +240,20 @@ fun AnimatedMarker(
     val emergencyState by rememberUpdatedState(newValue = isEmergency)
     val animLat = remember { Animatable(markerState.position.latitude.toFloat()) }
     val animLng = remember { Animatable(markerState.position.longitude.toFloat()) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(emergencyState) {
-        // Si hay emergencia no iniciamos el loop
+        // Si hay emergencia no iniciamos el loop de movimiento aleatorio
         if (emergencyState) return@LaunchedEffect
+
         while (isActive && !emergencyState) {
             val nextLat = (baseLocation.latitude + Random.nextDouble(-0.005, 0.005)).toFloat()
             val nextLng = (baseLocation.longitude + Random.nextDouble(-0.005, 0.005)).toFloat()
-            coroutineScope {
-                launch {
-                    animLat.animateTo(nextLat, animationSpec = tween(durationMillis = durationMs))
-                }
-                launch {
-                    animLng.animateTo(nextLng, animationSpec = tween(durationMillis = durationMs))
-                }
-            }
+
+            scope.launch { animLat.animateTo(nextLat, animationSpec = tween(durationMillis = durationMs)) }
+            scope.launch { animLng.animateTo(nextLng, animationSpec = tween(durationMillis = durationMs)) }
+
+            delay(durationMs.toLong())
         }
     }
 
