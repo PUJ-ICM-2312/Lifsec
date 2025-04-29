@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -132,8 +133,21 @@ fun LocationCaretakerScreen(
             }
 
             if (isEmergency && uiLocState.location != null) {
-                // Dibujar rutas para cada cuidador en emergencia
-                uiLocState.caretakerMarkers.forEachIndexed { _, markerState ->
+                uiLocState.caretakerMarkers.forEachIndexed { index, markerState ->
+                    // Genera un color aleatorio (evitando blanco o negro)
+                    val lineColor = remember(markerState.position) {
+                        mutableListOf<Color>().apply {
+                            var color: Color
+                            do {
+                                color = Color(
+                                    Random.nextFloat().coerceIn(0.1f, 0.9f),
+                                    Random.nextFloat().coerceIn(0.1f, 0.9f),
+                                    Random.nextFloat().coerceIn(0.1f, 0.9f)
+                                )
+                            } while (color == Color.Black || color == Color.White)
+                            add(color)
+                        }.first()
+                    }
                     val routePoints by produceState(
                         initialValue = emptyList<LatLng>(),
                         key1 = markerState.position,
@@ -148,7 +162,8 @@ fun LocationCaretakerScreen(
                         Polyline(
                             points = routePoints,
                             clickable = false,
-                            width = 8f
+                            width = 8f,
+                            color = lineColor
                         )
                     }
                 }
