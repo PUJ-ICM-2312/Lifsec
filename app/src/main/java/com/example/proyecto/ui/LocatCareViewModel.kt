@@ -11,39 +11,62 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
-import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.MarkerState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlin.random.Random
 
-class LocatCareViewModel(context: Context) : ViewModel() {
+/**
+ * ViewModel que controla la ubicación y genera los marcadores de cuidadores.
+ * @param context Context de Android.
+ * @param caretakersCount Número de cuidadores a generar (parametrizable).
+ */
+class LocatCareViewModel(
+    context: Context,
+    private val caretakersCount: Int = 5
+) : ViewModel() {
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
 
     private val _uiLocState = MutableStateFlow(LocatCareState())
     val uiLocState: StateFlow<LocatCareState> = _uiLocState.asStateFlow()
 
-    /**
-     * Obtains the current user's location asynchronously.
-     */
     @SuppressLint("MissingPermission")
     fun registerLocationUpdates(callback: (LatLng) -> Unit): LocationCallback {
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
-            5000 // Update interval in ms
+            5000
         ).build()
 
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 result.locations.lastOrNull()?.let { location ->
                     val latLng = LatLng(location.latitude, location.longitude)
+
+                    // Generar marcadores de cuidadores una sola vez
+                    val currentMarkers = _uiLocState.value.caretakerMarkers
+                    val newMarkers = if (currentMarkers.isEmpty()) {
+                        val base = latLng
+                        List(caretakersCount) {
+                            MarkerState(
+                                position = LatLng(
+                                    base.latitude + Random.nextDouble(-0.005, 0.005),
+                                    base.longitude + Random.nextDouble(-0.005, 0.005)
+                                )
+                            )
+                        }
+                    } else currentMarkers
+
+                    // Actualizar el estado con ubicación y marcadores
                     _uiLocState.value = _uiLocState.value.copy(
-                        location = latLng
+                        location = latLng,
+                        caretakerMarkers = newMarkers
                     )
-                    callback(latLng) // Llama al callback con la nueva ubicación
+
+                    callback(latLng)
                 }
             }
         }
@@ -54,23 +77,18 @@ class LocatCareViewModel(context: Context) : ViewModel() {
             Looper.getMainLooper()
         )
 
-        return locationCallback // So you can stop updates later
+        return locationCallback
     }
-    /**
-     * Sets the camera to a new position.
-     */
+
     fun setCameraPosition(newLatLng: LatLng) {
-        val newCameraPositionState = CameraPosition.fromLatLngZoom(newLatLng, 15f)
+        val newCameraPositionState = CameraPositionState(
+            com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(newLatLng, 15f)
+        )
         _uiLocState.value = _uiLocState.value.copy(
-            cameraPositionState = CameraPositionState(newCameraPositionState)
+            cameraPositionState = newCameraPositionState
         )
     }
 
-    /**
-     * Stops location updates using a LocationCallback.
-     *
-     * @param locationCallback The LocationCallback to remove.
-     */
     fun unregisterLocationUpdates(locationCallback: LocationCallback) {
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }

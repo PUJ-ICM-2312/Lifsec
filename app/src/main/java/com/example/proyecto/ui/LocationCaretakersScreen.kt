@@ -14,8 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,9 +34,7 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.rememberMarkerState
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
@@ -47,121 +43,83 @@ fun LocationCaretakerScreen(
     locatCareViewModel: LocatCareViewModel = viewModel(),
     navController: NavController
 ) {
-    // Observe the state
     val uiLocState by locatCareViewModel.uiLocState.collectAsStateWithLifecycle()
-
     val context = LocalContext.current
 
-    val mapProperties = MapProperties(
-        mapStyleOptions = if (isSystemInDarkTheme()) {
-            MapStyleOptions.loadRawResourceStyle(context, R.raw.dark_map_style)
-        } else {
-            null
-        },
-        isMyLocationEnabled = true
-    )
-
-    val mapUiSettings = MapUiSettings(
-        myLocationButtonEnabled = true,
-        zoomControlsEnabled = true
-    )
-
     var hasPermission by remember { mutableStateOf(false) }
-    LocationPermissionHandler {
-        hasPermission = true
-    }
+    LocationPermissionHandler { hasPermission = true }
 
     var locationCallback: LocationCallback? by remember { mutableStateOf(null) }
     DisposableEffect(hasPermission) {
-        Log.d("DisposableEffect", "hasPermission changed: $hasPermission")
         if (hasPermission) {
             locationCallback = locatCareViewModel.registerLocationUpdates { newLocation ->
                 Log.i("Location", "New location: $newLocation")
             }
         }
-
         onDispose {
-            Log.d("onDispose", "Unregistering location updates")
             locationCallback?.let { locatCareViewModel.unregisterLocationUpdates(it) }
-            locationCallback = null
         }
     }
 
-    //Mock: colocar cuidadores en el mapa
-    val markerStates = remember { mutableStateListOf<MarkerState>() }
-    val targetPositions = remember { mutableStateListOf<LatLng>() }
-
-
+    // Animar cámara solo una vez
     var isInitialCameraMoveDone by remember { mutableStateOf(false) }
     LaunchedEffect(uiLocState.location) {
-        if (uiLocState.location != null && !isInitialCameraMoveDone) {
-            // Anima la cámara a la nueva posición (ubicación actual) con zoom 15
+        uiLocState.location?.takeIf { !isInitialCameraMoveDone }?.let { loc ->
             uiLocState.cameraPositionState.animate(
-                update = CameraUpdateFactory.newLatLngZoom(uiLocState.location!!, 15f),
-                durationMs = 1000 // Duración de la animación en milisegundos (opcional)
+                update = CameraUpdateFactory.newLatLngZoom(loc, 15f),
+                durationMs = 1000
             )
-            isInitialCameraMoveDone = true // Marca que el movimiento inicial ya se hizo
+            isInitialCameraMoveDone = true
         }
     }
-
-    //Mock: colocar cuidadores en el mapa
-    LaunchedEffect(uiLocState.location) {
-        if (uiLocState.location != null && markerStates.isEmpty()) {
-            delay(500L)
-            val base = uiLocState.location!!
-            repeat(5) {
-                // Partimos todos desde la ubicación actual
-                markerStates.add(MarkerState(position = LatLng(
-                                            base.latitude + Random.nextDouble(-0.005, 0.005),
-                                            base.longitude + Random.nextDouble(-0.005, 0.005))))
-            }
-        }
-    }
-
 
     if (!hasPermission) {
-        Text("Se requiere permiso de ubicación para usar el mapa.",
-            modifier = Modifier.padding(16.dp).fillMaxSize().statusBarsPadding(),
-            textAlign = TextAlign.Center,
+        Text(
+            "Se requiere permiso de ubicación para usar el mapa.",
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxSize()
+                .statusBarsPadding(),
+            textAlign = TextAlign.Center
         )
         return
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
-            contentPadding = PaddingValues(
-                top = 150.dp
+            contentPadding = PaddingValues(top = 150.dp),
+            properties = MapProperties(
+                mapStyleOptions = if (isSystemInDarkTheme()) MapStyleOptions.loadRawResourceStyle(context, R.raw.dark_map_style) else null,
+                isMyLocationEnabled = true
             ),
-            properties = mapProperties,
-            uiSettings = mapUiSettings,
+            uiSettings = MapUiSettings(myLocationButtonEnabled = true, zoomControlsEnabled = true),
             cameraPositionState = uiLocState.cameraPositionState
         ) {
-
+            // Mi ubicación
             uiLocState.location?.let { currentLocation ->
-                val myLocation = currentLocation
                 Marker(
-                    state = MarkerState(position = myLocation),
+                    state = MarkerState(position = currentLocation),
                     title = "Mi ubicación",
                     snippet = "Estoy aquí"
                 )
             }
 
-            // Marcadores animados
-            markerStates.forEachIndexed { i, state ->
+            // Cuidadores
+            uiLocState.caretakerMarkers.forEachIndexed { index, markerState ->
                 AnimatedMarker(
-                    markerState = state,
+                    markerState = markerState,
                     baseLocation = uiLocState.location ?: LatLng(4.7110, -74.0721),
                     durationMs = 30000
                 )
                 Marker(
-                    state = state,
-                    title = "Cuidador #${i+1}"
+                    state = markerState,
+                    title = "Cuidador #${index + 1}"
                 )
             }
-
         }
     }
 }
+
 
 @Composable
 fun AnimatedMarker(
