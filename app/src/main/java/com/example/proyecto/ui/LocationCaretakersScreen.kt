@@ -88,8 +88,6 @@ fun LocationCaretakerScreen(
     }
 
     //Mock: colocar cuidadores en el mapa
-    val bogota: LatLng = uiLocState.location ?: LatLng(4.7110, -74.0721)
-
     val markerStates = remember { mutableStateListOf<MarkerState>() }
     val targetPositions = remember { mutableStateListOf<LatLng>() }
 
@@ -106,37 +104,16 @@ fun LocationCaretakerScreen(
         }
     }
 
-
+    //Mock: colocar cuidadores en el mapa
     LaunchedEffect(uiLocState.location) {
-        if (uiLocState.location != null) {
-            // Esperar un poco para asegurar que el mapa esté listo
+        if (uiLocState.location != null && markerStates.isEmpty()) {
             delay(500L)
-
-            val baseLocation = uiLocState.location ?: LatLng(4.7110, -74.0721)
-
-            if (markerStates.isEmpty()) {
-                // Crear cuidadores (una sola vez)
-                repeat(5) {
-                    val initial = LatLng(
-                        baseLocation.latitude + Random.nextDouble(-0.0005, 0.0005),
-                        baseLocation.longitude + Random.nextDouble(-0.0005, 0.0005)
-                    )
-                    markerStates.add(MarkerState(position = initial))
-                    targetPositions.add(initial)
-                }
-            }
-
-            // Luego comenzar a actualizar posiciones periódicamente
-            while (true) {
-                delay(1500L)
-                val updateBaseLocation = uiLocState.location ?: LatLng(4.7110, -74.0721)
-
-                for (i in targetPositions.indices) {
-                    targetPositions[i] = LatLng(
-                        updateBaseLocation.latitude + Random.nextDouble(-0.003, 0.003),
-                        updateBaseLocation.longitude + Random.nextDouble(-0.003, 0.003)
-                    )
-                }
+            val base = uiLocState.location!!
+            repeat(5) {
+                // Partimos todos desde la ubicación actual
+                markerStates.add(MarkerState(position = LatLng(
+                                            base.latitude + Random.nextDouble(-0.005, 0.005),
+                                            base.longitude + Random.nextDouble(-0.005, 0.005))))
             }
         }
     }
@@ -173,8 +150,8 @@ fun LocationCaretakerScreen(
             markerStates.forEachIndexed { i, state ->
                 AnimatedMarker(
                     markerState = state,
-                    target = targetPositions[i],
-                    durationMs = 7000
+                    baseLocation = uiLocState.location ?: LatLng(4.7110, -74.0721),
+                    durationMs = 30000
                 )
                 Marker(
                     state = state,
@@ -189,37 +166,42 @@ fun LocationCaretakerScreen(
 @Composable
 fun AnimatedMarker(
     markerState: MarkerState,
-    target: LatLng,
-    durationMs: Int = 1200
+    baseLocation: LatLng,
+    durationMs: Int = 10000
 ) {
-    // Animatables inicializados una sola vez
+    // Inicializamos justo donde esté el MarkerState
     val animLat = remember { Animatable(markerState.position.latitude.toFloat()) }
     val animLng = remember { Animatable(markerState.position.longitude.toFloat()) }
 
-    // Cuando cambia el target, lanzamos ambas animaciones en paralelo
-    LaunchedEffect(target) {
-        coroutineScope {
-            launch {
-                animLat.animateTo(
-                    target.latitude.toFloat(),
-                    animationSpec = tween(durationMillis = durationMs)
-                )
+    // Coroutine que corre indefinidamente
+    LaunchedEffect(Unit) {
+        while (true) {
+            // Genera un nuevo objetivo alrededor de baseLocation
+            val nextLat = (baseLocation.latitude  + Random.nextDouble(-0.005, 0.005)).toFloat()
+            val nextLng = (baseLocation.longitude + Random.nextDouble(-0.005, 0.005)).toFloat()
+
+            // Animar lat y lng en paralelo
+            coroutineScope {
+                launch {
+                    animLat.animateTo(
+                        nextLat,
+                        animationSpec = tween(durationMillis = durationMs)
+                    )
+                }
+                launch {
+                    animLng.animateTo(
+                        nextLng,
+                        animationSpec = tween(durationMillis = durationMs)
+                    )
+                }
             }
-            launch {
-                animLng.animateTo(
-                    target.longitude.toFloat(),
-                    animationSpec = tween(durationMillis = durationMs)
-                )
-            }
+            // Al terminar la animación, el bucle vuelve a generar otro destino
         }
     }
 
-    // Cada recomposición actualiza la posición real del marcador
-    // de acuerdo al valor interpolado.
-    val animatedPosition = LatLng(
+    // En cada frame Compose re-lee estos valores
+    markerState.position = LatLng(
         animLat.value.toDouble(),
         animLng.value.toDouble()
     )
-    // Asignamos al MarkerState para que el Marker nativo se mueva
-    markerState.position = animatedPosition
 }
