@@ -45,7 +45,7 @@ import androidx.core.content.ContextCompat
 
 
 import androidx.navigation.NavController
-import com.example.proyecto.ui.theme.SharedViewModel
+import com.example.proyecto.SharedImageViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
@@ -58,7 +58,7 @@ import java.util.concurrent.Executor
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun CamaraScreen(navController: NavController, sharedViewModel: SharedViewModel){
+fun CamaraScreen(navController: NavController, sharedImageViewModel: SharedImageViewModel){
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     LaunchedEffect(Unit) {
         cameraPermissionState.launchPermissionRequest()
@@ -77,7 +77,7 @@ fun CamaraScreen(navController: NavController, sharedViewModel: SharedViewModel)
             Text("Se necesita permiso de la cámara para continuar.")
             return
         }else{
-            CameraFoto(cameraPermissionState,navController,sharedViewModel)
+            CameraFoto(cameraPermissionState,navController,sharedImageViewModel)
 
         }
 
@@ -95,7 +95,7 @@ fun CamaraScreen(navController: NavController, sharedViewModel: SharedViewModel)
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun CameraFoto(cameraPermissionState: PermissionState, navController: NavController, sharedViewModel: SharedViewModel){
+fun CameraFoto(cameraPermissionState: PermissionState, navController: NavController, sharedImageViewModel: SharedImageViewModel){
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -266,7 +266,7 @@ fun CameraFoto(cameraPermissionState: PermissionState, navController: NavControl
                 Button(
                 onClick = {
 
-                    sharedViewModel.capturedImage = capturedImage
+                    sharedImageViewModel.capturedImage = capturedImage
                     navController.popBackStack()
 
                 }) { Text(text = "Cargar la foto") }

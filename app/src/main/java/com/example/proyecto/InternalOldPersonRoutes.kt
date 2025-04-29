@@ -20,7 +20,6 @@ import com.example.proyecto.ui.LocationCaretakerScreen
 import com.example.proyecto.ui.ReminderListScreen
 import com.example.proyecto.ui.SOSScreen
 import com.example.proyecto.ui.MainScreen
-import com.example.proyecto.ui.theme.SharedViewModel
 
 // La anotación @RequiresApi indica que este código requiere Android Oreo (API 26) o superior,
 // ya que utiliza funcionalidades que se introdujeron a partir de esa versión
@@ -31,8 +30,9 @@ fun InternalNavegationStack(
     authViewModel: AuthViewModel,
     rootNavController: NavController
 ){
-    val sharedViewModel: SharedViewModel = viewModel()
+    val sharedViewModel: SharedImageViewModel = viewModel()
     val context = LocalContext.current
+    val sharedImageViewModel: SharedImageViewModel = viewModel()
 
     //Para navegacion entre pantallas
     NavHost(navController = navController, startDestination = Screen.MainScreen.route) {

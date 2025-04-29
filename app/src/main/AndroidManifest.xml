@@ -14,6 +14,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
         android:allowBackup="true"
@@ -48,7 +50,12 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAWswEd4FNkUvorTefrpu_eu-n0xxGmz60" />
+            android:value="API_KEY_MAPS" />
+        <service
+            android:name=".SensorService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"/>
+
     </application>
 
 </manifest>
