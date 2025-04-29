@@ -80,10 +80,6 @@ fun LocationCaretakerScreen(
             )
             isInitialCameraMoveDone = true
         }
-
-        if (authViewModel.emergencia.value) {
-            Log.i("authVM","Emergencia: ${authViewModel.emergencia.value}")
-        }
     }
 
     if (!hasPermission) {
