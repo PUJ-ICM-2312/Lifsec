@@ -1,4 +1,3 @@
 package com.example.proyecto.data
 
-abstract class Usuario (val email:String) {
-}
+abstract class Usuario(open val email: String)

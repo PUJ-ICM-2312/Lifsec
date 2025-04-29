@@ -93,6 +93,10 @@ class LocatCareViewModel(
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
+    //TODO: Metodo para cargar de la BD los cuidadores y colocarlos en el mapa
+
+    //TODO: Metodo para cargar actividades en el mapa
+
     init {
         setCameraPosition(LatLng(4.60971, -74.08175))
     }

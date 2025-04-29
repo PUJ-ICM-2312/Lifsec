@@ -1,4 +1,3 @@
 package com.example.proyecto.data
 
-class Cuidador {
-}
+class Cuidador(override val email: String) : Usuario(email)
