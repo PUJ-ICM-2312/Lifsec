@@ -143,7 +143,7 @@ fun ActivityCard(activity: Actividad) {
             Spacer(modifier = Modifier.height(8.dp))
             if (activity.imagen != null) {
                 Image(
-                    painter = androidx.compose.ui.graphics.painter.BitmapPainter(activity.imagen.asImageBitmap()),
+                    painter = androidx.compose.ui.graphics.painter.BitmapPainter(activity.imagen!!.asImageBitmap()),
                     contentDescription = "Activity Image",
                     modifier = Modifier
                         .fillMaxWidth()

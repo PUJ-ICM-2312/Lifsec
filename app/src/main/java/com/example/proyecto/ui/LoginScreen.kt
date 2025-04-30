@@ -74,7 +74,7 @@ fun LogScreen(
     Column(
 
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(180.dp, Alignment.CenterVertically)
+        verticalArrangement = Arrangement.SpaceEvenly
 
 
     ) {
@@ -103,7 +103,7 @@ fun LogPhone(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.SpaceEvenly
     ) {
         Text(
             "Inicio de sesión",
@@ -193,11 +193,11 @@ fun LogPhone(
             modifier = Modifier.padding(horizontal = 32.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.primary
             )
         ) {
-            Text("Seguir con huella")
+            Text("Seguir con huella", color = MaterialTheme.colorScheme.primary)
         }
 
         if (showFingerprint.value) {

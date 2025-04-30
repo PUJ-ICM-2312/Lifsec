@@ -138,7 +138,7 @@ dependencies {
     implementation ("androidx.camera:camera-extensions:${camerax_version}")
     // JSON serialization library, works with the Kotlin serialization plugin
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-
+    implementation("com.google.code.gson:gson:2.10.1") // O la versión más reciente
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
