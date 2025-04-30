@@ -27,6 +27,9 @@ sealed class Screen(val route: String) {
     object CreateReminder: Screen("create_reminder_screen")
     object CreateActivity: Screen("create_activity_screen")
     object CamaraActivityScreen: Screen("camara_activity_screen")
+    object ConfigScreenElder: Screen("config_screen_elder")
+    object caretakersConfigScreen: Screen("caretakers_config_screen")
+    object packageConfigScreen: Screen("package_config_screen")
 }
 
 @RequiresApi(Build.VERSION_CODES.O)

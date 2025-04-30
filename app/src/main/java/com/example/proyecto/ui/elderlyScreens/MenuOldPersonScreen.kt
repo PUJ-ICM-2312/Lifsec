@@ -249,7 +249,7 @@ fun MainScreen(
                         title = "Ajustes",
                         icon = Icons.Default.Settings,
                         onClick = {
-                            // Acción al hacer clic
+                            navController.navigate(Screen.ConfigScreenElder.route)
                         }
                     )
                 }
@@ -355,13 +355,15 @@ fun BottomNavigationBar(navController: NavController) {
                 Icon(
                     imageVector = Icons.Default.Menu,
                     contentDescription = "Menú",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             },
             label = {
                 Text(
                     text = "Menú",
                     style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     maxLines = 1
                 )
             },
@@ -372,7 +374,7 @@ fun BottomNavigationBar(navController: NavController) {
                 indicatorColor = MaterialTheme.colorScheme.secondary,
                 unselectedIconColor = MaterialTheme.colorScheme.background,
                 unselectedTextColor = MaterialTheme.colorScheme.background,
-                selectedIconColor = MaterialTheme.colorScheme.surface,
+                selectedIconColor = Color.White,
                 selectedTextColor = MaterialTheme.colorScheme.secondary,
             ),
             modifier = Modifier.height(56.dp)
@@ -383,13 +385,15 @@ fun BottomNavigationBar(navController: NavController) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
                     contentDescription = "Ubicación",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             },
             label = {
                 Text(
                     text = "Ubicación",
                     style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     maxLines = 1
                 )
             },
@@ -400,7 +404,7 @@ fun BottomNavigationBar(navController: NavController) {
                 indicatorColor = MaterialTheme.colorScheme.secondary,
                 unselectedIconColor = MaterialTheme.colorScheme.background,
                 unselectedTextColor = MaterialTheme.colorScheme.background,
-                selectedIconColor = MaterialTheme.colorScheme.surface,
+                selectedIconColor = Color.White,
                 selectedTextColor = MaterialTheme.colorScheme.secondary,
             ),
             modifier = Modifier.height(56.dp)
@@ -411,13 +415,15 @@ fun BottomNavigationBar(navController: NavController) {
                 Icon(
                     imageVector = Icons.Default.List,
                     contentDescription = "Actividades",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             },
             label = {
                 Text(
                     text = "Actividades",
                     style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     maxLines = 1
                 )
             },
@@ -428,7 +434,7 @@ fun BottomNavigationBar(navController: NavController) {
                 indicatorColor = MaterialTheme.colorScheme.secondary,
                 unselectedIconColor = MaterialTheme.colorScheme.background,
                 unselectedTextColor = MaterialTheme.colorScheme.background,
-                selectedIconColor = MaterialTheme.colorScheme.surface,
+                selectedIconColor = Color.White,
                 selectedTextColor = MaterialTheme.colorScheme.secondary,
             ),
             modifier = Modifier.height(56.dp)
@@ -439,13 +445,15 @@ fun BottomNavigationBar(navController: NavController) {
                 Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = "Recordatorios",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             },
             label = {
                 Text(
                     text = "Recordatorios",
                     style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     maxLines = 1
                 )
             },
@@ -456,7 +464,7 @@ fun BottomNavigationBar(navController: NavController) {
                 indicatorColor = MaterialTheme.colorScheme.secondary,
                 unselectedIconColor = MaterialTheme.colorScheme.background,
                 unselectedTextColor = MaterialTheme.colorScheme.background,
-                selectedIconColor = MaterialTheme.colorScheme.surface,
+                selectedIconColor = Color.White,
                 selectedTextColor = MaterialTheme.colorScheme.secondary,
             ),
             modifier = Modifier.height(56.dp)
