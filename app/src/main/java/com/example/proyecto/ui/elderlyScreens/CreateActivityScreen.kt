@@ -1,4 +1,4 @@
-package com.example.proyecto.ui
+package com.example.proyecto.ui.elderlyScreens
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.proyecto.Screen
 import com.example.proyecto.R
-import com.example.proyecto.SharedImageViewModel
+import com.example.proyecto.ui.viewmodel.SharedImageViewModel
 
 @Composable
 fun CreateActivityScreen(navController: NavController, sharedImageViewModel: SharedImageViewModel) {

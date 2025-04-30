@@ -1,4 +1,4 @@
-package com.example.proyecto.ui
+package com.example.proyecto.ui.elderlyScreens
 
 import android.util.Log
 import androidx.compose.animation.core.Animatable
@@ -24,6 +24,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -31,6 +32,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyecto.R
+import com.example.proyecto.ui.viewmodel.AuthViewModel
+import com.example.proyecto.ui.viewmodel.LocatCareViewModel
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
@@ -169,7 +172,7 @@ fun LocationCaretakerScreen(
                 if (isEmergency && uiLocState.location != null) {
                     // Obtenemos la ruta y color del estado
                     val routePoints = remainingRoutes[markerState] ?: emptyList()
-                    val routeColor = uiLocState.caretakerRouteColors[markerState] ?: androidx.compose.ui.graphics.Color.Blue
+                    val routeColor = uiLocState.caretakerRouteColors[markerState] ?: Color.Blue
 
                     if (routePoints.isNotEmpty()) {
                         // Dibujamos solo la ruta restante

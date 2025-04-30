@@ -1,4 +1,4 @@
-package com.example.proyecto.ui
+package com.example.proyecto.ui.viewmodel
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -14,6 +14,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MarkerState
@@ -101,7 +102,7 @@ class LocatCareViewModel(
 
     fun setCameraPosition(newLatLng: LatLng) {
         val newCameraPositionState = CameraPositionState(
-            com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(newLatLng, 15f)
+            CameraPosition.fromLatLngZoom(newLatLng, 15f)
         )
         _uiLocState.value = _uiLocState.value.copy(
             cameraPositionState = newCameraPositionState

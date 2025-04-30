@@ -1,10 +1,9 @@
-package com.example.proyecto
+package com.example.proyecto.ui.viewmodel
 
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
@@ -15,6 +14,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.hardware.TriggerEvent
 import android.hardware.TriggerEventListener
+import com.example.proyecto.R
 
 class SensorService : Service(), SensorEventListener {
 
@@ -24,7 +24,7 @@ class SensorService : Service(), SensorEventListener {
     override fun onCreate() {
         super.onCreate()
         // 1) Obtenemos el SensorManager
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         // 2) Pedimos el sensor de movimiento significativo (one-shot)
         significantMotionSensor = sensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION)
     }
@@ -65,7 +65,7 @@ class SensorService : Service(), SensorEventListener {
     /** Construye la notificación de “Foreground Service” */
     private fun buildForegroundNotification(): Notification {
         val channelId = "sensor_service_channel"
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val chan = NotificationChannel(
@@ -86,7 +86,7 @@ class SensorService : Service(), SensorEventListener {
     /** Envía la notificación de alerta cuando el sensor dispara */
     internal fun showAlertNotification(title: String, text: String) {
         val channelId = "sensor_alerts_channel"
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val chan = NotificationChannel(

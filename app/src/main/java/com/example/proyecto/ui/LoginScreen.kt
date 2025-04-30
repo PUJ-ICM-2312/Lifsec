@@ -37,6 +37,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.R
 import com.example.proyecto.Screen
+import com.example.proyecto.ui.viewmodel.AuthViewModel
 
 @Composable
 fun LogScreen(

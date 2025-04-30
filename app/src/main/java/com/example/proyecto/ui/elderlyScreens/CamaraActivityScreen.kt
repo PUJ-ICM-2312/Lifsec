@@ -1,4 +1,4 @@
-package com.example.proyecto.ui
+package com.example.proyecto.ui.elderlyScreens
 
 
 import android.Manifest
@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.camera.core.Preview
 
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -45,7 +46,7 @@ import androidx.core.content.ContextCompat
 
 
 import androidx.navigation.NavController
-import com.example.proyecto.SharedImageViewModel
+import com.example.proyecto.ui.viewmodel.SharedImageViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
@@ -112,7 +113,7 @@ fun CameraFoto(cameraPermissionState: PermissionState, navController: NavControl
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-            val preview = androidx.camera.core.Preview.Builder().build().also {
+            val preview = Preview.Builder().build().also {
                 it.setSurfaceProvider(previewView.surfaceProvider)
             }
 
@@ -137,7 +138,7 @@ fun CameraFoto(cameraPermissionState: PermissionState, navController: NavControl
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-            val preview = androidx.camera.core.Preview.Builder().build().also {
+            val preview = Preview.Builder().build().also {
                 it.setSurfaceProvider(previewView.surfaceProvider)
             }
 

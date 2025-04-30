@@ -1,4 +1,4 @@
-package com.example.proyecto.ui
+package com.example.proyecto.ui.elderlyScreens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

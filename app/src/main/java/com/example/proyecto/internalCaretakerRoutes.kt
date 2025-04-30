@@ -6,9 +6,9 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.proyecto.ui.ActivitiesCaretaker
-import com.example.proyecto.ui.LocationOldPersonScreen
-import com.example.proyecto.ui.RemindersCaretakerScreen
+import com.example.proyecto.ui.caretakerScreen.ActivitiesCaretaker
+import com.example.proyecto.ui.caretakerScreen.LocationOldPersonScreen
+import com.example.proyecto.ui.caretakerScreen.RemindersCaretakerScreen
 
 sealed class InternalCaretakerRoutes(val route: String) {
     object LocationOldPerson : InternalCaretakerRoutes("location")

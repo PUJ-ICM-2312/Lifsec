@@ -1,4 +1,4 @@
-package com.example.proyecto.ui
+package com.example.proyecto.ui.elderlyScreens
 
 import android.os.Build
 import android.os.Parcelable

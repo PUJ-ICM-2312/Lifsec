@@ -1,4 +1,4 @@
-package com.example.proyecto.ui
+package com.example.proyecto.ui.viewmodel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,7 +21,7 @@ class AuthViewModel: ViewModel() {
 
     private val auth: FirebaseAuth = Firebase.auth
     // TODO: cambiar a ancianos obtenidos de la base de datos
-    val elderlyUsers: List<Anciano> = Anciano.ancianoListStarter();
+    val elderlyUsers: List<Anciano> = Anciano.Companion.ancianoListStarter();
 
     //TODO: cambiar a cuidadores obtenidos de la bd
     val caretakersList: List<Cuidador> = emptyList();

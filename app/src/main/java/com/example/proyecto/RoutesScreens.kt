@@ -7,10 +7,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.ui.LogScreen
-import com.example.proyecto.ui.MenuCaretakersScreen
-import com.example.proyecto.ui.MenuOldPersonScreen
+import com.example.proyecto.ui.caretakerScreen.MenuCaretakersScreen
+import com.example.proyecto.ui.elderlyScreens.MenuOldPersonScreen
 import com.example.proyecto.ui.RegistryScreen
-import com.example.proyecto.ui.UserListScreen
+import com.example.proyecto.ui.caretakerScreen.UserListScreen
 
 sealed class Screen(val route: String) {
     object Login: Screen("login_screen")

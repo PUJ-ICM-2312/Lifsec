@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 
 import com.example.proyecto.ui.theme.ProyectoTheme
+import com.example.proyecto.ui.viewmodel.SensorService
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)

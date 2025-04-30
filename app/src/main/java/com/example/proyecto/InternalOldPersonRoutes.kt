@@ -10,16 +10,17 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 
 import androidx.navigation.compose.composable
-import com.example.proyecto.ui.AuthViewModel
-import com.example.proyecto.ui.CamaraScreen
-import com.example.proyecto.ui.CreateActivityScreen
-import com.example.proyecto.ui.CreateReminderScreen
-import com.example.proyecto.ui.ListActivitiesOldPersonScreen
-import com.example.proyecto.ui.LocatCareViewModel
-import com.example.proyecto.ui.LocationCaretakerScreen
-import com.example.proyecto.ui.ReminderListScreen
-import com.example.proyecto.ui.SOSScreen
-import com.example.proyecto.ui.MainScreen
+import com.example.proyecto.ui.viewmodel.AuthViewModel
+import com.example.proyecto.ui.elderlyScreens.CamaraScreen
+import com.example.proyecto.ui.elderlyScreens.CreateActivityScreen
+import com.example.proyecto.ui.elderlyScreens.CreateReminderScreen
+import com.example.proyecto.ui.elderlyScreens.ListActivitiesOldPersonScreen
+import com.example.proyecto.ui.viewmodel.LocatCareViewModel
+import com.example.proyecto.ui.elderlyScreens.LocationCaretakerScreen
+import com.example.proyecto.ui.elderlyScreens.ReminderListScreen
+import com.example.proyecto.ui.elderlyScreens.SOSScreen
+import com.example.proyecto.ui.elderlyScreens.MainScreen
+import com.example.proyecto.ui.viewmodel.SharedImageViewModel
 
 // La anotación @RequiresApi indica que este código requiere Android Oreo (API 26) o superior,
 // ya que utiliza funcionalidades que se introdujeron a partir de esa versión

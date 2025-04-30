@@ -3,7 +3,7 @@ package com.example.proyecto
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.proyecto.ui.LocatCareViewModel
+import com.example.proyecto.ui.viewmodel.LocatCareViewModel
 //Constructor que toma el parametro de contexto
 class LocatCareViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
