@@ -112,6 +112,7 @@ dependencies {
 
     // Mapas de Compose
     implementation("com.google.maps.android:maps-compose:6.4.1")
+    implementation ("com.google.maps.android:android-maps-utils:3.8.0")
 
     // Google Play Services Maps
     implementation("com.google.android.gms:play-services-maps:18.2.0")

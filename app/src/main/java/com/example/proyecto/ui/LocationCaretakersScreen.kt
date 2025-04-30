@@ -15,14 +15,15 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,6 +45,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.random.Random
+import com.google.maps.android.SphericalUtil
 
 @Composable
 fun LocationCaretakerScreen(
@@ -58,6 +60,24 @@ fun LocationCaretakerScreen(
 
     var hasPermission by remember { mutableStateOf(false) }
     LocationPermissionHandler { hasPermission = true }
+
+    // Control para rastrear los cuidadores que han llegado a su destino
+    var caretakersArrived by rememberSaveable { mutableIntStateOf(0) }
+    val totalCaretakers = uiLocState.caretakerMarkers.size
+
+    // Estado para almacenar las rutas restantes por cada cuidador
+    val remainingRoutes = remember { mutableStateMapOf<MarkerState, List<LatLng>>() }
+
+    // Función para manejar la llegada de un cuidador
+    val handleCaretakerArrival = {
+        caretakersArrived++
+        // Si todos los cuidadores han llegado, desactivamos la emergencia
+        if (caretakersArrived >= totalCaretakers && totalCaretakers > 0) {
+            caretakersArrived = 0
+            authViewModel.setEmergencia(false)
+            Log.i("Emergency", "Todos los cuidadores han llegado. Emergencia desactivada.")
+        }
+    }
 
     var locationCallback: LocationCallback? by remember { mutableStateOf(null) }
     DisposableEffect(hasPermission) {
@@ -80,6 +100,29 @@ fun LocationCaretakerScreen(
                 durationMs = 1000
             )
             isInitialCameraMoveDone = true
+        }
+    }
+
+    // Reiniciamos el contador cuando cambia el estado de emergencia
+    LaunchedEffect(isEmergency) {
+        if (isEmergency) {
+            caretakersArrived = 0
+            remainingRoutes.clear() // Limpiamos las rutas restantes
+        }
+    }
+
+    // Control de emergencia - carga rutas cuando el estado de emergencia cambia
+    LaunchedEffect(isEmergency, uiLocState.location) {
+        if (isEmergency && uiLocState.location != null) {
+            locatCareViewModel.loadAllCaretakerRoutes(uiLocState.location)
+            uiLocState.caretakerMarkers.forEach { markerState ->
+                uiLocState.caretakerRoutes[markerState]?.takeIf { it.isNotEmpty() }?.let { route ->
+                    remainingRoutes[markerState] = route
+                }
+            }
+        } else {
+            locatCareViewModel.clearAllRoutes()
+            remainingRoutes.clear()
         }
     }
 
@@ -122,45 +165,35 @@ fun LocationCaretakerScreen(
                     title = "Cuidador #${index + 1}"
                 )
 
-                // Si hay emergencia, calculamos y mostramos la ruta
+                // Si hay emergencia, mostramos la ruta almacenada en el estado
                 if (isEmergency && uiLocState.location != null) {
-                    // Genera un color aleatorio para la ruta (evitando blanco o negro)
-                    val lineColor = remember(markerState.position) {
-                        Color(
-                            Random.nextFloat().coerceIn(0.1f, 0.9f),
-                            Random.nextFloat().coerceIn(0.1f, 0.9f),
-                            Random.nextFloat().coerceIn(0.1f, 0.9f)
-                        )
-                    }
-
-                    // Obtenemos los puntos de la ruta
-                    val routePoints by produceState(
-                        initialValue = emptyList<LatLng>(),
-                        key1 = markerState.position,
-                        key2 = uiLocState.location,
-                        key3 = isEmergency
-                    ) {
-                        value = locatCareViewModel.getRouteBetweenPoints(
-                            origin = markerState.position,
-                            destination = uiLocState.location!!
-                        )
-                    }
+                    // Obtenemos la ruta y color del estado
+                    val routePoints = remainingRoutes[markerState] ?: emptyList()
+                    val routeColor = uiLocState.caretakerRouteColors[markerState] ?: androidx.compose.ui.graphics.Color.Blue
 
                     if (routePoints.isNotEmpty()) {
-                        // Dibujamos la ruta
+                        // Dibujamos solo la ruta restante
                         Polyline(
                             points = routePoints,
                             clickable = false,
                             width = 8f,
-                            color = lineColor
+                            color = routeColor
                         )
 
                         // Animamos el marcador a lo largo de la ruta
-                        LaunchedEffect(routePoints, isEmergency) {
-                            animateMarkerAlongRoute(
-                                markerState = markerState,
-                                route = routePoints
-                            )
+                        LaunchedEffect(isEmergency, key2 = markerState) {
+                            val initialRoute = uiLocState.caretakerRoutes[markerState] ?: emptyList()
+                            if (initialRoute.isNotEmpty()) {
+                                animateMarkerAlongRoute(
+                                    markerState = markerState,
+                                    route = initialRoute,
+                                    onCompleted = handleCaretakerArrival,
+                                    onRouteUpdate = { remaining ->
+                                        // Actualizamos la ruta restante en el mapa
+                                        remainingRoutes[markerState] = remaining
+                                    }
+                                )
+                            }
                         }
                     }
                 } else {
@@ -177,56 +210,71 @@ fun LocationCaretakerScreen(
     }
 }
 
-// Función para animar un marcador a lo largo de una ruta
 suspend fun animateMarkerAlongRoute(
     markerState: MarkerState,
-    route: List<LatLng>
+    route: List<LatLng>,
+    totalDuration: Long = 60_000L,  // ms
+    onCompleted: () -> Unit = {},
+    onRouteUpdate: (List<LatLng>) -> Unit = {}
 ) {
-    // Si la ruta está vacía, no hacemos nada
-    if (route.isEmpty()) return
+    if (route.size < 2) return
 
-    // Tiempo total para recorrer la ruta (en milisegundos)
-    val totalDuration = 60000L // 1 minuto
+    // 1. Distancia total (en metros)
+    val segmentDistances = route.zipWithNext { a, b ->
+        SphericalUtil.computeDistanceBetween(a, b)
+    }
+    val totalDistance = segmentDistances.sum()
 
-    // Calculamos el tiempo que debe demorar entre cada punto
-    val pointDuration = totalDuration / route.size
+    // 2. Velocidad constante (m/ms)
+    val speed = totalDistance / totalDuration.toDouble()
 
-    // Animamos el marcador a través de cada punto de la ruta
-    for (i in 0 until route.size - 1) {
-        val start = route[i]
-        val end = route[i + 1]
+    // 3. Variables de control
+    val remainingRoute = route.toMutableList()
+    onRouteUpdate(remainingRoute)
 
-        // Calculamos la distancia entre los puntos para determinar la duración
-        val segmentDuration = (pointDuration * distanceBetween(start, end) / 0.0001).toLong()
-            .coerceAtLeast(100) // Al menos 100ms por segmento
-            .coerceAtMost(5000) // Máximo 5 segundos por segmento
+    val startTime = System.currentTimeMillis()
+    var travelled = 0.0
 
-        // Interpolamos la posición entre los puntos
-        val steps = (segmentDuration / 16).toInt().coerceAtLeast(2) // 16ms por frame ~ 60fps
+    while (true) {
+        val elapsed = System.currentTimeMillis() - startTime
+        if (elapsed >= totalDuration) break
 
-        for (step in 1..steps) {
-            val fraction = step.toFloat() / steps
-            val lat = start.latitude + (end.latitude - start.latitude) * fraction
-            val lng = start.longitude + (end.longitude - start.longitude) * fraction
+        travelled = speed * elapsed  // metros recorridos hasta ahora
 
-            // Actualizamos la posición del marcador
-            markerState.position = LatLng(lat, lng)
-
-            // Pequeña pausa para la animación
-            delay(16) // ~60fps
+        // 4. Determinar en qué segmento estamos y la fracción dentro de él
+        var acc = 0.0
+        var index = 0
+        while (index < segmentDistances.size && acc + segmentDistances[index] < travelled) {
+            acc += segmentDistances[index]
+            index++
         }
+
+        // Si ya nos pasamos del último, salimos
+        if (index >= segmentDistances.size) break
+
+        // fracción dentro del segmento actual
+        val inSegDist = travelled - acc
+        val fraction = (inSegDist / segmentDistances[index]).coerceIn(0.0, 1.0)
+
+        // 5. Interpolar LatLng
+        val start = route[index]
+        val end = route[index + 1]
+        val lat = start.latitude + (end.latitude - start.latitude) * fraction
+        val lng = start.longitude + (end.longitude - start.longitude) * fraction
+        markerState.position = LatLng(lat, lng)
+
+        // 6. Construir ruta restante una sola vez por frame
+        val remaining = mutableListOf<LatLng>(markerState.position)
+        remaining.addAll(route.subList(index + 1, route.size))
+        onRouteUpdate(remaining)
+
+        delay(16)  // ~60fps
     }
 
-    // Aseguramos que el marcador llegue al punto final
+    // Aseguramos el final
     markerState.position = route.last()
-}
-
-// Función para calcular la distancia aproximada entre dos puntos (para uso en animación)
-private fun distanceBetween(p1: LatLng, p2: LatLng): Double {
-    // Calculamos la distancia euclidiana (suficiente para comparar distancias relativas)
-    val dx = p1.latitude - p2.latitude
-    val dy = p1.longitude - p2.longitude
-    return Math.sqrt(dx * dx + dy * dy)
+    onRouteUpdate(emptyList())
+    onCompleted()
 }
 
 @Composable
