@@ -97,7 +97,10 @@ fun LogScreen(
 fun LogPhone(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel()
-){
+) {
+    val currentUser by authViewModel.currentUser.collectAsState()
+    val showFingerprint = remember { mutableStateOf(false) }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -105,38 +108,41 @@ fun LogPhone(
         Text(
             "Inicio de sesión",
             color = MaterialTheme.colorScheme.primary,
+        )
 
-            )
-
-        //Campo email
+        // Campo email
         OutlinedTextField(
             value = authViewModel.email,
-            onValueChange = { authViewModel.onEmailChange(it)},
-            label = { Text("Ingrese su correo electronico", color = MaterialTheme.colorScheme.secondary) },
+            onValueChange = { authViewModel.onEmailChange(it) },
+            label = {
+                Text(
+                    "Ingrese su correo electrónico",
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             singleLine = true,
             isError = authViewModel.feedbackMessage?.contains("correo", ignoreCase = true) == true
         )
 
-        //Campo contraseña
+        // Campo contraseña
         OutlinedTextField(
             value = authViewModel.password,
             onValueChange = { authViewModel.onPasswordChange(it) },
-            label = { Text("Ingrese su contraseña", color = MaterialTheme.colorScheme.secondary) },
+            label = {
+                Text(
+                    "Ingrese su contraseña",
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             singleLine = true,
             isError = authViewModel.feedbackMessage?.contains("contraseña", ignoreCase = true) == true
         )
 
-        /*
-        * Esos dos botones son para probar el d1111213233iseño
-        * Cuando se coloque la funcionalidad debe detectar
-        * a partir de los datos dados que tipo de usuario es
-         */
-
-        // Mensaje de Feedback/Error
-        Box(modifier = Modifier.height(24.dp).fillMaxWidth()) { // Contenedor para estabilizar layout
+        // Mensaje de error
+        Box(modifier = Modifier.height(24.dp).fillMaxWidth()) {
             authViewModel.feedbackMessage?.let { message ->
                 Text(
                     text = message,
@@ -147,40 +153,70 @@ fun LogPhone(
             }
         }
 
-        // Iniciar sesion como cuidador (MOCKUP)
+        // Iniciar sesión como cuidador (mockup)
         Button(
-            onClick = { navController.navigate(route = Screen.PersonSelector.route) },
-            modifier = Modifier
-                .padding(horizontal = 32.dp),
-            shape = RoundedCornerShape(16.dp), // Bordes redondeados
-            colors = ButtonDefaults.buttonColors( // colores
+            onClick = { navController.navigate(Screen.PersonSelector.route) },
+            modifier = Modifier.padding(horizontal = 32.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 contentColor = MaterialTheme.colorScheme.primary
             )
         ) {
-            Text(text = "iniciar sesion como cuidador")
+            Text("Iniciar sesión como cuidador")
         }
 
-        //Iniciar sesion como anciano
+        // Iniciar sesión como anciano (manual)
         Button(
             onClick = { authViewModel.signInUser() },
             enabled = !authViewModel.isLoading,
-            modifier = Modifier
-                .padding(horizontal = 32.dp),
-            shape = RoundedCornerShape(16.dp), // Bordes redondeados
-            colors = ButtonDefaults.buttonColors( // colores
+            modifier = Modifier.padding(horizontal = 32.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 contentColor = MaterialTheme.colorScheme.primary
             )
         ) {
             if (authViewModel.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             } else {
-                Text("Iniciar Sesión como anciano")
+                Text("Iniciar sesión como anciano")
             }
+        }
+
+        // Botón huella dummy
+        Button(
+            onClick = { showFingerprint.value = true },
+            modifier = Modifier.padding(horizontal = 32.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        ) {
+            Text("Seguir con huella")
+        }
+
+        if (showFingerprint.value) {
+            FingerprintPrompt(
+                onAuthSuccess = {
+                    authViewModel.onEmailChange("simondiaz@yopmail.com")
+                    authViewModel.onPasswordChange("123456")
+                    authViewModel.signInUser()
+                    showFingerprint.value = false
+                },
+                onAuthError = {
+                    authViewModel.clearFeedbackMessage()
+                    showFingerprint.value = false
+                }
+            )
         }
     }
 }
+
 
 @Composable
 fun ButtonRegistry(
