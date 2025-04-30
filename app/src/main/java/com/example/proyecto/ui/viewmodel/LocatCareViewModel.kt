@@ -2,6 +2,8 @@ package com.example.proyecto.ui.viewmodel
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.location.Address
+import android.location.Geocoder
 import android.os.Looper
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
 import kotlin.random.Random
 
 /**
@@ -165,5 +168,21 @@ class LocatCareViewModel(
 
     init {
         setCameraPosition(LatLng(4.60971, -74.08175))
+    }
+
+    /**
+     * Convierte coordenadas en dirección en texto.
+     */
+    fun getAddressFromLatLng(context: Context, latitude: Double, longitude: Double): String? {
+        val geocoder = Geocoder(context, Locale.getDefault())
+        return try {
+            val addresses: List<Address> = geocoder.getFromLocation(latitude, longitude, 1) ?: emptyList()
+            if (addresses.isNotEmpty()) {
+                addresses[0].getAddressLine(0)
+            } else null
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }

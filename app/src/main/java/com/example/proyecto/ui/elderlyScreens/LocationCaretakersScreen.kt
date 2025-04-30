@@ -36,6 +36,7 @@ import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.example.proyecto.ui.viewmodel.LocatCareViewModel
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.GoogleMap
@@ -44,6 +45,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
+import com.google.maps.android.compose.rememberMarkerState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -70,6 +72,9 @@ fun LocationCaretakerScreen(
 
     // Estado para almacenar las rutas restantes por cada cuidador
     val remainingRoutes = remember { mutableStateMapOf<MarkerState, List<LatLng>>() }
+
+    // Caché de direcciones por marcador
+    val addressCache = remember { mutableStateMapOf<MarkerState, String?>() }
 
     // Función para manejar la llegada de un cuidador
     val handleCaretakerArrival = {
@@ -110,7 +115,7 @@ fun LocationCaretakerScreen(
     LaunchedEffect(isEmergency) {
         if (isEmergency) {
             caretakersArrived = 0
-            remainingRoutes.clear() // Limpiamos las rutas restantes
+            remainingRoutes.clear()
         }
     }
 
@@ -126,6 +131,22 @@ fun LocationCaretakerScreen(
         } else {
             locatCareViewModel.clearAllRoutes()
             remainingRoutes.clear()
+        }
+    }
+
+    //Lanzamos un solo efecto que, cada minuto, recalcule todas las direcciones
+    LaunchedEffect(uiLocState.caretakerMarkers) {
+        while (isActive) {
+            uiLocState.caretakerMarkers.forEach { markerState ->
+                // llama a tu función de geocodificación
+                val addr = locatCareViewModel.getAddressFromLatLng(
+                    context,
+                    markerState.position.latitude,
+                    markerState.position.longitude
+                )
+                addressCache[markerState] = addr
+            }
+            delay(60_000L) // 1 minuto
         }
     }
 
@@ -153,19 +174,34 @@ fun LocationCaretakerScreen(
         ) {
             // Mi ubicación
             uiLocState.location?.let { currentLocation ->
+                // Creamos un ícono personalizado a partir de un recurso drawable
+                val userIcon = remember(context) { // Recordamos para eficiencia
+                    BitmapDescriptorFactory.fromResource(R.drawable.caretaker)
+                    // Si el recurso no existe, usa el marcador predeterminado
+                        ?: BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                }
+
                 Marker(
-                    state = MarkerState(position = currentLocation),
+                    state = remember { MarkerState(position = currentLocation) },
                     title = "Mi ubicación",
-                    snippet = "Estoy aquí"
+                    snippet = "Estoy aquí",
+                    icon = userIcon
                 )
             }
 
             // Cuidadores y sus rutas
             uiLocState.caretakerMarkers.forEachIndexed { index, markerState ->
+
                 // Visualizamos los cuidadores
+                val caretakerIcon = remember(context) {
+                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
+                }
+
                 Marker(
                     state = markerState,
-                    title = "Cuidador #${index + 1}"
+                    title = "Cuidador #${index + 1}",
+                    snippet = addressCache[markerState] ?: "Obteniendo dirección…",
+                    icon = caretakerIcon
                 )
 
                 // Si hay emergencia, mostramos la ruta almacenada en el estado
@@ -293,6 +329,9 @@ fun AnimatedMarker(
     val animLng = remember { Animatable(markerState.position.longitude.toFloat()) }
     val scope = rememberCoroutineScope()
 
+    // Usamos un estado estable para la posición para evitar parpadeos
+    val stablePosition = remember { mutableStateOf(markerState.position) }
+
     LaunchedEffect(emergencyState) {
         // Si hay emergencia no iniciamos el loop de movimiento aleatorio
         if (emergencyState) return@LaunchedEffect
@@ -301,16 +340,26 @@ fun AnimatedMarker(
             val nextLat = (baseLocation.latitude + Random.nextDouble(-0.005, 0.005)).toFloat()
             val nextLng = (baseLocation.longitude + Random.nextDouble(-0.005, 0.005)).toFloat()
 
-            scope.launch { animLat.animateTo(nextLat, animationSpec = tween(durationMillis = durationMs)) }
-            scope.launch { animLng.animateTo(nextLng, animationSpec = tween(durationMillis = durationMs)) }
+            scope.launch {
+                animLat.animateTo(nextLat, animationSpec = tween(durationMillis = durationMs))
+            }
+            scope.launch {
+                animLng.animateTo(nextLng, animationSpec = tween(durationMillis = durationMs))
+            }
 
             delay(durationMs.toLong())
         }
     }
 
-    // Actualizamos la posición en cada frame
-    markerState.position = LatLng(
+    // Actualizamos el estado estable en cada recomposición
+    stablePosition.value = LatLng(
         animLat.value.toDouble(),
         animLng.value.toDouble()
     )
+
+    // Actualizamos la posición del marker solo cuando cambia el valor estable
+    // Esto reduce la frecuencia de actualización y evita parpadeos
+    LaunchedEffect(stablePosition.value) {
+        markerState.position = stablePosition.value
+    }
 }
