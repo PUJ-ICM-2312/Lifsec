@@ -1,5 +1,10 @@
 package com.example.proyecto.ui.elderlyScreens
 
+import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
 import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -28,10 +33,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyecto.R
+import com.example.proyecto.ui.showNotification
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.example.proyecto.ui.viewmodel.LocatCareViewModel
 import com.google.android.gms.location.LocationCallback
@@ -84,6 +92,11 @@ fun LocationCaretakerScreen(
             caretakersArrived = 0
             authViewModel.setEmergencia(false)
             Log.i("Emergency", "Todos los cuidadores han llegado. Emergencia desactivada.")
+            showNotification(
+                context = context,
+                title = "Emergencia en progreso",
+                content = "Todos los cuidadores han llegado a su ubicacion"
+            )
         }
     }
 

@@ -79,7 +79,7 @@ class SensorService : Service(), SensorEventListener {
         return NotificationCompat.Builder(this, channelId)
             .setContentTitle("Servicio de Sensor Activo")
             .setContentText("Escuchando evento de movimiento significativo")
-            .setSmallIcon(R.drawable.servicioengranajes)  // tu icono
+            .setSmallIcon(R.drawable.servicioengranajes)  // icono
             .build()
     }
 
@@ -100,7 +100,7 @@ class SensorService : Service(), SensorEventListener {
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle(title)
             .setContentText(text)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)  // tu icono de notificación
+            .setSmallIcon(R.drawable.ic_launcher_foreground)  // icono de notificación
             .setAutoCancel(true)
             .build()
 
