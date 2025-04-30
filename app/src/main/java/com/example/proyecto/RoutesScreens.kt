@@ -11,6 +11,8 @@ import com.example.proyecto.ui.caretakerScreen.MenuCaretakersScreen
 import com.example.proyecto.ui.elderlyScreens.MenuOldPersonScreen
 import com.example.proyecto.ui.RegistryScreen
 import com.example.proyecto.ui.caretakerScreen.UserListScreen
+import com.example.proyecto.ui.elderlyScreens.AppPlanScreen
+import com.example.proyecto.ui.elderlyScreens.CaretakersConfigScreen
 
 sealed class Screen(val route: String) {
     object Login: Screen("login_screen")
@@ -28,8 +30,8 @@ sealed class Screen(val route: String) {
     object CreateActivity: Screen("create_activity_screen")
     object CamaraActivityScreen: Screen("camara_activity_screen")
     object ConfigScreenElder: Screen("config_screen_elder")
-    object caretakersConfigScreen: Screen("caretakers_config_screen")
-    object packageConfigScreen: Screen("package_config_screen")
+    object CaretakersConfigScreen: Screen("caretakers_config_screen")
+    object AppPlanScreen: Screen("app_plan_screen")
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
