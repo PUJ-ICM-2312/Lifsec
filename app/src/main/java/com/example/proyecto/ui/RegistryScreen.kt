@@ -1,151 +1,178 @@
 package com.example.proyecto.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyecto.R
 import com.example.proyecto.Screen
+import com.example.proyecto.ui.viewmodel.AuthViewModel
 
 @Composable
 fun RegistryScreen(navController: NavController) {
+    val authViewModel: AuthViewModel = viewModel()
+
     Column(
-
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(180.dp, Alignment.CenterVertically)
-
-
+        verticalArrangement = Arrangement.spacedBy(180.dp, Alignment.CenterVertically),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
-        //imagen
         Image(
             painter = painterResource(id = R.drawable.lifesec_logo),
-            contentDescription = ""
-
-        )
-        //Ingreso de numero de celular
-        RegistryPhone(navController)
-
-        //boton de registro
-        ButtonLogIn(navController)
-    }
-
-}
-@Composable
-fun RegistryPhone(navController: NavController){
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Text(
-            "Ingrese su celular para registrarse",
-            color = MaterialTheme.colorScheme.primary,
-
-            )
-        var num = remember { mutableStateOf("") }
-        OutlinedTextField(
-            value = num.value,
-            onValueChange = { newValue ->
-                // Solo permite números
-                if (newValue.all { it.isDigit() }) {
-                    num.value = newValue
-                }
-            },
-            label = { Text("Ingrese número registrado", color = MaterialTheme.colorScheme.secondary) }
-        )
-        var contra = remember { mutableStateOf("") }
-        OutlinedTextField(
-            value = contra.value,
-            onValueChange = { contra.value = it },
-            label = { Text("Ingrese contraseña", color = MaterialTheme.colorScheme.secondary) } ,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            contentDescription = null
         )
 
+        RegistryForm(navController, authViewModel)
 
-
-
-        Spacer(modifier = Modifier.padding(12.dp))
-
-        Text("Su cuenta es de cuidador?",
-            color = MaterialTheme.colorScheme.primary,
-
-            )
-        var checked = remember { mutableStateOf(true) }
-        Switch(
-            checked = checked.value,
-            onCheckedChange = {
-                checked.value = it
-            },
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.primary,
-                checkedTrackColor = MaterialTheme.colorScheme.surface,
-                uncheckedThumbColor = MaterialTheme.colorScheme.secondary,
-                uncheckedTrackColor = MaterialTheme.colorScheme.surface,
-            )
-        )
-        // Iniciar sesion como cuidador (MOCKUP)
         Button(
-            onClick = {
-                if(checked.value == true) {
-
-                    /* aqui se agrega codigo para guardar en base de datos como cuidador*/
-                    navController.navigate(route = Screen.PersonSelector.route)
-                }
-                else{
-
-                    /* aqui se agrega codigo para guardar en base de datos como cuidador*/
-                    navController.navigate(route = Screen.MenuOldPerson.route)
-
-                }
-            },
+            onClick = { navController.navigate(route = Screen.Login.route) },
             modifier = Modifier
-                .padding(horizontal = 32.dp),
-            shape = RoundedCornerShape(16.dp), // Bordes redondeados
-            colors = ButtonDefaults.buttonColors( // colores
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                .padding(horizontal = 32.dp)
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.primary
             )
         ) {
-            Text(text = "registrarse")
+            Text(text = "Iniciar sesión")
         }
-
-        //Iniciar sesion como anciano
     }
 }
 
 @Composable
-fun ButtonLogIn(navController: NavController){
-    Button(
-        onClick = { navController.navigate(route = Screen.Login.route) },
-        modifier = Modifier
-            .padding(horizontal = 32.dp),
-        shape = RoundedCornerShape(16.dp), // Bordes redondeados
-        colors = ButtonDefaults.buttonColors( // colores
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary
-        )
+fun RegistryForm(
+    navController: NavController,
+    authViewModel: AuthViewModel
+) {
+    // Estados locales
+    val email by remember { derivedStateOf { authViewModel.email } }
+    val password by remember { derivedStateOf { authViewModel.password } }
+    var confirmInput by remember { mutableStateOf("") }
+    var isElderly by remember { mutableStateOf(false) }
+
+    // Verificar coincidencia de contraseñas localmente
+    val passwordsMatch = confirmInput == password
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Text(text = "iniciar sesion")
+        OutlinedTextField(
+            value = email,
+            onValueChange = { authViewModel.onEmailChange(it) },
+            label = { Text("Correo electrónico") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            singleLine = true
+        )
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = { authViewModel.onPasswordChange(it) },
+            label = { Text("Contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            singleLine = true
+        )
+
+        // Campo de confirmación de contraseña (solo verificación local)
+        OutlinedTextField(
+            value = confirmInput,
+            onValueChange = { confirmInput = it },
+            label = { Text("Confirmar contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            singleLine = true,
+            isError = confirmInput.isNotEmpty() && !passwordsMatch
+        )
+        if (confirmInput.isNotEmpty() && !passwordsMatch) {
+            Text(
+                text = "Las contraseñas no coinciden",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        // Segmented button
+        SegmentToggle(
+            options = listOf("Cuidador", "Anciano"),
+            selectedIndex = if (isElderly) 1 else 0,
+            onOptionSelected = { idx -> isElderly = (idx == 1) }
+        )
+
+        if (authViewModel.feedbackMessage != null) {
+            Text(
+                text = authViewModel.feedbackMessage!!,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
+        Button(
+            onClick = {
+                authViewModel.signUpUser(
+                    isElderly = isElderly
+                ) {
+                    val route = if (isElderly) Screen.MenuOldPerson.route else Screen.PersonSelector.route
+                    navController.navigate(route)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.primary
+            ),
+            enabled = email.isNotBlank() && password.isNotBlank() && passwordsMatch
+        ) {
+            Text(text = "Registrarse")
+        }
+    }
+}
+
+@Composable
+fun SegmentToggle(
+    options: List<String>,
+    selectedIndex: Int,
+    onOptionSelected: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .padding(8.dp)
+            .wrapContentWidth()
+    ) {
+        options.forEachIndexed { index, option ->
+            val shape = when (index) {
+                0 -> RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp)
+                options.lastIndex -> RoundedCornerShape(topEnd = 16.dp, bottomEnd = 16.dp)
+                else -> RoundedCornerShape(0.dp)
+            }
+            val selected = index == selectedIndex
+            OutlinedButton(
+                onClick = { onOptionSelected(index) },
+                shape = shape,
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                    contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                ),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(option)
+            }
+        }
     }
 }

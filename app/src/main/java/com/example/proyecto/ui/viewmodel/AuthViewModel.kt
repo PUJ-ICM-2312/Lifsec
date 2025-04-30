@@ -1,6 +1,7 @@
 package com.example.proyecto.ui.viewmodel
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -21,10 +22,14 @@ class AuthViewModel: ViewModel() {
 
     private val auth: FirebaseAuth = Firebase.auth
     // TODO: cambiar a ancianos obtenidos de la base de datos
-    val elderlyUsers: List<Anciano> = Anciano.Companion.ancianoListStarter();
+    private val _elderlyUsers = mutableStateListOf<Anciano>().apply {
+        addAll(Anciano.ancianoListStarter())
+    }
+    val elderlyUsers: List<Anciano> = _elderlyUsers
 
     //TODO: cambiar a cuidadores obtenidos de la bd
-    val caretakersList: List<Cuidador> = emptyList();
+    private val _caretakersList = mutableStateListOf<Cuidador>()
+    val caretakersList: List<Cuidador> = _caretakersList
 
     //Expone la entidad con la info correspondiente al usuario
     private val _currentEntity = MutableStateFlow<Usuario?>(null)
@@ -127,7 +132,11 @@ class AuthViewModel: ViewModel() {
             }
     }
 
-    fun signUpUser() {
+    /**
+     * Registra usuario en Firebase y lo agrega a la lista correspondiente.
+     * @param isElderly true si es anciano, false si es cuidador
+     */
+    fun signUpUser(isElderly: Boolean, onSuccess: () -> Unit = {}) {
         isLoading = true
         feedbackMessage = null
         auth.createUserWithEmailAndPassword(email, password)
@@ -138,20 +147,22 @@ class AuthViewModel: ViewModel() {
                     _currentUser.value = user
                     feedbackMessage = "Usuario registrado exitosamente."
 
-                    // Asumimos que al registrarse puedes considerarlo inicialmente cuidador
-                    _currentEntity.value = user?.email
-                        ?.let { mail ->
-                            caretakersList.firstOrNull { it.email == mail }
-                                ?: elderlyUsers.firstOrNull { it.email == mail }
+                    user?.email?.let { mail ->
+                        if (isElderly) {
+                            _elderlyUsers.add(Anciano(email = mail))
+                            _currentEntity.value = _elderlyUsers.last()
+                        } else {
+                            _caretakersList.add(Cuidador(email = mail))
+                            _currentEntity.value = _caretakersList.last()
                         }
+                    }
+                    onSuccess()
                 } else {
-                    _currentUser.value = null
-                    _currentEntity.value = null
-                    feedbackMessage = "Error Registro: ${task.exception?.localizedMessage
-                        ?: "No se pudo registrar"}"
+                    feedbackMessage = "Error Registro: ${task.exception?.localizedMessage ?: "No se pudo registrar"}"
                 }
             }
     }
+
 
     fun signOut() {
         auth.signOut()
