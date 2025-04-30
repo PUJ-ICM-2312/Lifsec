@@ -10,8 +10,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 
 import androidx.navigation.compose.composable
+import com.example.proyecto.ui.elderlyScreens.AppPlanScreen
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.example.proyecto.ui.elderlyScreens.CamaraScreen
+import com.example.proyecto.ui.elderlyScreens.CaretakersConfigScreen
+import com.example.proyecto.ui.elderlyScreens.ConfigurationScreenElder
 import com.example.proyecto.ui.elderlyScreens.CreateActivityScreen
 import com.example.proyecto.ui.elderlyScreens.CreateReminderScreen
 import com.example.proyecto.ui.elderlyScreens.ListActivitiesOldPersonScreen
@@ -82,6 +85,18 @@ fun InternalNavegationStack(
 
         composable(Screen.CamaraActivityScreen.route) {
             CamaraScreen(navController, sharedImageViewModel)
+        }
+
+        composable (Screen.ConfigScreenElder.route){
+            ConfigurationScreenElder(navController)
+        }
+
+        composable (Screen.CaretakersConfigScreen.route) {
+            CaretakersConfigScreen(navController)
+        }
+
+        composable (Screen.AppPlanScreen.route) {
+            AppPlanScreen(navController)
         }
     }
 }
