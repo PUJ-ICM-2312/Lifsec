@@ -1,7 +1,6 @@
 package com.example.proyecto.ui.elderlyScreens
 
 import android.os.Build
-import android.os.Parcelable
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,37 +14,29 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.Screen
-import kotlinx.parcelize.Parcelize
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import com.example.proyecto.data.Recordatorio
+import com.example.proyecto.ui.viewmodel.ReminderViewModel
 
-
-@Parcelize
-data class Reminder(
-    var title: String,
-    var date: LocalDateTime,
-    var isDone: Boolean
-) : Parcelable
-
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ReminderListScreen(navController: NavController) {
-    val reminders = ListStarterReminder()
-
+fun ReminderListScreen(
+    navController: NavController,
+    viewModel: ReminderViewModel
+) {
+    val reminders = viewModel.reminders
     Column {
-        TopBarReminder(navController,
-            onSearchClick = { /*TODO*/ },
+        TopBarReminder(
+            navController = navController,
             onAddClick = { navController.navigate(Screen.CreateReminder.route) }
         )
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -60,10 +51,8 @@ fun ReminderListScreen(navController: NavController) {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReminderListItem(reminder: Reminder) {
+fun ReminderListItem(reminder: Recordatorio) {
     Card(
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
@@ -71,139 +60,28 @@ fun ReminderListItem(reminder: Reminder) {
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Columna con título y fecha
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp)
-            ) {
-                Text(
-                    text = reminder.title,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.SemiBold
-                    )
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = reminder.titulo,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.SemiBold
                 )
+            )
+            Text(
+                text = reminder.fecha,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            )
+            reminder.infoAdicional?.let {
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = formatDateTime(reminder.date),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
-            // Checkbox a la derecha
-            Checkbox(
-                checked = reminder.isDone,
-                onCheckedChange = null
-            )
         }
     }
-}
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun formatDateTime(dateTime: LocalDateTime): String {
-    val formatter = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM yyyy, h:mm a", Locale("es", "ES"))
-    return dateTime.format(formatter)
-}
-
-/**
- * Lista inicial de recordatorios usando
- */
-@RequiresApi(Build.VERSION_CODES.O)
-fun ListStarterReminder(): List<Reminder> {
-    return listOf(
-        Reminder(
-            title = "Jugar con mi nieto",
-            date = LocalDateTime.of(2025, 3, 16, 11, 30),
-            isDone = false
-        ),
-        Reminder(
-            title = "Comprar regalo a mi hija",
-            date = LocalDateTime.of(2025, 3, 16, 9, 30),
-            isDone = true
-        ),
-        Reminder(
-            title = "Sacar al perro",
-            date = LocalDateTime.of(2025, 3, 16, 9, 30),
-            isDone = true
-        ),
-        Reminder(
-            title = "Dar un paseo por el parque",
-            date = LocalDateTime.of(2025, 3, 15, 16, 0),
-            isDone = false
-        ),
-        Reminder(
-            title = "Sacar al perro",
-            date = LocalDateTime.of(2025, 3, 15, 9, 30),
-            isDone = false
-        ),
-        Reminder(
-            title = "Hacer café",
-            date = LocalDateTime.of(2025, 3, 15, 7, 0),
-            isDone = true
-        ),
-        Reminder(
-            title = "Comprar Arroz",
-            date = LocalDateTime.of(2025, 3, 15, 10, 0),
-            isDone = true
-        ),
-        Reminder(
-            title = "Recordar tomar agua",
-            date = LocalDateTime.of(2025, 3, 14, 8, 0),
-            isDone = false
-        ),
-        Reminder(
-            title = "Enviar correo a Juan",
-            date = LocalDateTime.of(2025, 3, 14, 10, 30),
-            isDone = false
-        ),
-        Reminder(
-            title = "Ir al gimnasio",
-            date = LocalDateTime.of(2025, 3, 14, 18, 0),
-            isDone = true
-        ),
-        Reminder(
-            title = "Leer 30 minutos",
-            date = LocalDateTime.of(2025, 3, 14, 20, 0),
-            isDone = false
-        ),
-        Reminder(
-            title = "Llamar a mamá",
-            date = LocalDateTime.of(2025, 3, 14, 21, 0),
-            isDone = false
-        ),
-        Reminder(
-            title = "Preparar desayuno",
-            date = LocalDateTime.of(2025, 3, 15, 7, 30),
-            isDone = true
-        ),
-        Reminder(
-            title = "Revisar agenda",
-            date = LocalDateTime.of(2025, 3, 15, 8, 30),
-            isDone = false
-        ),
-        Reminder(
-            title = "Reunión de trabajo",
-            date = LocalDateTime.of(2025, 3, 15, 14, 0),
-            isDone = false
-        ),
-        Reminder(
-            title = "Estudiar Kotlin",
-            date = LocalDateTime.of(2025, 3, 15, 17, 0),
-            isDone = true
-        ),
-        Reminder(
-            title = "Cenar en familia",
-            date = LocalDateTime.of(2025, 3, 15, 20, 0),
-            isDone = false
-        )
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -246,14 +124,4 @@ fun TopBarReminder(
             containerColor = MaterialTheme.colorScheme.outline
         )
     )
-}
-
-
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun ReminderListScreenPreview() {
-    ReminderListScreen(navController = rememberNavController())
 }

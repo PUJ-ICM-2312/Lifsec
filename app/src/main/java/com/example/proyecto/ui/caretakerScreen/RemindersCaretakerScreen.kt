@@ -29,7 +29,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.proyecto.ui.elderlyScreens.formatDateTime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -113,7 +112,7 @@ fun ReminderCaretakerListItem(reminder: ReminderCaretaker) {
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Text(
-                    text = formatDateTime(reminder.date),
+                    text = formatDateTimeCaretaker(reminder.date),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }

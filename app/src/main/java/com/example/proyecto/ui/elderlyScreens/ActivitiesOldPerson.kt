@@ -2,6 +2,7 @@ package com.example.proyecto.ui.elderlyScreens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,48 +15,163 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto.R
+import com.example.proyecto.data.Actividad
+import com.example.proyecto.ui.viewmodel.ActivityViewModel
+import android.graphics.Bitmap
+import android.net.Uri
+import android.provider.MediaStore
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+
+
 
 @Composable
-fun ListActivitiesOldPersonScreen(){
-    val activities = listOf(
-        ActivityItem("En el parque", "57-27, Av. La Esmeralda...", R.drawable.parque),
-        ActivityItem("En la tienda", "Cra. 6 #53-05, Santa Fé...", null),
-        ActivityItem("En la casa", "Cra. 18a #43 A - 59, Bogotá", null),
-        ActivityItem("Comprando medicamentos", "Cra. 16 #82-52, Bogotá", R.drawable.farmacia)
-    )
+fun ListActivitiesOldPersonScreen(
+    viewModel: ActivityViewModel = viewModel()
+) {
+    val showDialog = remember { mutableStateOf(false) }
+    val newTitle = remember { mutableStateOf("") }
+    val newLocation = remember { mutableStateOf("") }
+    val selectedImage = remember { mutableStateOf<Bitmap?>(null) }
 
-    LazyColumn (
-        modifier = Modifier.fillMaxSize().padding(16.dp)
-    ) {
-        items(activities.size) { index ->
-            activityCard(activity = activities[index])
+    val context = LocalContext.current
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+            selectedImage.value = bitmap
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            items(viewModel.activities.size) { index ->
+                val activity = viewModel.activities[index]
+                ActivityCard(activity = activity)
+            }
+        }
+
+        // FAB
+        androidx.compose.material3.FloatingActionButton(
+            onClick = { showDialog.value = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            containerColor = MaterialTheme.colorScheme.primary
+        ) {
+            Text("+", color = Color.White, fontSize = 24.sp)
+        }
+
+        // Diálogo
+        if (showDialog.value) {
+            AlertDialog(
+                onDismissRequest = { showDialog.value = false },
+                title = { Text("Nueva actividad") },
+                text = {
+                    Column {
+                        OutlinedTextField(
+                            value = newTitle.value,
+                            onValueChange = { newTitle.value = it },
+                            label = { Text("Título") }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = newLocation.value,
+                            onValueChange = { newLocation.value = it },
+                            label = { Text("Ubicación") }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Button(onClick = { imagePickerLauncher.launch("image/*") }) {
+                            Text("Seleccionar imagen")
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        selectedImage.value?.let {
+                            Image(
+                                bitmap = it.asImageBitmap(),
+                                contentDescription = "Imagen seleccionada",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(150.dp)
+                                    .clip(RoundedCornerShape(8.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        if (
+                            newTitle.value.isNotBlank() &&
+                            newLocation.value.isNotBlank() &&
+                            selectedImage.value != null
+                        ) {
+                            viewModel.addActivity(
+                                actividad = newTitle.value,
+                                ubicacion = newLocation.value,
+                                imagen = selectedImage.value!!
+                            )
+                            newTitle.value = ""
+                            newLocation.value = ""
+                            selectedImage.value = null
+                            showDialog.value = false
+                        }
+                    }) {
+                        Text("Guardar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog.value = false }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
         }
     }
 }
 
+
+
+
 @Composable
-fun activityCard(activity: ActivityItem) {
+fun ActivityCard(activity: Actividad) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface // Fondo claro para la tarjeta
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
@@ -76,15 +192,15 @@ fun activityCard(activity: ActivityItem) {
 
                 Column {
                     Text(
-                        text = activity.title,
+                        text = activity.actividad,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = activity.location,
+                        text = activity.ubicacion,
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) // Color sutil pero legible
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                     Text(
                         text = "hace 5 mins",
@@ -94,33 +210,18 @@ fun activityCard(activity: ActivityItem) {
                 }
             }
 
-            activity.imageRes?.let {
-                Spacer(modifier = Modifier.height(8.dp))
-                Image(
-                    painter = painterResource(id = it),
-                    contentDescription = "Activity Image",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Image(
+                painter = androidx.compose.ui.graphics.painter.BitmapPainter(activity.imagen.asImageBitmap()),
+                contentDescription = "Activity Image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
         }
     }
 }
 
 
-
-/*
-    Clase para representar actividad
-    Atributos:
-        - title: String (Titulo de la actividad)
-        - location: String (Ubicación de la actividad)
-        - imageRes: Int? (Imagen de la actividad - opcional)
- */
-data class ActivityItem(
-    val title: String,
-    val location: String,
-    val imageRes: Int?
-)

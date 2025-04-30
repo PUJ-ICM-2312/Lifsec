@@ -10,12 +10,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 
 import androidx.navigation.compose.composable
-import com.example.proyecto.Screen.ConfigScreenElder
-import com.example.proyecto.ui.elderlyScreens.AppPlanScreen
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.example.proyecto.ui.elderlyScreens.CamaraScreen
-import com.example.proyecto.ui.elderlyScreens.CaretakersConfigScreen
-import com.example.proyecto.ui.elderlyScreens.ConfigurationScreenElder
 import com.example.proyecto.ui.elderlyScreens.CreateActivityScreen
 import com.example.proyecto.ui.elderlyScreens.CreateReminderScreen
 import com.example.proyecto.ui.elderlyScreens.ListActivitiesOldPersonScreen
@@ -24,6 +20,7 @@ import com.example.proyecto.ui.elderlyScreens.LocationCaretakerScreen
 import com.example.proyecto.ui.elderlyScreens.ReminderListScreen
 import com.example.proyecto.ui.elderlyScreens.SOSScreen
 import com.example.proyecto.ui.elderlyScreens.MainScreen
+import com.example.proyecto.ui.viewmodel.ReminderViewModel
 import com.example.proyecto.ui.viewmodel.SharedImageViewModel
 
 // La anotación @RequiresApi indica que este código requiere Android Oreo (API 26) o superior,
@@ -34,37 +31,56 @@ fun InternalNavegationStack(
     navController: NavHostController,
     authViewModel: AuthViewModel,
     rootNavController: NavController
-){
-    val sharedViewModel: SharedImageViewModel = viewModel()
+) {
     val context = LocalContext.current
+
+    val sharedViewModel: SharedImageViewModel = viewModel()
+    val reminderViewModel: ReminderViewModel = viewModel() // ✅ Aquí se crea solo UNA vez
+
     val sharedImageViewModel: SharedImageViewModel = viewModel()
 
-    //Para navegacion entre pantallas
     NavHost(navController = navController, startDestination = Screen.MainScreen.route) {
-        composable(Screen.MainScreen.route) { MainScreen(
-            navController = navController,
-            rootNavController = rootNavController,
-            authViewModel = authViewModel
-        ) }
+        composable(Screen.MainScreen.route) {
+            MainScreen(
+                navController = navController,
+                rootNavController = rootNavController,
+                authViewModel = authViewModel
+            )
+        }
+
         composable(Screen.LocationCaretaker.route) {
             val locatCareViewModel: LocatCareViewModel = viewModel(
                 factory = LocatCareViewModelFactory(context)
             )
             LocationCaretakerScreen(
                 locatCareViewModel = locatCareViewModel,
-                authViewModel= authViewModel,
+                authViewModel = authViewModel,
                 navController = navController
             )
         }
-        composable(Screen.ReminderList.route) { ReminderListScreen(navController) }
-        composable(Screen.ActivityList.route) { ListActivitiesOldPersonScreen() }
-        composable(Screen.SosScreen.route) { SOSScreen(navController, authViewModel) }
-        composable(Screen.CreateReminder.route) { CreateReminderScreen(navController) }
-        composable(Screen.CreateActivity.route) { CreateActivityScreen(navController,sharedViewModel) }
-        composable(Screen.CamaraActivityScreen.route) { CamaraScreen(navController,sharedViewModel) }
-        composable(Screen.ConfigScreenElder.route) { ConfigurationScreenElder(navController) }
-        composable(route = Screen.CaretakersConfigScreen.route) { CaretakersConfigScreen(navController) }
-        composable(route = Screen.AppPlanScreen.route) { AppPlanScreen(navController) }
+
+        composable(Screen.ReminderList.route) {
+            ReminderListScreen(navController, reminderViewModel) // ✅ Se pasa el mismo ViewModel
+        }
+
+        composable(Screen.ActivityList.route) {
+            ListActivitiesOldPersonScreen()
+        }
+
+        composable(Screen.SosScreen.route) {
+            SOSScreen(navController, authViewModel)
+        }
+
+        composable(Screen.CreateReminder.route) {
+            CreateReminderScreen(navController, reminderViewModel) // ✅ Se pasa el mismo ViewModel
+        }
+
+        composable(Screen.CreateActivity.route) {
+            CreateActivityScreen(navController, sharedViewModel)
+        }
+
+        composable(Screen.CamaraActivityScreen.route) {
+            CamaraScreen(navController, sharedImageViewModel)
+        }
     }
 }
-

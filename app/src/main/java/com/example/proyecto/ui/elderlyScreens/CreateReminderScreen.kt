@@ -13,11 +13,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.proyecto.ui.viewmodel.ReminderViewModel
 import java.util.*
 
 @Composable
-fun CreateReminderScreen(navController: NavController) {
+fun CreateReminderScreen(navController: NavController,
+                         viewModel: ReminderViewModel) {
     var titleText by remember { mutableStateOf("") }
     var additionalInfoText by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf("") }
@@ -94,7 +97,16 @@ fun CreateReminderScreen(navController: NavController) {
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(
-                        onClick = { /* Guardar el recordatorio */ },
+                        onClick = {
+                            if (titleText.isNotBlank() && selectedDate.isNotBlank()) {
+                                viewModel.addReminder(
+                                    titulo = titleText,
+                                    fecha = selectedDate,
+                                    infoAdicional = additionalInfoText.ifBlank { null }
+                                )
+                                navController.popBackStack() // volver después de guardar
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier
                             .weight(1f)
