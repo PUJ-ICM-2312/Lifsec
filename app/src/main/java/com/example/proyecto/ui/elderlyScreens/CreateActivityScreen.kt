@@ -17,15 +17,27 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.proyecto.Screen
 import com.example.proyecto.R
+import com.example.proyecto.data.Actividad
+import com.example.proyecto.ui.viewmodel.ActivityViewModel
 import com.example.proyecto.ui.viewmodel.SharedImageViewModel
 
 @Composable
-fun CreateActivityScreen(navController: NavController, sharedImageViewModel: SharedImageViewModel) {
+fun CreateActivityScreen(navController: NavController, sharedImageViewModel: SharedImageViewModel,  activityViewModel : ActivityViewModel  ) {
     var activityText by remember { mutableStateOf("") }
     var locationText by remember { mutableStateOf("") }
-    var additionalInfoText by remember { mutableStateOf("") }
+    var additionalInfoText by remember { mutableStateOf<String>("") }
     var imageSelected by remember { mutableStateOf<Bitmap?>(null) }
+
+
     imageSelected = sharedImageViewModel.capturedImage
+    LaunchedEffect(imageSelected){
+
+        activityText = sharedImageViewModel.actividad
+        locationText = sharedImageViewModel.ubicacion
+        additionalInfoText = sharedImageViewModel.infoAdicional
+    }
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -54,10 +66,12 @@ fun CreateActivityScreen(navController: NavController, sharedImageViewModel: Sha
 
                 InputField(label = "¿Qué hiciste?", value = activityText) {
                     activityText = it
+                    sharedImageViewModel.actividad = activityText
                 }
 
                 InputField(label = "¿Donde fue?", value = locationText) {
                     locationText = it
+                    sharedImageViewModel.ubicacion =  locationText
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -91,9 +105,14 @@ fun CreateActivityScreen(navController: NavController, sharedImageViewModel: Sha
 
                 }
 
-                InputField(label = "Información adicional (opcional)", value = additionalInfoText) {
+                InputField(label = "Información adicional (opcional)", value = additionalInfoText!!) {
                     additionalInfoText = it
+                    if (additionalInfoText != "") {
+                        sharedImageViewModel.infoAdicional = additionalInfoText
+                    }
                 }
+
+
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -102,7 +121,12 @@ fun CreateActivityScreen(navController: NavController, sharedImageViewModel: Sha
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(
-                        onClick = { /* Guardar la actividad */ },
+                        onClick = {
+
+
+                            activityViewModel.addActivity(activityText,locationText, imageSelected ,additionalInfoText)
+                            navController.popBackStack()
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier
                             .weight(1f)

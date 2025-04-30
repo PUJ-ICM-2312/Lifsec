@@ -8,4 +8,7 @@ import androidx.lifecycle.ViewModel
 
 class   SharedImageViewModel : ViewModel() {
     var capturedImage by mutableStateOf<Bitmap?>(null)
+    var actividad by mutableStateOf("")
+    var ubicacion by mutableStateOf("")
+    var infoAdicional by mutableStateOf("")
 }

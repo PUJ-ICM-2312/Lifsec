@@ -264,13 +264,15 @@ fun CameraFoto(cameraPermissionState: PermissionState, navController: NavControl
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.Bottom) {
 
-                Button(
+            Button(
                 onClick = {
 
                     sharedImageViewModel.capturedImage = capturedImage
+
                     navController.popBackStack()
 
                 }) { Text(text = "Cargar la foto") }
+
         }
 
     }

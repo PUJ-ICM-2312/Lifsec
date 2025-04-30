@@ -20,6 +20,7 @@ import com.example.proyecto.ui.elderlyScreens.LocationCaretakerScreen
 import com.example.proyecto.ui.elderlyScreens.ReminderListScreen
 import com.example.proyecto.ui.elderlyScreens.SOSScreen
 import com.example.proyecto.ui.elderlyScreens.MainScreen
+import com.example.proyecto.ui.viewmodel.ActivityViewModel
 import com.example.proyecto.ui.viewmodel.ReminderViewModel
 import com.example.proyecto.ui.viewmodel.SharedImageViewModel
 
@@ -34,8 +35,9 @@ fun InternalNavegationStack(
 ) {
     val context = LocalContext.current
 
+    val activityViewModel: ActivityViewModel = viewModel()
     val sharedViewModel: SharedImageViewModel = viewModel()
-    val reminderViewModel: ReminderViewModel = viewModel() // ✅ Aquí se crea solo UNA vez
+    val reminderViewModel: ReminderViewModel = viewModel()
 
     val sharedImageViewModel: SharedImageViewModel = viewModel()
 
@@ -63,9 +65,7 @@ fun InternalNavegationStack(
             ReminderListScreen(navController, reminderViewModel) // ✅ Se pasa el mismo ViewModel
         }
 
-        composable(Screen.ActivityList.route) {
-            ListActivitiesOldPersonScreen()
-        }
+        composable(Screen.ActivityList.route) { ListActivitiesOldPersonScreen(activityViewModel,navController) }
 
         composable(Screen.SosScreen.route) {
             SOSScreen(navController, authViewModel)
@@ -76,7 +76,8 @@ fun InternalNavegationStack(
         }
 
         composable(Screen.CreateActivity.route) {
-            CreateActivityScreen(navController, sharedViewModel)
+
+            CreateActivityScreen(navController, sharedViewModel, activityViewModel)
         }
 
         composable(Screen.CamaraActivityScreen.route) {

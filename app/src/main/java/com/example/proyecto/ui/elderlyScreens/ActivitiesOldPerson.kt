@@ -46,27 +46,19 @@ import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
-
+import androidx.navigation.NavController
+import com.example.proyecto.Screen
 
 
 @Composable
 fun ListActivitiesOldPersonScreen(
-    viewModel: ActivityViewModel = viewModel()
+    viewModel: ActivityViewModel ,
+    navController: NavController
 ) {
     val showDialog = remember { mutableStateOf(false) }
-    val newTitle = remember { mutableStateOf("") }
-    val newLocation = remember { mutableStateOf("") }
-    val selectedImage = remember { mutableStateOf<Bitmap?>(null) }
+
 
     val context = LocalContext.current
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, it)
-            selectedImage.value = bitmap
-        }
-    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -93,70 +85,8 @@ fun ListActivitiesOldPersonScreen(
 
         // Diálogo
         if (showDialog.value) {
-            AlertDialog(
-                onDismissRequest = { showDialog.value = false },
-                title = { Text("Nueva actividad") },
-                text = {
-                    Column {
-                        OutlinedTextField(
-                            value = newTitle.value,
-                            onValueChange = { newTitle.value = it },
-                            label = { Text("Título") }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = newLocation.value,
-                            onValueChange = { newLocation.value = it },
-                            label = { Text("Ubicación") }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Button(onClick = { imagePickerLauncher.launch("image/*") }) {
-                            Text("Seleccionar imagen")
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        selectedImage.value?.let {
-                            Image(
-                                bitmap = it.asImageBitmap(),
-                                contentDescription = "Imagen seleccionada",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(150.dp)
-                                    .clip(RoundedCornerShape(8.dp)),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
-                },
-                confirmButton = {
-                    Button(onClick = {
-                        if (
-                            newTitle.value.isNotBlank() &&
-                            newLocation.value.isNotBlank() &&
-                            selectedImage.value != null
-                        ) {
-                            viewModel.addActivity(
-                                actividad = newTitle.value,
-                                ubicacion = newLocation.value,
-                                imagen = selectedImage.value!!
-                            )
-                            newTitle.value = ""
-                            newLocation.value = ""
-                            selectedImage.value = null
-                            showDialog.value = false
-                        }
-                    }) {
-                        Text("Guardar")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDialog.value = false }) {
-                        Text("Cancelar")
-                    }
-                }
-            )
+            navController.navigate(Screen.CreateActivity.route)
+            showDialog.value = false
         }
     }
 }
@@ -195,7 +125,7 @@ fun ActivityCard(activity: Actividad) {
                         text = activity.actividad,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.secondary
                     )
                     Text(
                         text = activity.ubicacion,
@@ -211,15 +141,18 @@ fun ActivityCard(activity: Actividad) {
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Image(
-                painter = androidx.compose.ui.graphics.painter.BitmapPainter(activity.imagen.asImageBitmap()),
-                contentDescription = "Activity Image",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+            if (activity.imagen != null) {
+                Image(
+                    painter = androidx.compose.ui.graphics.painter.BitmapPainter(activity.imagen.asImageBitmap()),
+                    contentDescription = "Activity Image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
         }
     }
 }

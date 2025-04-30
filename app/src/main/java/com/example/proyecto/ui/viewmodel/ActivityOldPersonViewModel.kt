@@ -11,9 +11,9 @@ class ActivityViewModel : ViewModel() {
     private val _activities = mutableStateListOf<Actividad>()
     val activities: List<Actividad> get() = _activities
 
-    fun addActivity(actividad: String, ubicacion: String, imagen: Bitmap) {
+    fun addActivity(actividad: String, ubicacion: String, imagen: Bitmap?, infoAdicional: String?) {
         val dummyImage = createBitmap(100, 100)
-        _activities.add(Actividad(actividad, ubicacion, imagen, null))
+        _activities.add(Actividad(actividad, ubicacion, imagen, infoAdicional))
     }
 
     fun removeActivity(index: Int) {

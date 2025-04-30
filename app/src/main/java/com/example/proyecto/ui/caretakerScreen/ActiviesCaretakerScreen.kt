@@ -22,9 +22,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.proyecto.ui.elderlyScreens.ListActivitiesOldPersonScreen
+import com.example.proyecto.ui.viewmodel.ActivityViewModel
 
 @Composable
-fun ActivitiesCaretaker(navController: NavController) {
+fun ActivitiesCaretaker(navController: NavController, activityViewModel: ActivityViewModel) {
     Scaffold (
         topBar = {
             Surface(
@@ -52,7 +53,7 @@ fun ActivitiesCaretaker(navController: NavController) {
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            ListActivitiesOldPersonScreen()
+            ListActivitiesOldPersonScreen(activityViewModel,navController)
         }
     }
 }
