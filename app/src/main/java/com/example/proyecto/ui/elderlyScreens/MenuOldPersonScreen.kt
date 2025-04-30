@@ -1,6 +1,11 @@
 package com.example.proyecto.ui.elderlyScreens
 
 import android.Manifest
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
@@ -42,6 +47,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -62,6 +68,8 @@ import com.example.proyecto.Screen
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -86,6 +94,72 @@ fun MenuOldPersonScreen(
 
     // NavController interno para la navegación anidada
     val internalNavController = rememberNavController()
+
+
+    // Implementación del shake detector
+    DisposableEffect(internalNavController) {
+        val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+
+        val sensorListener = object : SensorEventListener {
+            private var lastUpdate = 0L
+            private var lastX = 0f
+            private var lastY = 0f
+            private var lastZ = 0f
+            private val shakeThreshold = 800
+            private var lastShakeTime = 0L // Para evitar múltiples activaciones
+
+            override fun onSensorChanged(event: SensorEvent) {
+                val currentTime = System.currentTimeMillis()
+                if ((currentTime - lastUpdate) > 100) {
+                    val diffTime = (currentTime - lastUpdate).toFloat()
+                    lastUpdate = currentTime
+
+                    val x = event.values[0]
+                    val y = event.values[1]
+                    val z = event.values[2]
+
+                    val speed = sqrt(
+                        (x - lastX).pow(2) +
+                                (y - lastY).pow(2) +
+                                (z - lastZ).pow(2)
+                    ) / diffTime * 10000
+
+                    // Agregamos debouncing (2 segundos entre shakes)
+                    if (speed > shakeThreshold && currentTime - lastShakeTime > 2000) {
+
+                        lastShakeTime = currentTime
+                        // Navegación directa a SOS
+                        internalNavController.navigate(Screen.SosScreen.route) {
+                            // Opcional: limpia el back stack
+                            popUpTo(internalNavController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    }
+
+                    lastX = x
+                    lastY = y
+                    lastZ = z
+                }
+            }
+
+            override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
+        }
+
+        sensorManager.registerListener(
+            sensorListener,
+            accelerometer,
+            SensorManager.SENSOR_DELAY_UI
+        )
+
+        onDispose {
+            sensorManager.unregisterListener(sensorListener)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        notificationPermissionState.launchMultiplePermissionRequest()
+    }
 
     Scaffold(
         bottomBar = { BottomNavigationBar(internalNavController) },
