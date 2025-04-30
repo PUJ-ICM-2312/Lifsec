@@ -123,8 +123,11 @@ fun CreateActivityScreen(navController: NavController, sharedImageViewModel: Sha
                     Button(
                         onClick = {
 
-
                             activityViewModel.addActivity(activityText,locationText, imageSelected ,additionalInfoText)
+                            sharedImageViewModel.capturedImage = null
+                            sharedImageViewModel.actividad = ""
+                            sharedImageViewModel.ubicacion = ""
+                            sharedImageViewModel.infoAdicional = ""
                             navController.popBackStack()
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
