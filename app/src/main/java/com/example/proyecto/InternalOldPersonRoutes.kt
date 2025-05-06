@@ -65,7 +65,7 @@ fun InternalNavegationStack(
         }
 
         composable(Screen.ReminderList.route) {
-            ReminderListScreen(navController, reminderViewModel) // ✅ Se pasa el mismo ViewModel
+            ReminderListScreen(navController, reminderViewModel)
         }
 
         composable(Screen.ActivityList.route) { ListActivitiesOldPersonScreen(activityViewModel,navController) }
@@ -75,7 +75,7 @@ fun InternalNavegationStack(
         }
 
         composable(Screen.CreateReminder.route) {
-            CreateReminderScreen(navController, reminderViewModel) // ✅ Se pasa el mismo ViewModel
+            CreateReminderScreen(navController, reminderViewModel)
         }
 
         composable(Screen.CreateActivity.route) {

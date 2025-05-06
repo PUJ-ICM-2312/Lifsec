@@ -3,6 +3,7 @@ package com.example.proyecto
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -13,6 +14,7 @@ import com.example.proyecto.ui.RegistryScreen
 import com.example.proyecto.ui.caretakerScreen.UserListScreen
 import com.example.proyecto.ui.elderlyScreens.AppPlanScreen
 import com.example.proyecto.ui.elderlyScreens.CaretakersConfigScreen
+import com.example.proyecto.ui.viewmodel.AuthViewModel
 
 sealed class Screen(val route: String) {
     object Login: Screen("login_screen")
@@ -38,14 +40,16 @@ sealed class Screen(val route: String) {
 @Composable
 fun NavegationStack(){
     val navController = rememberNavController()
+    val authViewModel: AuthViewModel = viewModel()
+
 
     //Para navegacion entre pantallas
     NavHost(navController = navController, startDestination = Screen.Login.route){
-        composable(route = Screen.Login.route) { LogScreen( navController) }
-        composable(route = Screen.PersonSelector.route) { UserListScreen(navController) }
+        composable(route = Screen.Login.route) { LogScreen( navController, authViewModel) }
+
         composable(route = Screen.MenuOldPerson.route) { MenuOldPersonScreen( navController) }
         composable (route = Screen.MenuCaretaker.route) { MenuCaretakersScreen( navController) }
-        composable(route = Screen.Registry.route) { RegistryScreen(navController) }
+        composable(route = Screen.Registry.route) { RegistryScreen(navController, authViewModel) }
     }
 
 }

@@ -10,7 +10,9 @@ import androidx.navigation.compose.composable
 import com.example.proyecto.ui.caretakerScreen.ActivitiesCaretaker
 import com.example.proyecto.ui.caretakerScreen.LocationOldPersonScreen
 import com.example.proyecto.ui.caretakerScreen.RemindersCaretakerScreen
+import com.example.proyecto.ui.caretakerScreen.UserListScreen
 import com.example.proyecto.ui.viewmodel.ActivityViewModel
+import com.example.proyecto.ui.viewmodel.AuthViewModel
 
 sealed class InternalCaretakerRoutes(val route: String) {
     object LocationOldPerson : InternalCaretakerRoutes("location")
@@ -24,9 +26,11 @@ sealed class InternalCaretakerRoutes(val route: String) {
 @Composable
 fun InternalCaretakerRoutesStack(navController: NavHostController){
     val activityViewModel: ActivityViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel()
     //Para navegacion entre pantallas
     NavHost(navController = navController, startDestination = InternalCaretakerRoutes.LocationOldPerson.route) {
-        composable(InternalCaretakerRoutes.LocationOldPerson.route) { LocationOldPersonScreen(navController) }
+        composable(route = Screen.PersonSelector.route) { UserListScreen(navController) }
+        composable(InternalCaretakerRoutes.LocationOldPerson.route) { LocationOldPersonScreen(navController,authViewModel ) }
         composable(InternalCaretakerRoutes.RemindersCaretaker.route) { RemindersCaretakerScreen(navController) }
         composable(InternalCaretakerRoutes.ActivitiesCaretaker.route) { ActivitiesCaretaker(navController,activityViewModel) }
     }

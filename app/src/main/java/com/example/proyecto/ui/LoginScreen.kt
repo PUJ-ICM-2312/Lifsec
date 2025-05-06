@@ -38,11 +38,13 @@ import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.R
 import com.example.proyecto.Screen
 import com.example.proyecto.ui.viewmodel.AuthViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LogScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel
 ) {
 
     // Observar el estado del usuario. Si cambia a != null, navegar.
@@ -50,17 +52,13 @@ fun LogScreen(
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
             // Navegar a la pantalla principal de anciano o cuidador según sea necesario.
-            if (authViewModel.checkUserElderlyType()) {
+
                 navController.navigate(route = Screen.MenuOldPerson.route) {
                     popUpTo("login_screen") { inclusive = true }
                     launchSingleTop = true
                 }
-            } else {
-                navController.navigate(route = Screen.MenuCaretaker.route) {
-                    popUpTo("login_screen") { inclusive = true }
-                    launchSingleTop = true
-                }
-            }
+
+
         }
     }
 
@@ -98,7 +96,6 @@ fun LogPhone(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel()
 ) {
-    val currentUser by authViewModel.currentUser.collectAsState()
     val showFingerprint = remember { mutableStateOf(false) }
 
     Column(
@@ -152,23 +149,33 @@ fun LogPhone(
                 )
             }
         }
-
-        // Iniciar sesión como cuidador (mockup)
-        Button(
-            onClick = { navController.navigate(Screen.PersonSelector.route) },
-            modifier = Modifier.padding(horizontal = 32.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                contentColor = MaterialTheme.colorScheme.primary
-            )
-        ) {
-            Text("Iniciar sesión como cuidador")
-        }
+//        /
+//        // Iniciar sesión como cuidador (mockup)
+//        Button(
+//            onClick = { navController.navigate(Screen.PersonSelector.route) },
+//            modifier = Modifier.padding(horizontal = 32.dp),
+//            shape = RoundedCornerShape(16.dp),
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+//                contentColor = MaterialTheme.colorScheme.primary
+//            )
+//        ) {
+//            Text("Iniciar sesión ")
+//        }
 
         // Iniciar sesión como anciano (manual)
         Button(
-            onClick = { authViewModel.signInUser() },
+            onClick = {
+                var auth: FirebaseAuth = authViewModel.getAuth()
+                auth.signInWithEmailAndPassword(authViewModel.email, authViewModel.password).addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        navController.navigate(route = Screen.MenuOldPerson.route) {
+                            popUpTo("login_screen") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+            },
             enabled = !authViewModel.isLoading,
             modifier = Modifier.padding(horizontal = 32.dp),
             shape = RoundedCornerShape(16.dp),
@@ -183,7 +190,7 @@ fun LogPhone(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             } else {
-                Text("Iniciar sesión como anciano")
+                Text("Iniciar sesión")
             }
         }
 
@@ -221,7 +228,6 @@ fun LogPhone(
 @Composable
 fun ButtonRegistry(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel()
 ){
 
     Column (
@@ -252,5 +258,5 @@ fun ButtonRegistry(
 fun LogScreenPreview() {
     // We need a NavController for the preview since the screen uses navigation.
     val navController = rememberNavController()
-    LogScreen(navController = navController)
+    navController.navigate(Screen.Registry.route)
 }

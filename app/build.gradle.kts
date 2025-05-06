@@ -48,6 +48,8 @@ android {
 
 dependencies {
 
+    implementation(platform(libs.firebase.bom))
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -69,22 +71,22 @@ dependencies {
     val nav_version = "2.8.9"
 
     // Jetpack Compose integration
-    implementation("androidx.navigation:navigation-compose:$nav_version")
+    implementation(libs.androidx.navigation.compose)
     implementation (libs.material3)
 
 
     // Views/Fragments integration
-    implementation("androidx.navigation:navigation-fragment:$nav_version")
-    implementation("androidx.navigation:navigation-ui:$nav_version")
+    implementation(libs.androidx.navigation.fragment)
+    implementation(libs.androidx.navigation.ui)
 
     // Feature module support for Fragments
-    implementation("androidx.navigation:navigation-dynamic-features-fragment:$nav_version")
+    implementation(libs.androidx.navigation.dynamic.features.fragment)
 
     // Testing Navigation
     androidTestImplementation("androidx.navigation:navigation-testing:$nav_version")
 
     // JSON serialization library, works with the Kotlin serialization plugin
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation(libs.kotlinx.serialization.json)
 
     val camerax_version = "1.2.3"
     implementation ("androidx.camera:camera-core:${camerax_version}")
@@ -130,12 +132,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     // del taller
-    implementation ("androidx.camera:camera-core:${camerax_version}")
-    implementation ("androidx.camera:camera-camera2:${camerax_version}")
-    implementation ("androidx.camera:camera-lifecycle:${camerax_version}")
-    implementation ("androidx.camera:camera-video:${camerax_version}")
-    implementation ("androidx.camera:camera-view:${camerax_version}")
-    implementation ("androidx.camera:camera-extensions:${camerax_version}")
+
     // JSON serialization library, works with the Kotlin serialization plugin
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("com.google.code.gson:gson:2.10.1") // O la versión más reciente
@@ -149,8 +146,8 @@ dependencies {
     implementation("androidx.camera:camera-view:1.2.3")
 
     // Accompanist for permissions handling
-    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
+    implementation(libs.accompanist.permissions)
+    implementation(libs.accompanist.systemuicontroller)
     implementation("com.google.accompanist:accompanist-insets:0.30.1")
 
     // Coil

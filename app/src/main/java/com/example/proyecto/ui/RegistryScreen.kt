@@ -19,7 +19,7 @@ import com.example.proyecto.Screen
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 
 @Composable
-fun RegistryScreen(navController: NavController) {
+fun RegistryScreen(navController: NavController, authViewModel: AuthViewModel) {
     val authViewModel: AuthViewModel = viewModel()
 
     Column(
@@ -122,11 +122,12 @@ fun RegistryForm(
 
         Button(
             onClick = {
-                authViewModel.signUpUser(
-                    isElderly = isElderly
-                ) {
-                    val route = if (isElderly) Screen.MenuOldPerson.route else Screen.PersonSelector.route
-                    navController.navigate(route)
+                val auth = authViewModel.getAuth()
+                auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
+                    if(task.isSuccessful){
+                        navController.navigate(if (isElderly) Screen.MenuOldPerson.route else Screen.PersonSelector.route)
+                    }
+
                 }
             },
             modifier = Modifier

@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,10 +23,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.proyecto.R
+import com.example.proyecto.ui.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationOldPersonScreen(navController: NavController) {
+fun LocationOldPersonScreen(navController: NavController, authViewModel: AuthViewModel ) {
     var showBottomSheet by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -49,8 +52,20 @@ fun LocationOldPersonScreen(navController: NavController) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
+
+                }
+                IconButton(
+                    onClick = { authViewModel.signOut() },
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ExitToApp,
+                        contentDescription = "Cerrar Sesión",
+                        tint = MaterialTheme.colorScheme.background
+                    )
                 }
             }
+
         }
     ) { paddingValues ->
         Box(

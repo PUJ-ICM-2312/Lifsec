@@ -20,6 +20,9 @@ import kotlinx.coroutines.launch
 
 class AuthViewModel: ViewModel() {
 
+
+
+
     private val auth: FirebaseAuth = Firebase.auth
     // TODO: cambiar a ancianos obtenidos de la base de datos
     private val _elderlyUsers = mutableStateListOf<Anciano>().apply {
@@ -88,6 +91,9 @@ class AuthViewModel: ViewModel() {
         feedbackMessage = null // Limpiar al escribir
     }
 
+    fun getAuth(): FirebaseAuth {
+        return auth
+    }
     fun clearFeedbackMessage() {
         feedbackMessage = null
     }
@@ -172,4 +178,5 @@ class AuthViewModel: ViewModel() {
         password = ""
         feedbackMessage = "Sesión cerrada."
     }
+
 }
