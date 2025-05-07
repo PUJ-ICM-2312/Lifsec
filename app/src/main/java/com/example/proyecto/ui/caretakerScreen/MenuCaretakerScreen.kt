@@ -25,8 +25,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.proyecto.InternalCaretakerRoutes
 import com.example.proyecto.InternalCaretakerRoutesStack
+import com.example.proyecto.Screen
 
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -81,8 +81,8 @@ fun BottomNavigationBarCareTaker(navController: NavController) {
         NavigationBarItem(
             icon = { Icon(imageVector = Icons.Default.LocationOn, contentDescription = "Ubicación") },
             label = { Text(text = "Ubicación", style = MaterialTheme.typography.labelSmall) },
-            selected = isSelected(InternalCaretakerRoutes.LocationOldPerson.route),
-            onClick = { navController.navigate(InternalCaretakerRoutes.LocationOldPerson.route) },
+            selected = isSelected(Screen.LocationOldPerson.route),
+            onClick = { navController.navigate(Screen.LocationOldPerson.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,
@@ -96,8 +96,8 @@ fun BottomNavigationBarCareTaker(navController: NavController) {
         NavigationBarItem(
             icon = { Icon(imageVector = Icons.Default.Notifications, contentDescription = "Recordatorios") },
             label = { Text(text = "Recordatorios", style = MaterialTheme.typography.labelSmall) },
-            selected = isSelected(InternalCaretakerRoutes.RemindersCaretaker.route),
-            onClick = { navController.navigate(InternalCaretakerRoutes.RemindersCaretaker.route) },
+            selected = isSelected(Screen.RemindersCaretaker.route),
+            onClick = { navController.navigate(Screen.RemindersCaretaker.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,
@@ -112,8 +112,8 @@ fun BottomNavigationBarCareTaker(navController: NavController) {
         NavigationBarItem(
             icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Actividades") },
             label = { Text(text = "Actividades", style = MaterialTheme.typography.labelSmall) },
-            selected = isSelected(InternalCaretakerRoutes.ActivitiesCaretaker.route),
-            onClick = { navController.navigate(InternalCaretakerRoutes.ActivitiesCaretaker.route) },
+            selected = isSelected(Screen.ActivitiesCaretaker.route),
+            onClick = { navController.navigate(Screen.ActivitiesCaretaker.route) },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,

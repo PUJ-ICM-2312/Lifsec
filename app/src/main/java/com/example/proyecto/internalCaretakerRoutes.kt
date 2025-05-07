@@ -9,16 +9,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.proyecto.ui.caretakerScreen.ActivitiesCaretaker
 import com.example.proyecto.ui.caretakerScreen.LocationOldPersonScreen
+import com.example.proyecto.ui.caretakerScreen.MenuCaretakersScreen
 import com.example.proyecto.ui.caretakerScreen.RemindersCaretakerScreen
 import com.example.proyecto.ui.caretakerScreen.UserListScreen
 import com.example.proyecto.ui.viewmodel.ActivityViewModel
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 
-sealed class InternalCaretakerRoutes(val route: String) {
-    object LocationOldPerson : InternalCaretakerRoutes("location")
-    object RemindersCaretaker : InternalCaretakerRoutes("reminders")
-    object ActivitiesCaretaker : InternalCaretakerRoutes("activities")
-}
 
 // La anotación @RequiresApi indica que este código requiere Android Oreo (API 26) o superior,
 // ya que utiliza funcionalidades que se introdujeron a partir de esa versión
@@ -30,9 +26,10 @@ fun InternalCaretakerRoutesStack(navController: NavHostController){
     //Para navegacion entre pantallas
     NavHost(navController = navController, startDestination = Screen.PersonSelector.route) {
         composable(Screen.PersonSelector.route) { UserListScreen(navController) }
-        composable(InternalCaretakerRoutes.LocationOldPerson.route) { LocationOldPersonScreen(navController,authViewModel ) }
-        composable(InternalCaretakerRoutes.RemindersCaretaker.route) { RemindersCaretakerScreen(navController) }
-        composable(InternalCaretakerRoutes.ActivitiesCaretaker.route) { ActivitiesCaretaker(navController,activityViewModel) }
+        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController) }
+        composable(Screen.LocationOldPerson.route) { LocationOldPersonScreen(navController,authViewModel ) }
+        composable(Screen.RemindersCaretaker.route) { RemindersCaretakerScreen(navController) }
+        composable(Screen.ActivitiesCaretaker.route) { ActivitiesCaretaker(navController,activityViewModel) }
     }
 }
 

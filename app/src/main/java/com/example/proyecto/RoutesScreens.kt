@@ -34,6 +34,9 @@ sealed class Screen(val route: String) {
     object ConfigScreenElder: Screen("config_screen_elder")
     object CaretakersConfigScreen: Screen("caretakers_config_screen")
     object AppPlanScreen: Screen("app_plan_screen")
+    object LocationOldPerson : Screen("location")
+    object RemindersCaretaker : Screen("reminders")
+    object ActivitiesCaretaker : Screen("activities")
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -46,9 +49,9 @@ fun NavegationStack(){
     //Para navegacion entre pantallas
     NavHost(navController = navController, startDestination = Screen.Login.route){
         composable(route = Screen.Login.route) { LogScreen( navController, authViewModel) }
-
+        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController) }
         composable(route = Screen.MenuOldPerson.route) { MenuOldPersonScreen( navController) }
-        composable (route = Screen.MenuCaretaker.route) { MenuCaretakersScreen( navController) }
+        composable (route = Screen.PersonSelector.route) { UserListScreen(navController) }
         composable(route = Screen.Registry.route) { RegistryScreen(navController, authViewModel) }
     }
 
