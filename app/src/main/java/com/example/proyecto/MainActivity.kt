@@ -22,7 +22,6 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1) Arranca aquí tu SensorService en primer plano
         Intent(this, SensorService::class.java).also { intent ->
             ContextCompat.startForegroundService(this, intent)
         }

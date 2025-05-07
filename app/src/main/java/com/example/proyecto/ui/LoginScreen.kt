@@ -210,9 +210,8 @@ fun LogPhone(
         if (showFingerprint.value) {
             FingerprintPrompt(
                 onAuthSuccess = {
-                    authViewModel.onEmailChange("simondiaz@yopmail.com")
+                    authViewModel.onEmailChange("")
                     authViewModel.onPasswordChange("123456")
-                    authViewModel.signInUser()
                     showFingerprint.value = false
                 },
                 onAuthError = {

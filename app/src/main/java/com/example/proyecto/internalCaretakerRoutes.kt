@@ -28,8 +28,8 @@ fun InternalCaretakerRoutesStack(navController: NavHostController){
     val activityViewModel: ActivityViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
     //Para navegacion entre pantallas
-    NavHost(navController = navController, startDestination = InternalCaretakerRoutes.LocationOldPerson.route) {
-        composable(route = Screen.PersonSelector.route) { UserListScreen(navController) }
+    NavHost(navController = navController, startDestination = Screen.PersonSelector.route) {
+        composable(Screen.PersonSelector.route) { UserListScreen(navController) }
         composable(InternalCaretakerRoutes.LocationOldPerson.route) { LocationOldPersonScreen(navController,authViewModel ) }
         composable(InternalCaretakerRoutes.RemindersCaretaker.route) { RemindersCaretakerScreen(navController) }
         composable(InternalCaretakerRoutes.ActivitiesCaretaker.route) { ActivitiesCaretaker(navController,activityViewModel) }
