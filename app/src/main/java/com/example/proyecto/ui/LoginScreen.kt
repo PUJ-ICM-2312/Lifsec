@@ -1,5 +1,8 @@
 package com.example.proyecto.ui
 
+import android.content.Context
+import android.widget.Toast
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,8 +28,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -37,15 +42,45 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.R
 import com.example.proyecto.Screen
+import com.example.proyecto.data.HuellaData
 import com.example.proyecto.ui.viewmodel.AuthViewModel
+import com.example.proyecto.ui.viewmodel.internalStorageViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LogScreen(
     navController: NavController,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    internalViewModel: internalStorageViewModel = viewModel()
 ) {
+<<<<<<< HEAD
+=======
+
+
+    // Observar el estado del usuario. Si cambia a != null, navegar.
+    val currentUser by authViewModel.currentUser.collectAsState()
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            // Navegar a la pantalla principal de anciano o cuidador según sea necesario.
+
+                navController.navigate(route = Screen.MenuOldPerson.route) {
+                    popUpTo("login_screen") { inclusive = true }
+                    launchSingleTop = true
+                }
+
+
+        }
+    }
+
+    // Limpiar mensaje de feedback cuando la pantalla se recompone en el caso que ya no aplique
+    DisposableEffect(authViewModel.feedbackMessage) {
+        onDispose {
+            // No limpiar aquí directamente para que el mensaje persista hasta la interacción
+        }
+    }
+
+>>>>>>> d63f2d773459e2449e445f31bf9760e6a03ee836
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly
@@ -56,7 +91,7 @@ fun LogScreen(
             contentDescription = ""
         )
         //Ingreso de numero de celular
-        LogPhone(navController)
+        LogPhone(navController,internalViewModel)
 
         //boton de registro
         ButtonRegistry(navController)
@@ -66,10 +101,13 @@ fun LogScreen(
 @Composable
 fun LogPhone(
     navController: NavController,
+    internalViewModel: internalStorageViewModel,
     authViewModel: AuthViewModel = viewModel()
-) {
-    val showFingerprint = remember { mutableStateOf(false) }
 
+) {
+    var huellaGuardada by remember { mutableStateOf(false) }
+    val showFingerprint = remember { mutableStateOf(false) }
+    val context = LocalContext.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly
@@ -165,7 +203,16 @@ fun LogPhone(
 
         // Botón huella dummy
         Button(
-            onClick = { showFingerprint.value = true },
+            onClick = {
+                huellaGuardada = internalViewModel.existeJson(context)
+                if (huellaGuardada)
+                    showFingerprint.value = true
+                else{
+                    showFingerprint.value = false
+                    Toast.makeText(context, "Inicie sesión con correo y contraseña y asígnelo para la huella", Toast.LENGTH_SHORT).show()
+
+                }
+            },
             modifier = Modifier.padding(horizontal = 32.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
@@ -179,8 +226,10 @@ fun LogPhone(
         if (showFingerprint.value) {
             FingerprintPrompt(
                 onAuthSuccess = {
-                    authViewModel.onEmailChange("")
-                    authViewModel.onPasswordChange("123456")
+                    var huellaData: HuellaData = internalViewModel.leerJsonHuella(context)
+
+                    authViewModel.onEmailChange(huellaData.correo)
+                    authViewModel.onPasswordChange(huellaData.contra)
                     showFingerprint.value = false
                 },
                 onAuthError = {

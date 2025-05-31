@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,6 +51,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -66,7 +70,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.InternalNavegationStack
 import com.example.proyecto.Screen
 import com.example.proyecto.ui.viewmodel.AuthViewModel
+import com.example.proyecto.ui.viewmodel.internalStorageViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -77,9 +83,11 @@ import kotlin.math.sqrt
 @Composable
 fun MenuOldPersonScreen(
     navController: NavController,
+    internalViewModel: internalStorageViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    var huellaEqualsUser by remember { mutableStateOf(internalViewModel.huellaIgualAUser(context, authViewModel.email, authViewModel.password)) }
     val notificationPermissionState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.POST_NOTIFICATIONS,
@@ -161,20 +169,67 @@ fun MenuOldPersonScreen(
         notificationPermissionState.launchMultiplePermissionRequest()
     }
 
-    Scaffold(
-        bottomBar = { BottomNavigationBar(internalNavController) },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            // Aquí se carga el grafo de navegación interno
-            InternalNavegationStack(navController = internalNavController, rootNavController = navController, authViewModel = authViewModel)
+    if(huellaEqualsUser){
+        Scaffold(
+            bottomBar = { BottomNavigationBar(internalNavController) },
+            containerColor = MaterialTheme.colorScheme.background
+        ) { innerPadding ->
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                // Aquí se carga el grafo de navegación interno
+                InternalNavegationStack(navController = internalNavController, rootNavController = navController, authViewModel = authViewModel)
+            }
         }
+    }else{
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 17.dp)
+            ) {
+                Text(
+                    text = "¿Desea que este usuario tenga la huella?",
+                    fontSize = 15.sp
+                )
+            }
+
+
+            Spacer(modifier = Modifier.padding(15.dp))
+
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp)
+            ) {
+                Button(onClick = {
+
+                    internalViewModel.guardarJsonHuella(context, authViewModel.email, authViewModel.password)
+                    huellaEqualsUser = true
+
+
+                }) {
+                    Text(text = "Si", fontSize = 13.sp)
+                }
+                Button(onClick = {
+
+                    huellaEqualsUser = true
+
+
+                }) {
+                    Text(text = "No", fontSize = 13.sp)
+                }
+            }
+
+
+        }
+
     }
+
+
 }
 
 
