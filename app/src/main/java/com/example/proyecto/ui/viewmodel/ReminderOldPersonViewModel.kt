@@ -28,8 +28,8 @@ class ReminderViewModel(application: Application) : AndroidViewModel(application
     }
 
     /** Añade un nuevo recordatorio y lo persiste inmediatamente */
-    fun addReminder(titulo: String, fecha: String, infoAdicional: String? = null) {
-        _reminders.add(Recordatorio(titulo, fecha, infoAdicional))
+    fun addReminder(ancianoID: String, titulo: String, fecha: String, infoAdicional: String? = null) {
+        _reminders.add(Recordatorio(ancianoID, titulo, fecha, infoAdicional))
         saveLocalReminders()
     }
 

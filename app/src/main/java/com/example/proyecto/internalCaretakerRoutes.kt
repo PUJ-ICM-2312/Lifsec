@@ -20,16 +20,16 @@ import com.example.proyecto.ui.viewmodel.AuthViewModel
 // ya que utiliza funcionalidades que se introdujeron a partir de esa versión
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun InternalCaretakerRoutesStack(navController: NavHostController){
+fun InternalCaretakerRoutesStack(navController: NavHostController) {
     val activityViewModel: ActivityViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
+
     //Para navegacion entre pantallas
     NavHost(navController = navController, startDestination = Screen.PersonSelector.route) {
         composable(Screen.PersonSelector.route) { UserListScreen(navController) }
         composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController) }
-        composable(Screen.LocationOldPerson.route) { LocationOldPersonScreen(navController,authViewModel ) }
+        composable(Screen.LocationOldPerson.route) { LocationOldPersonScreen(navController, authViewModel) }
         composable(Screen.RemindersCaretaker.route) { RemindersCaretakerScreen(navController) }
-        composable(Screen.ActivitiesCaretaker.route) { ActivitiesCaretaker(navController,activityViewModel) }
+        composable(Screen.ActivitiesCaretaker.route) { ActivitiesCaretaker(navController, activityViewModel) }
     }
 }
-

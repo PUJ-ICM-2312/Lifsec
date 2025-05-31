@@ -46,41 +46,14 @@ fun LogScreen(
     navController: NavController,
     authViewModel: AuthViewModel
 ) {
-
-    // Observar el estado del usuario. Si cambia a != null, navegar.
-    val currentUser by authViewModel.currentUser.collectAsState()
-    LaunchedEffect(currentUser) {
-        if (currentUser != null) {
-            // Navegar a la pantalla principal de anciano o cuidador según sea necesario.
-
-                navController.navigate(route = Screen.MenuOldPerson.route) {
-                    popUpTo("login_screen") { inclusive = true }
-                    launchSingleTop = true
-                }
-
-
-        }
-    }
-
-    // Limpiar mensaje de feedback cuando la pantalla se recompone en el caso que ya no aplique
-    DisposableEffect(authViewModel.feedbackMessage) {
-        onDispose {
-            // No limpiar aquí directamente para que el mensaje persista hasta la interacción
-        }
-    }
-
     Column(
-
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly
-
-
     ) {
         //imagen
         Image(
             painter = painterResource(id = R.drawable.lifesec_logo),
             contentDescription = ""
-
         )
         //Ingreso de numero de celular
         LogPhone(navController)
@@ -88,7 +61,6 @@ fun LogScreen(
         //boton de registro
         ButtonRegistry(navController)
     }
-
 }
 
 @Composable
@@ -149,32 +121,29 @@ fun LogPhone(
                 )
             }
         }
-//        /
-//        // Iniciar sesión como cuidador (mockup)
-//        Button(
-//            onClick = { navController.navigate(Screen.PersonSelector.route) },
-//            modifier = Modifier.padding(horizontal = 32.dp),
-//            shape = RoundedCornerShape(16.dp),
-//            colors = ButtonDefaults.buttonColors(
-//                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-//                contentColor = MaterialTheme.colorScheme.primary
-//            )
-//        ) {
-//            Text("Iniciar sesión ")
-//        }
 
-        // Iniciar sesión como anciano (manual)
+        // Iniciar sesión
         Button(
             onClick = {
-                var auth: FirebaseAuth = authViewModel.getAuth()
-                auth.signInWithEmailAndPassword(authViewModel.email, authViewModel.password).addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        navController.navigate(route = Screen.MenuOldPerson.route) {
-                            popUpTo("login_screen") { inclusive = true }
+                authViewModel.signInAndLoadUser(
+                    onSuccess = {
+                        val route = when (authViewModel.userType.value) {
+                            AuthViewModel.UserType.ANCIANO -> Screen.MenuOldPerson.route
+                            AuthViewModel.UserType.CUIDADOR -> Screen.PersonSelector.route
+                            else -> {
+                                authViewModel.updateFeedbackMessage("No se pudo identificar el tipo de usuario")
+                                return@signInAndLoadUser
+                            }
+                        }
+                        navController.navigate(route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
                             launchSingleTop = true
                         }
+                    },
+                    onError = { errorMessage ->
+                        authViewModel.updateFeedbackMessage(errorMessage)
                     }
-                }
+                )
             },
             enabled = !authViewModel.isLoading,
             modifier = Modifier.padding(horizontal = 32.dp),
@@ -222,7 +191,6 @@ fun LogPhone(
         }
     }
 }
-
 
 @Composable
 fun ButtonRegistry(

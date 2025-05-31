@@ -10,7 +10,7 @@ import java.net.URLEncoder
 
 class RoutesService {
     //Colocar API directions
-    private val apiKey = "API_MAPS_KEY"
+    private val apiKey = "API"
 
 
     suspend fun getRoutePoints(origin: LatLng, destination: LatLng): List<LatLng> {

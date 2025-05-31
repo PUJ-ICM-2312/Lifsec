@@ -126,25 +126,29 @@ fun RegistryForm(
 
         Button(
             onClick = {
-
-                if ( password.length >= 6) {
-                    if (email.contains("@") && !email.contains("@.") && email.contains(".co")){
-                        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-                            if(task.isSuccessful){
-                                navController.navigate(if (isElderly) Screen.MenuOldPerson.route else Screen.PersonSelector.route)
+                if (password.length >= 6) {
+                    if (email.contains("@") && !email.contains("@.") && email.contains(".co")) {
+                        authViewModel.registerUser(
+                            isAnciano = isElderly,
+                            onSuccess = {
+                                navController.navigate(
+                                    if (isElderly) Screen.MenuOldPerson.route
+                                    else Screen.PersonSelector.route
+                                ) {
+                                    // Limpiar el back stack
+                                    popUpTo("registry_screen") { inclusive = true }
+                                }
+                            },
+                            onError = { error ->
+                                Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
                             }
-
-                        }
-                    }else{
+                        )
+                    } else {
                         Toast.makeText(context, "Por favor ingrese un correo válido", Toast.LENGTH_SHORT).show()
-
                     }
-                }else{
-                    Toast.makeText(context, "contraseña necesita mas de 6 caracteres", Toast.LENGTH_SHORT).show()
-
+                } else {
+                    Toast.makeText(context, "La contraseña necesita más de 6 caracteres", Toast.LENGTH_SHORT).show()
                 }
-
-
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -154,9 +158,17 @@ fun RegistryForm(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 contentColor = MaterialTheme.colorScheme.primary
             ),
-            enabled = email.isNotBlank() && password.isNotBlank() && passwordsMatch
+            enabled = !authViewModel.isLoading && email.isNotBlank() &&
+                    password.isNotBlank() && passwordsMatch
         ) {
-            Text(text = "Registrarse")
+            if (authViewModel.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Text(text = "Registrarse")
+            }
         }
     }
 }

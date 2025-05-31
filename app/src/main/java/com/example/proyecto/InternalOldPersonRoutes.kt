@@ -75,7 +75,7 @@ fun InternalNavegationStack(
         }
 
         composable(Screen.CreateReminder.route) {
-            CreateReminderScreen(navController, reminderViewModel)
+            CreateReminderScreen(navController, reminderViewModel, authViewModel)
         }
 
         composable(Screen.CreateActivity.route) {

@@ -41,18 +41,30 @@ sealed class Screen(val route: String) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun NavegationStack(){
+fun NavegationStack() {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
 
+    // Simplificamos la lógica inicial - siempre comenzamos en Login
+    NavHost(navController = navController, startDestination = Screen.Login.route) {
+        composable(route = Screen.Login.route) { 
+            LogScreen(navController, authViewModel) 
+        }
 
-    //Para navegacion entre pantallas
-    NavHost(navController = navController, startDestination = Screen.Login.route){
-        composable(route = Screen.Login.route) { LogScreen( navController, authViewModel) }
-        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController) }
-        composable(route = Screen.MenuOldPerson.route) { MenuOldPersonScreen( navController) }
-        composable (route = Screen.PersonSelector.route) { UserListScreen(navController) }
-        composable(route = Screen.Registry.route) { RegistryScreen(navController, authViewModel) }
+        composable(Screen.MenuCaretaker.route) { 
+            MenuCaretakersScreen(navController)
+        }
+
+        composable(route = Screen.MenuOldPerson.route) { 
+            MenuOldPersonScreen(navController)
+        }
+
+        composable(route = Screen.PersonSelector.route) { 
+            UserListScreen(navController)
+        }
+
+        composable(route = Screen.Registry.route) { 
+            RegistryScreen(navController, authViewModel) 
+        }
     }
-
 }

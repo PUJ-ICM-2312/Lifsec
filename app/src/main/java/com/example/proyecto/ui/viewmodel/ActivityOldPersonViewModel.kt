@@ -9,65 +9,137 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyecto.data.Actividad
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.storage
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.util.UUID // Para nombres de archivo únicos
+import java.util.UUID
 
 // Heredar de AndroidViewModel para obtener el contexto de la aplicación
 class ActivityViewModel(application: Application) : AndroidViewModel(application) {
+    private val auth: FirebaseAuth = Firebase.auth
+    private val firestore: FirebaseFirestore = Firebase.firestore
+    private val storage: FirebaseStorage = Firebase.storage
+    private val authViewModel = AuthViewModel()
 
     private val _activities = mutableStateListOf<Actividad>()
     val activities: List<Actividad> get() = _activities
+    // Constantes para los nombres de directorios y archivos usados en el almacenamiento local
+    companion object {
+        private const val JSON_DIR = "LifSec_Json_Data" // Directorio para archivos JSON
+        private const val IMAGE_SUBDIR = "LifSec_IMG"   // Subdirectorio para imágenes
+        private const val JSON_FILENAME = "actividades.json" // Nombre del archivo JSON principal
+    }
 
-    // Constantes para nombres de archivo y directorio
-    private val JSON_FILENAME = "activities_data.json"
-    private val IMAGE_SUBDIR = "activity_images" // Subdirectorio para imágenes
-
-    // Inicializador para cargar datos al crear el ViewModel
     init {
-        loadLocalActivities()
+        // Primero cargar datos locales y luego sincronizar con Firebase
+        loadLocalAndSync()
     }
 
-    // --- Funciones existentes (modificadas para guardar después de cambios) ---
+    private fun loadLocalAndSync() {
+        viewModelScope.launch(Dispatchers.IO) {
+            // 1. Cargar datos locales
+            loadLocalActivities()
 
-    fun addActivity(actividad: String, ubicacion: String, imagen: Bitmap?, infoAdicional: String?) {
-        // Crear la actividad (aún sin nombre de archivo de imagen)
-        val newActivity = Actividad(actividad, ubicacion, imagen, infoAdicional)
-        _activities.add(newActivity)
-        // Guardar toda la lista actualizada (incluyendo la nueva actividad con su imagen)
-        storeLocalActivities()
-    }
-
-    fun removeActivity(index: Int) {
-        if (index in _activities.indices) {
-            // Obtener el nombre del archivo de imagen antes de eliminar la actividad
-            val filenameToRemove = _activities[index].imagenFilename
-            _activities.removeAt(index)
-            // Guardar la lista actualizada
-            storeLocalActivities()
-            // Eliminar el archivo de imagen asociado (si existe) en segundo plano
-            filenameToRemove?.let { deleteImageFile(it) }
+            // 2. Sincronizar con Firebase
+            syncActivitiesWithFirebase()
         }
     }
 
-    fun updateActivity(index: Int, updatedActivity: Actividad) {
-        if (index in _activities.indices) {
-            val oldFilename = _activities[index].imagenFilename
-            // Si la imagen cambió (o se añadió una nueva), el 'updatedActivity' tendrá un Bitmap
-            // y 'imagenFilename' será null inicialmente. storeLocalActivities se encargará
-            // de guardar el nuevo Bitmap y asignar el nuevo nombre de archivo.
-            _activities[index] = updatedActivity
-            // Guardar la lista actualizada
-            storeLocalActivities()
-            // Si la imagen anterior era diferente y existía, eliminar el archivo antiguo
-            if (oldFilename != null && oldFilename != updatedActivity.imagenFilename) {
-                deleteImageFile(oldFilename)
+    private suspend fun syncActivitiesWithFirebase() {
+        authViewModel.getCurrentUserID()?.let { userId ->
+            _activities.forEach { actividad ->
+                // Subir cada actividad a Firestore
+                uploadActivityToFirebase(actividad)
+            }
+
+            // Limpiar almacenamiento local después de sincronizar
+            clearLocalStorage()
+        }
+    }
+
+    private suspend fun uploadActivityToFirebase(actividad: Actividad) {
+        try {
+            // 1. Si hay imagen, subirla primero a Storage
+            val imageUrl = actividad.imagen?.let { bitmap ->
+                uploadImageToStorage(bitmap)
+            }
+
+            // 2. Crear documento de actividad para Firestore
+            val activityMap = hashMapOf(
+                "ancianoID" to actividad.ancianoID,
+                "actividad" to actividad.actividad,
+                "ubicacion" to actividad.ubicacion,
+                "infoAdicional" to actividad.infoAdicional,
+                "imagenUrl" to imageUrl
+            )
+
+            // 3. Subir a Firestore
+            firestore.collection("actividades")
+                .add(activityMap)
+                .await()
+
+        } catch (e: Exception) {
+            Log.e("ActivityViewModel", "Error sincronizando actividad: ${e.message}")
+        }
+    }
+
+    private suspend fun uploadImageToStorage(bitmap: Bitmap): String {
+        return withContext(Dispatchers.IO) {
+            val baos = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+            val imageRef = storage.reference.child("actividades/${UUID.randomUUID()}.jpg")
+
+            val uploadTask = imageRef.putBytes(baos.toByteArray()).await()
+            return@withContext imageRef.downloadUrl.await().toString()
+        }
+    }
+
+    private fun clearLocalStorage() {
+        val context = getApplication<Application>().applicationContext
+
+        // Eliminar archivo JSON
+        val jsonDir = File(context.filesDir, JSON_DIR)
+        val jsonFile = File(jsonDir, JSON_FILENAME)
+        if (jsonFile.exists()) jsonFile.delete()
+
+        // Eliminar directorio de imágenes
+        val imageDir = File(context.filesDir, IMAGE_SUBDIR)
+        imageDir.deleteRecursively()
+
+        // Limpiar lista en memoria
+        _activities.clear()
+    }
+
+    fun addActivity(actividad: String, ubicacion: String, imagen: Bitmap?, infoAdicional: String?) {
+        authViewModel.getCurrentUserID()?.let { userID ->
+            val newActivity = Actividad(
+                ancianoID = userID,
+                actividad = actividad,
+                ubicacion = ubicacion,
+                imagen = imagen,
+                infoAdicional = infoAdicional
+            )
+
+            viewModelScope.launch {
+                // Subir directamente a Firebase
+                uploadActivityToFirebase(newActivity)
+
+                // Actualizar lista local
+                _activities.add(newActivity)
             }
         }
     }
@@ -82,9 +154,10 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
 
             // 1. Cargar JSON
             try {
-                val jsonFile = File(context.filesDir, JSON_FILENAME)
+                val jsonDir = File(context.filesDir, JSON_DIR)
+                val jsonFile = File(jsonDir, JSON_FILENAME)
                 if (jsonFile.exists()) {
-                    context.openFileInput(JSON_FILENAME).use { fis ->
+                    jsonFile.inputStream().use { fis ->
                         val jsonString = fis.bufferedReader().use { it.readText() }
                         // Definir el tipo de lista para Gson
                         val listType = object : TypeToken<List<Actividad>>() {}.type
@@ -129,7 +202,7 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
             val activitiesToStore = mutableListOf<Actividad>()
 
             // 1. Preparar datos y guardar imágenes
-            val imageDir = context.getDir(IMAGE_SUBDIR, Context.MODE_PRIVATE)
+            val imageDir = File(context.filesDir, IMAGE_SUBDIR)
             if (!imageDir.exists()) {
                 imageDir.mkdirs() // Crear directorio si no existe
             }
@@ -156,7 +229,10 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
 
             // 3. Guardar JSON en archivo interno
             try {
-                context.openFileOutput(JSON_FILENAME, Context.MODE_PRIVATE).use { fos ->
+                val jsonDir = File(context.filesDir, JSON_DIR)
+                if (!jsonDir.exists()) jsonDir.mkdirs()
+                val jsonFile = File(jsonDir, JSON_FILENAME)
+                jsonFile.outputStream().use { fos ->
                     fos.write(jsonString.toByteArray(Charsets.UTF_8))
                     Log.d("ActivityViewModel", "JSON guardado exitosamente.")
                 }
@@ -172,7 +248,7 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
     // --- Funciones auxiliares para manejo de Bitmaps ---
 
     private fun saveBitmapToFile(context: Context, bitmap: Bitmap, filename: String): Boolean {
-        val imageDir = context.getDir(IMAGE_SUBDIR, Context.MODE_PRIVATE)
+        val imageDir = File(context.filesDir, IMAGE_SUBDIR)
         val imageFile = File(imageDir, filename)
         var success = false
         try {
@@ -189,7 +265,7 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
     }
 
     private fun loadBitmapFromFile(context: Context, filename: String): Bitmap? {
-        val imageDir = context.getDir(IMAGE_SUBDIR, Context.MODE_PRIVATE)
+        val imageDir = File(context.filesDir, IMAGE_SUBDIR)
         val imageFile = File(imageDir, filename)
         var bitmap: Bitmap? = null
         if (imageFile.exists()) {
@@ -208,7 +284,7 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
     private fun deleteImageFile(filename: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val context = getApplication<Application>().applicationContext
-            val imageDir = context.getDir(IMAGE_SUBDIR, Context.MODE_PRIVATE)
+            val imageDir = File(context.filesDir, IMAGE_SUBDIR)
             val imageFile = File(imageDir, filename)
             try {
                 if (imageFile.exists()) {
@@ -228,7 +304,7 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
 
     // Opcional: Elimina imágenes en el directorio que no están referenciadas en la lista actual
     private fun cleanupOrphanedImages(context: Context, referencedFilenames: List<String>) {
-        val imageDir = context.getDir(IMAGE_SUBDIR, Context.MODE_PRIVATE)
+        val imageDir = File(context.filesDir, IMAGE_SUBDIR)
         if (imageDir.exists() && imageDir.isDirectory) {
             val referencedSet = referencedFilenames.toSet()
             imageDir.listFiles()?.forEach { file ->

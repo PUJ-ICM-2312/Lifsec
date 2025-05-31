@@ -16,11 +16,15 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyecto.ui.viewmodel.ReminderViewModel
+import com.example.proyecto.ui.viewmodel.AuthViewModel
 import java.util.*
 
 @Composable
-fun CreateReminderScreen(navController: NavController,
-                         viewModel: ReminderViewModel) {
+fun CreateReminderScreen(
+    navController: NavController,
+    viewModel: ReminderViewModel,
+    authViewModel: AuthViewModel
+) {
     var titleText by remember { mutableStateOf("") }
     var additionalInfoText by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf("") }
@@ -37,6 +41,9 @@ fun CreateReminderScreen(navController: NavController,
             selectedDate = "$selectedDay/${selectedMonth + 1}/$selectedYear"
         }, year, month, day
     )
+
+    // Obtener el ID del usuario autenticado desde el AuthViewModel
+    val ancianoID = authViewModel.getCurrentUserID() ?: ""
 
     Box(
         modifier = Modifier
@@ -100,11 +107,12 @@ fun CreateReminderScreen(navController: NavController,
                         onClick = {
                             if (titleText.isNotBlank() && selectedDate.isNotBlank()) {
                                 viewModel.addReminder(
+                                    ancianoID = ancianoID,
                                     titulo = titleText,
                                     fecha = selectedDate,
                                     infoAdicional = additionalInfoText.ifBlank { null }
                                 )
-                                navController.popBackStack() // volver después de guardar
+                                navController.popBackStack()
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
@@ -136,6 +144,6 @@ fun Recordatorioinfo(label: String, value: String, onValueChange: (String) -> Un
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth()
-            )
-        }
+        )
+    }
 }
