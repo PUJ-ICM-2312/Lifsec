@@ -36,6 +36,7 @@ class internalStorageViewModel : ViewModel() {
         return archivo.exists()
     }
     fun huellaIgualAUser(context: Context, correo:String, contra:String): Boolean {
+        //esto se hace porque si nm oexiste se muere la app
         if (!existeJson(context)) {
             return false
         }
