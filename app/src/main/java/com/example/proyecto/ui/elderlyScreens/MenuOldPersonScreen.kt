@@ -497,143 +497,147 @@ fun MenuCard(
 
 @Composable
 fun BottomNavigationBar(menuOldPersonViewModel: MenuOldPersonViewModel){
+    val recompositionKey by menuOldPersonViewModel.cambio
 
+    key(recompositionKey) {
+        // Observar la entrada actual del back stack
+        NavigationBar(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ) {
+            NavigationBarItem(
 
-    // Observar la entrada actual del back stack
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface
-    ) {
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Menú",
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            },
-            label = {
-                Text(
-                    text = "Menú",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    maxLines = 1
-                )
-            },
-            selected = menuOldPersonViewModel.apartado == "Menu" ,
-            onClick = {
-                menuOldPersonViewModel.cambiarApartado("Menu")
-                menuOldPersonViewModel.generarCambio()
-            },
-            alwaysShowLabel = true,
-            colors = NavigationBarItemDefaults.colors(
-                indicatorColor = MaterialTheme.colorScheme.secondary,
-                unselectedIconColor = MaterialTheme.colorScheme.background,
-                unselectedTextColor = MaterialTheme.colorScheme.background,
-                selectedIconColor = Color.White,
-                selectedTextColor = MaterialTheme.colorScheme.secondary,
-            ),
-            modifier = Modifier.height(56.dp)
-        )
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Menú",
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Menú",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        maxLines = 1
+                    )
+                },
+                selected = menuOldPersonViewModel.apartado == "Menu" ,
+                onClick = {
+                    menuOldPersonViewModel.cambiarApartado("Menu")
+                    menuOldPersonViewModel.generarCambio()
+                },
+                alwaysShowLabel = true,
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = MaterialTheme.colorScheme.secondary,
+                    unselectedIconColor = MaterialTheme.colorScheme.background,
+                    unselectedTextColor = MaterialTheme.colorScheme.background,
+                    selectedIconColor = Color.White,
+                    selectedTextColor = MaterialTheme.colorScheme.secondary,
+                ),
+                modifier = Modifier.height(56.dp)
+            )
 
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = "Ubicación",
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            },
-            label = {
-                Text(
-                    text = "Ubicación",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    maxLines = 1
-                )
-            },
-            selected = menuOldPersonViewModel.apartado == "Ubicacion" ,
-            onClick = {
-                menuOldPersonViewModel.cambiarApartado("Ubicacion")
-                menuOldPersonViewModel.generarCambio()
-                      },
-            alwaysShowLabel = true,
-            colors = NavigationBarItemDefaults.colors(
-                indicatorColor = MaterialTheme.colorScheme.secondary,
-                unselectedIconColor = MaterialTheme.colorScheme.background,
-                unselectedTextColor = MaterialTheme.colorScheme.background,
-                selectedIconColor = Color.White,
-                selectedTextColor = MaterialTheme.colorScheme.secondary,
-            ),
-            modifier = Modifier.height(56.dp)
-        )
+            NavigationBarItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = "Ubicación",
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Ubicación",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        maxLines = 1
+                    )
+                },
+                selected = menuOldPersonViewModel.apartado == "Ubicacion" ,
+                onClick = {
+                    menuOldPersonViewModel.cambiarApartado("Ubicacion")
+                    menuOldPersonViewModel.generarCambio()
+                },
+                alwaysShowLabel = true,
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = MaterialTheme.colorScheme.secondary,
+                    unselectedIconColor = MaterialTheme.colorScheme.background,
+                    unselectedTextColor = MaterialTheme.colorScheme.background,
+                    selectedIconColor = Color.White,
+                    selectedTextColor = MaterialTheme.colorScheme.secondary,
+                ),
+                modifier = Modifier.height(56.dp)
+            )
 
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.List,
-                    contentDescription = "Actividades",
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            },
-            label = {
-                Text(
-                    text = "Actividades",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    maxLines = 1
-                )
-            },
-            selected = menuOldPersonViewModel.apartado == "Actividades" ,
-            onClick = {
-                menuOldPersonViewModel.cambiarApartado("Actividades")
-                menuOldPersonViewModel.generarCambio()
-                      },
-            alwaysShowLabel = true,
-            colors = NavigationBarItemDefaults.colors(
-                indicatorColor = MaterialTheme.colorScheme.secondary,
-                unselectedIconColor = MaterialTheme.colorScheme.background,
-                unselectedTextColor = MaterialTheme.colorScheme.background,
-                selectedIconColor = Color.White,
-                selectedTextColor = MaterialTheme.colorScheme.secondary,
-            ),
-            modifier = Modifier.height(56.dp)
-        )
+            NavigationBarItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.List,
+                        contentDescription = "Actividades",
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Actividades",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        maxLines = 1
+                    )
+                },
+                selected = menuOldPersonViewModel.apartado == "Actividades" ,
+                onClick = {
+                    menuOldPersonViewModel.cambiarApartado("Actividades")
+                    menuOldPersonViewModel.generarCambio()
+                },
+                alwaysShowLabel = true,
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = MaterialTheme.colorScheme.secondary,
+                    unselectedIconColor = MaterialTheme.colorScheme.background,
+                    unselectedTextColor = MaterialTheme.colorScheme.background,
+                    selectedIconColor = Color.White,
+                    selectedTextColor = MaterialTheme.colorScheme.secondary,
+                ),
+                modifier = Modifier.height(56.dp)
+            )
 
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Recordatorios",
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            },
-            label = {
-                Text(
-                    text = "Recordatorios",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    maxLines = 1
-                )
-            },
-            selected = menuOldPersonViewModel.apartado == "Recordatorios" ,
-            onClick = {
-                menuOldPersonViewModel.cambiarApartado("Recordatorios")
-                menuOldPersonViewModel.generarCambio()
-                      },
-            alwaysShowLabel = true,
-            colors = NavigationBarItemDefaults.colors(
-                indicatorColor = MaterialTheme.colorScheme.secondary,
-                unselectedIconColor = MaterialTheme.colorScheme.background,
-                unselectedTextColor = MaterialTheme.colorScheme.background,
-                selectedIconColor = Color.White,
-                selectedTextColor = MaterialTheme.colorScheme.secondary,
-            ),
-            modifier = Modifier.height(56.dp)
-        )
+            NavigationBarItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "Recordatorios",
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Recordatorios",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        maxLines = 1
+                    )
+                },
+                selected = menuOldPersonViewModel.apartado == "Recordatorios" ,
+                onClick = {
+                    menuOldPersonViewModel.cambiarApartado("Recordatorios")
+                    menuOldPersonViewModel.generarCambio()
+                },
+                alwaysShowLabel = true,
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = MaterialTheme.colorScheme.secondary,
+                    unselectedIconColor = MaterialTheme.colorScheme.background,
+                    unselectedTextColor = MaterialTheme.colorScheme.background,
+                    selectedIconColor = Color.White,
+                    selectedTextColor = MaterialTheme.colorScheme.secondary,
+                ),
+                modifier = Modifier.height(56.dp)
+            )
+        }
     }
 }
+
