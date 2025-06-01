@@ -15,6 +15,7 @@ import com.example.proyecto.ui.caretakerScreen.UserListScreen
 import com.example.proyecto.ui.elderlyScreens.AppPlanScreen
 import com.example.proyecto.ui.elderlyScreens.CaretakersConfigScreen
 import com.example.proyecto.ui.viewmodel.AuthViewModel
+import com.example.proyecto.ui.viewmodel.internalStorageViewModel
 
 sealed class Screen(val route: String) {
     object Login: Screen("login_screen")
@@ -44,20 +45,19 @@ sealed class Screen(val route: String) {
 fun NavegationStack() {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
+    val internalStorageViewModel: internalStorageViewModel = viewModel()
 
 
     //Para navegacion entre pantallas
-    NavHost(navController = navController, startDestination = Screen.Login.route){
-        composable(route = Screen.Login.route) { LogScreen( navController, authViewModel) }
-        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController) }
-        composable(route = Screen.MenuOldPerson.route) { MenuOldPersonScreen( navController, authViewModel ) }
-        composable (route = Screen.PersonSelector.route) { UserListScreen(navController) }
-        composable(route = Screen.Registry.route) { RegistryScreen(navController, authViewModel) }
-    }
     // Simplificamos la lógica inicial - siempre comenzamos en Login
     NavHost(navController = navController, startDestination = Screen.Login.route) {
+//        composable(route = Screen.Login.route) { LogScreen( navController, authViewModel,internalStorageViewModel) }
+//        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController) }
+//        composable(route = Screen.MenuOldPerson.route) { MenuOldPersonScreen( navController, authViewModel ) }
+//        composable (route = Screen.PersonSelector.route) { UserListScreen(navController) }
+//        composable(route = Screen.Registry.route) { RegistryScreen(navController, authViewModel) }
         composable(route = Screen.Login.route) {
-            LogScreen(navController, authViewModel)
+            LogScreen(navController, authViewModel, internalStorageViewModel)
         }
 
         composable(Screen.MenuCaretaker.route) {
