@@ -61,14 +61,14 @@ fun LogScreen(
     val currentUser by authViewModel.currentUser.collectAsState()
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
+            android.util.Log.d("LogScreen", "Usuario autenticado: ${currentUser?.email}")
             // Navegar a la pantalla principal de anciano o cuidador según sea necesario.
-
-                navController.navigate(route = Screen.MenuOldPerson.route) {
-                    popUpTo("login_screen") { inclusive = true }
-                    launchSingleTop = true
-                }
-
-
+            navController.navigate(route = Screen.MenuOldPerson.route) {
+                popUpTo("login_screen") { inclusive = true }
+                launchSingleTop = true
+            }
+        } else {
+            android.util.Log.d("LogScreen", "Usuario no autenticado")
         }
     }
 
@@ -203,13 +203,35 @@ fun LogPhone(
         // Botón huella dummy
         Button(
             onClick = {
-                huellaGuardada = internalViewModel.existeJson(context)
-                if (huellaGuardada)
-                    showFingerprint.value = true
-                else{
+                try {
+                    val existeArchivo = internalViewModel.existeJson(context)
+                    if (existeArchivo) {
+                        val huellaData: HuellaData = internalViewModel.leerJsonHuella(context = context)
+                        if (huellaData != null &&
+                            huellaData.correo?.isNotEmpty() == true &&
+                            huellaData.contra?.isNotEmpty() == true) {
+                            showFingerprint.value = true
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "No hay credenciales guardadas para la huella",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Primero debe iniciar sesión y guardar sus credenciales",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        context,
+                        "Error al leer datos de huella",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     showFingerprint.value = false
-                    Toast.makeText(context, "Inicie sesión con correo y contraseña y asígnelo para la huella", Toast.LENGTH_SHORT).show()
-
                 }
             },
             modifier = Modifier.padding(horizontal = 32.dp),

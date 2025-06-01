@@ -7,9 +7,11 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 
 import androidx.compose.foundation.layout.Row
@@ -32,6 +34,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -86,10 +89,35 @@ fun MenuOldPersonScreen(
     navController: NavController,
     authViewModel: AuthViewModel,
     internalViewModel: internalStorageViewModel = viewModel(),
-
 ) {
     val context = LocalContext.current
-    var huellaEqualsUser by remember { mutableStateOf(internalViewModel.huellaIgualAUser(context, authViewModel.email, authViewModel.password)) }
+    val currentUser by authViewModel.currentUser.collectAsState()
+
+    // Si el usuario no está autenticado, no mostrar nada y navegar a Login
+    if (currentUser == null) {
+        // Navegación segura fuera del árbol de composición
+        LaunchedEffect(Unit) {
+            Log.i("MenuOldPersonScreen", "Usuario no autenticado, navegando a Login")
+            navController.navigate(Screen.Login.route) {
+                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+            }
+        }
+        // Opcional: indicador de carga
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Verificando autenticación...")
+        }
+        return
+    }
+
+    // Solo verificar la huella si hay usuario activo
+    var huellaEqualsUser by remember(currentUser?.uid) {
+        mutableStateOf(
+            currentUser?.let {
+                internalViewModel.huellaIgualAUser(context, authViewModel.email, authViewModel.password)
+            } ?: false
+        )
+    }
+    var mostrarCard by remember { mutableStateOf(true) }
     val notificationPermissionState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.POST_NOTIFICATIONS,
@@ -100,7 +128,6 @@ fun MenuOldPersonScreen(
     LaunchedEffect(Unit) {
         notificationPermissionState.launchMultiplePermissionRequest()
     }
-
 
     // NavController interno para la navegación anidada
     val internalNavController = rememberNavController()
@@ -171,88 +198,112 @@ fun MenuOldPersonScreen(
         notificationPermissionState.launchMultiplePermissionRequest()
     }
 
-    if(huellaEqualsUser){
-        var huellaData: HuellaData = internalViewModel.leerJsonHuella(context)
-        Column (
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ){
-            Text(text = huellaData.contra + huellaData.correo + "ddasd")
-            Text(text =  authViewModel.password + authViewModel.email +  "sadsad")
-        }
-
-
-
-//        Scaffold(
-//            bottomBar = { BottomNavigationBar(internalNavController) },
-//            containerColor = MaterialTheme.colorScheme.background
-//        ) { innerPadding ->
-//            Surface(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(innerPadding),
-//                color = MaterialTheme.colorScheme.background
-//            ) {
-//                // Aquí se carga el grafo de navegación interno
-//                InternalNavegationStack(navController = internalNavController, rootNavController = navController, authViewModel = authViewModel)
-//            }
-//        }
-    }else{
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    Scaffold(
+        bottomBar = { BottomNavigationBar(internalNavController) },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            color = MaterialTheme.colorScheme.background
         ) {
-            Card(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(20.dp)
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-
-                    Text(
-                        text = "¿Desea que este usuario tenga la huella?",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (huellaEqualsUser) {
+                    Log.i("MenuOldPersonScreen", "Huella coincide con el usuario")
+                    // Carga el grafo de navegación interno
+                    InternalNavegationStack(
+                        navController = internalNavController,
+                        rootNavController = navController,
+                        authViewModel = authViewModel
                     )
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Button(
-                            onClick = {
-                                internalViewModel.guardarJsonHuella(context, authViewModel.email, authViewModel.password)
-                                huellaEqualsUser = true
-                            },
+                    // Card flotante con datos de huella solo si ambas condiciones son true
+                    if (mostrarCard) {
+                        var huellaData: HuellaData = internalViewModel.leerJsonHuella(context)
+                        Card(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .align(Alignment.Center),
+                            elevation = CardDefaults.cardElevation(8.dp),
+                            shape = RoundedCornerShape(16.dp)
                         ) {
-                            Text(text = "Sí", fontSize = 14.sp)
-                        }
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Datos de Huella",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(text = "Contraseña: ${huellaData.contra}")
+                                Text(text = "Correo: ${huellaData.correo}")
 
-                        Button(
-                            onClick = {
-                                huellaEqualsUser = true
-                            },
+                                Button(
+                                    onClick = { mostrarCard = false },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    )
+                                ) {
+                                    Text("Descartar", color = MaterialTheme.colorScheme.onError)
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Pantalla de solicitud de huella
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Log.i("MenuOldPersonScreen", "Huella no coincide con el usuario")
+                        Card(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                            shape = RoundedCornerShape(16.dp)
                         ) {
-                            Text(text = "No", fontSize = 14.sp)
+                            Column(
+                                modifier = Modifier
+                                    .padding(20.dp)
+                                    .fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Text(
+                                    text = "¿Desea que este usuario tenga la huella?",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.align(Alignment.End)
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            internalViewModel.guardarJsonHuella(context, authViewModel.email, authViewModel.password)
+                                            huellaEqualsUser = true
+                                        }
+                                    ) {
+                                        Text(text = "Sí", fontSize = 14.sp)
+                                    }
+                                    Button(
+                                        onClick = { huellaEqualsUser = true
+                                                    mostrarCard = false
+                                                    authViewModel.getCurrentState()}
+                                    ) {
+                                        Text(text = "No", fontSize = 14.sp)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
-
-
-
-
         }
-
     }
 
 
@@ -268,14 +319,6 @@ fun MainScreen(
 ) {
     // Observar el estado del usuario. Si cambia a null, navegar.
     val currentUser by authViewModel.currentUser.collectAsState()
-    LaunchedEffect(currentUser) {
-        if (currentUser == null) {
-            rootNavController.navigate(Screen.Login.route) {
-                popUpTo(Screen.MenuOldPerson.route) { inclusive = true }
-                launchSingleTop = true
-            }
-        }
-    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -553,7 +596,3 @@ fun BottomNavigationBar(navController: NavController) {
         )
     }
 }
-
-
-
-

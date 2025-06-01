@@ -1,5 +1,6 @@
 package com.example.proyecto.ui.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.text.get
 
 class AuthViewModel: ViewModel() {
     enum class UserType {
@@ -52,13 +54,31 @@ class AuthViewModel: ViewModel() {
     var feedbackMessage by mutableStateOf<String?>(null)
         private set
 
+    init {
+        viewModelScope.launch {
+            auth.currentUser?.let { user ->
+                _currentUser.value = user
+                // Solo cargar datos si no tenemos una entidad actual
+                if (_currentEntity.value == null) {
+                    loadUserData(user.uid)
+                }
+            }
+        }
+    }
 
     fun setCurrentEntity(user: Usuario?) {
-        _currentEntity.value = user
-        _userType.value = when(user) {
-            is Anciano -> UserType.ANCIANO
-            is Cuidador -> UserType.CUIDADOR
-            else -> UserType.NONE
+        viewModelScope.launch {
+            _currentEntity.value = user
+            _userType.value = when(user) {
+                is Anciano -> {
+                    _emergencia.value = user.emergencia ?: false
+                    UserType.ANCIANO
+                }
+                is Cuidador -> UserType.CUIDADOR
+                else -> UserType.NONE
+            }
+
+            Log.d("AuthViewModel", "CurrentEntity actualizado: ${user?.userID}, Tipo: ${_userType.value}")
         }
     }
 
@@ -92,13 +112,26 @@ class AuthViewModel: ViewModel() {
     }
 
     fun signOut() {
-        auth.signOut()
-        _currentUser.value = null
-        _currentEntity.value = null
-        _userType.value = UserType.NONE
-        email = ""
-        password = ""
-        feedbackMessage = "Sesión cerrada."
+        viewModelScope.launch {
+            try {
+                auth.signOut()
+                // Resetear todos los estados de forma síncrona
+                _currentUser.value = null
+                _currentEntity.value = null
+                _userType.value = UserType.NONE
+                _emergencia.value = false
+
+                // Limpiar campos UI
+                email = ""
+                password = ""
+                feedbackMessage = "Sesión cerrada."
+
+                Log.d("AuthViewModel", "SignOut completo - Estados reseteados")
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error en signOut: ${e.message}")
+                feedbackMessage = "Error al cerrar sesión: ${e.message}"
+            }
+        }
     }
 
     fun registerUser(isAnciano: Boolean, onSuccess: () -> Unit, onError: (String) -> Unit) {
@@ -113,38 +146,33 @@ class AuthViewModel: ViewModel() {
                 if (task.isSuccessful) {
                     val firebaseUser = task.result?.user
                     firebaseUser?.let { user ->
-                        // Crear el GeoPoint con una ubicación inicial por defecto
                         val defaultLocation = GeoPoint(0.0, 0.0)
 
-                        // Crear objeto según tipo de usuario con los constructores correctos
                         val nuevoUsuario = if (isAnciano) {
                             Anciano(
                                 userID = user.uid,
                                 email = email,
-                                nombre = "", // Nombre vacío prueba
+                                nombre = "",
                                 password = password,
-                                latLng = defaultLocation
-                            ).apply {
+                                latLng = defaultLocation,
                                 emergencia = false
-                            }
+                            )
                         } else {
                             Cuidador(
                                 userID = user.uid,
                                 email = email,
-                                nombre = "", // Nombre vacío prueba
+                                nombre = "",
                                 password = password,
                                 latLng = defaultLocation
-                            ).apply {
-                                ancianosACargo = mutableListOf()
-                            }
+                            )
                         }
 
-                        // Guardar en Firestore
                         val coleccion = if (isAnciano) "ancianos" else "cuidadores"
                         firestore.collection(coleccion)
                             .document(user.uid)
                             .set(nuevoUsuario)
                             .addOnSuccessListener {
+                                _currentUser.value = user
                                 setCurrentEntity(nuevoUsuario)
                                 isLoading = false
                                 onSuccess()
@@ -158,6 +186,49 @@ class AuthViewModel: ViewModel() {
                     isLoading = false
                     onError(task.exception?.message ?: "Error al registrar usuario")
                 }
+            }
+    }
+
+    private fun loadUserData(uid: String) {
+        isLoading = true
+        firestore.collection("ancianos").document(uid).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val data = document.data
+                    if (data != null) {
+                        val anciano = Anciano(
+                            userID = data["userID"] as? String ?: "",
+                            email = data["email"] as? String ?: "",
+                            nombre = data["nombre"] as? String ?: "",
+                            password = data["password"] as? String ?: "",
+                            latLng = data["latLng"] as? GeoPoint ?: GeoPoint(0.0, 0.0),
+                            emergencia = data["emergencia"] as? Boolean ?: false
+                        )
+                        setCurrentEntity(anciano)
+                    }
+                } else {
+                    firestore.collection("cuidadores").document(uid).get()
+                        .addOnSuccessListener { cuidadorDoc ->
+                            if (cuidadorDoc.exists()) {
+                                val data = cuidadorDoc.data
+                                if (data != null) {
+                                    val cuidador = Cuidador(
+                                        userID = data["userID"] as? String ?: "",
+                                        email = data["email"] as? String ?: "",
+                                        nombre = data["nombre"] as? String ?: "",
+                                        password = data["password"] as? String ?: "",
+                                        latLng = data["latLng"] as? GeoPoint ?: GeoPoint(0.0, 0.0)
+                                    )
+                                    setCurrentEntity(cuidador)
+                                }
+                            }
+                        }
+                }
+                isLoading = false
+            }
+            .addOnFailureListener {
+                isLoading = false
+                Log.e("AuthViewModel", "Error cargando datos: ${it.message}")
             }
     }
 
@@ -244,5 +315,15 @@ class AuthViewModel: ViewModel() {
 
     fun updateFeedbackMessage(message: String?) {
         feedbackMessage = message
+    }
+
+    fun getCurrentState(){
+        Log.d("AuthViewModel", """
+        CurrentUser: ${_currentUser.value?.uid}
+        CurrentEntity: ${_currentEntity.value?.userID}
+        UserType: ${_userType.value}
+        Email: $email
+        Password: ${if (password.isNotEmpty()) "***" else "empty"}
+    """.trimIndent())
     }
 }
