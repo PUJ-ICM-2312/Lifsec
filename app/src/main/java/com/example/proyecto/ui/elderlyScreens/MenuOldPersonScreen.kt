@@ -69,6 +69,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.InternalNavegationStack
 import com.example.proyecto.Screen
+import com.example.proyecto.data.HuellaData
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.example.proyecto.ui.viewmodel.internalStorageViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -83,8 +84,9 @@ import kotlin.math.sqrt
 @Composable
 fun MenuOldPersonScreen(
     navController: NavController,
+    authViewModel: AuthViewModel,
     internalViewModel: internalStorageViewModel = viewModel(),
-    authViewModel: AuthViewModel = viewModel()
+
 ) {
     val context = LocalContext.current
     var huellaEqualsUser by remember { mutableStateOf(internalViewModel.huellaIgualAUser(context, authViewModel.email, authViewModel.password)) }
@@ -170,64 +172,89 @@ fun MenuOldPersonScreen(
     }
 
     if(huellaEqualsUser){
-        Scaffold(
-            bottomBar = { BottomNavigationBar(internalNavController) },
-            containerColor = MaterialTheme.colorScheme.background
-        ) { innerPadding ->
-            Surface(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                color = MaterialTheme.colorScheme.background
-            ) {
-                // Aquí se carga el grafo de navegación interno
-                InternalNavegationStack(navController = internalNavController, rootNavController = navController, authViewModel = authViewModel)
-            }
+        var huellaData: HuellaData = internalViewModel.leerJsonHuella(context)
+        Column (
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ){
+            Text(text = huellaData.contra + huellaData.correo + "ddasd")
+            Text(text =  authViewModel.password + authViewModel.email +  "sadsad")
         }
+
+
+
+//        Scaffold(
+//            bottomBar = { BottomNavigationBar(internalNavController) },
+//            containerColor = MaterialTheme.colorScheme.background
+//        ) { innerPadding ->
+//            Surface(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(innerPadding),
+//                color = MaterialTheme.colorScheme.background
+//            ) {
+//                // Aquí se carga el grafo de navegación interno
+//                InternalNavegationStack(navController = internalNavController, rootNavController = navController, authViewModel = authViewModel)
+//            }
+//        }
     }else{
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 17.dp)
+            Card(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Text(
-                    text = "¿Desea que este usuario tenga la huella?",
-                    fontSize = 15.sp
-                )
+                Column(
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+
+                    Text(
+                        text = "¿Desea que este usuario tenga la huella?",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Button(
+                            onClick = {
+                                internalViewModel.guardarJsonHuella(context, authViewModel.email, authViewModel.password)
+                                huellaEqualsUser = true
+                            },
+                        ) {
+                            Text(text = "Sí", fontSize = 14.sp)
+                        }
+
+                        Button(
+                            onClick = {
+                                huellaEqualsUser = true
+                            },
+                        ) {
+                            Text(text = "No", fontSize = 14.sp)
+                        }
+                    }
+                }
             }
 
 
-            Spacer(modifier = Modifier.padding(15.dp))
-
-            Row(
-                modifier = Modifier.padding(horizontal = 10.dp)
-            ) {
-                Button(onClick = {
-
-                    internalViewModel.guardarJsonHuella(context, authViewModel.email, authViewModel.password)
-                    huellaEqualsUser = true
-
-
-                }) {
-                    Text(text = "Si", fontSize = 13.sp)
-                }
-                Button(onClick = {
-
-                    huellaEqualsUser = true
-
-
-                }) {
-                    Text(text = "No", fontSize = 13.sp)
-                }
-            }
 
 
         }
 
     }
+
 
 
 }

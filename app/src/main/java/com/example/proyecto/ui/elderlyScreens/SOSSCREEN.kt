@@ -27,7 +27,7 @@ import com.example.proyecto.ui.viewmodel.AuthViewModel
 @Composable
 fun SOSScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel,
 ) {
     var emergencyType by remember { mutableStateOf(TextFieldValue("")) }
     var emergencyMessage by remember { mutableStateOf(TextFieldValue("")) }

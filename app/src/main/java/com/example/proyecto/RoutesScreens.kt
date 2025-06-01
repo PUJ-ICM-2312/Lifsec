@@ -45,26 +45,35 @@ fun NavegationStack() {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
 
+
+    //Para navegacion entre pantallas
+    NavHost(navController = navController, startDestination = Screen.Login.route){
+        composable(route = Screen.Login.route) { LogScreen( navController, authViewModel) }
+        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController) }
+        composable(route = Screen.MenuOldPerson.route) { MenuOldPersonScreen( navController, authViewModel ) }
+        composable (route = Screen.PersonSelector.route) { UserListScreen(navController) }
+        composable(route = Screen.Registry.route) { RegistryScreen(navController, authViewModel) }
+    }
     // Simplificamos la lógica inicial - siempre comenzamos en Login
     NavHost(navController = navController, startDestination = Screen.Login.route) {
-        composable(route = Screen.Login.route) { 
-            LogScreen(navController, authViewModel) 
+        composable(route = Screen.Login.route) {
+            LogScreen(navController, authViewModel)
         }
 
-        composable(Screen.MenuCaretaker.route) { 
+        composable(Screen.MenuCaretaker.route) {
             MenuCaretakersScreen(navController)
         }
 
-        composable(route = Screen.MenuOldPerson.route) { 
-            MenuOldPersonScreen(navController)
+        composable(route = Screen.MenuOldPerson.route) {
+            MenuOldPersonScreen(navController, authViewModel)
         }
 
-        composable(route = Screen.PersonSelector.route) { 
+        composable(route = Screen.PersonSelector.route) {
             UserListScreen(navController)
         }
 
-        composable(route = Screen.Registry.route) { 
-            RegistryScreen(navController, authViewModel) 
+        composable(route = Screen.Registry.route) {
+            RegistryScreen(navController, authViewModel)
         }
     }
 }

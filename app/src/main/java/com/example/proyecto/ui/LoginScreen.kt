@@ -54,8 +54,7 @@ fun LogScreen(
     authViewModel: AuthViewModel,
     internalViewModel: internalStorageViewModel = viewModel()
 ) {
-<<<<<<< HEAD
-=======
+
 
 
     // Observar el estado del usuario. Si cambia a != null, navegar.
@@ -80,7 +79,7 @@ fun LogScreen(
         }
     }
 
->>>>>>> d63f2d773459e2449e445f31bf9760e6a03ee836
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceEvenly
@@ -91,7 +90,7 @@ fun LogScreen(
             contentDescription = ""
         )
         //Ingreso de numero de celular
-        LogPhone(navController,internalViewModel)
+        LogPhone(navController,internalViewModel,authViewModel)
 
         //boton de registro
         ButtonRegistry(navController)
@@ -102,7 +101,7 @@ fun LogScreen(
 fun LogPhone(
     navController: NavController,
     internalViewModel: internalStorageViewModel,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel
 
 ) {
     var huellaGuardada by remember { mutableStateOf(false) }
@@ -226,7 +225,8 @@ fun LogPhone(
         if (showFingerprint.value) {
             FingerprintPrompt(
                 onAuthSuccess = {
-                    var huellaData: HuellaData = internalViewModel.leerJsonHuella(context)
+                    val huellaData: HuellaData = internalViewModel.leerJsonHuella(context)
+
 
                     authViewModel.onEmailChange(huellaData.correo)
                     authViewModel.onPasswordChange(huellaData.contra)

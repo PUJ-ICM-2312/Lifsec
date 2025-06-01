@@ -63,7 +63,7 @@ import com.google.maps.android.SphericalUtil
 @Composable
 fun LocationCaretakerScreen(
     locatCareViewModel: LocatCareViewModel = viewModel(),
-    authViewModel: AuthViewModel = viewModel(),
+    authViewModel: AuthViewModel,
     navController: NavController
 ) {
     val uiLocState by locatCareViewModel.uiLocState.collectAsStateWithLifecycle()
