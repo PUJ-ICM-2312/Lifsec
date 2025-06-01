@@ -264,7 +264,7 @@ fun MenuOldPersonScreen(
 fun MainScreen(
     navController: NavController,
     rootNavController: NavController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel
 ) {
     // Observar el estado del usuario. Si cambia a null, navegar.
     val currentUser by authViewModel.currentUser.collectAsState()
@@ -343,7 +343,7 @@ fun MainScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBarHome(authViewModel: AuthViewModel = viewModel()) {
+fun TopBarHome(authViewModel: AuthViewModel) {
     TopAppBar(
         title = {
             Text(

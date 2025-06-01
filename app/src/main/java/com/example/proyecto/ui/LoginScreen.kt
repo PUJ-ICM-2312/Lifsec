@@ -52,7 +52,7 @@ import com.google.firebase.auth.FirebaseAuth
 fun LogScreen(
     navController: NavController,
     authViewModel: AuthViewModel,
-    internalViewModel: internalStorageViewModel = viewModel()
+    internalViewModel: internalStorageViewModel
 ) {
 
 
