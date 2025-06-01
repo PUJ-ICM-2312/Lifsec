@@ -25,7 +25,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.proyecto.InternalCaretakerRoutesStack
 import com.example.proyecto.Screen
 
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -59,7 +58,7 @@ fun MenuCaretakersScreen(navController: NavController) {
                 .padding(innerPadding),
             color = MaterialTheme.colorScheme.background
         ) {
-            InternalCaretakerRoutesStack(navController = internalNavController)
+            navController.navigate(route = Screen.MenuCaretaker.route)
         }
     }
 }

@@ -54,6 +54,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -70,10 +71,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.proyecto.InternalNavegationStack
 import com.example.proyecto.Screen
 import com.example.proyecto.data.HuellaData
+import com.example.proyecto.ui.viewmodel.ActivityViewModel
 import com.example.proyecto.ui.viewmodel.AuthViewModel
+import com.example.proyecto.ui.viewmodel.LocatCareViewModel
+import com.example.proyecto.ui.viewmodel.MenuOldPersonViewModel
+import com.example.proyecto.ui.viewmodel.ReminderViewModel
 import com.example.proyecto.ui.viewmodel.internalStorageViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -88,6 +92,10 @@ import kotlin.math.sqrt
 fun MenuOldPersonScreen(
     navController: NavController,
     authViewModel: AuthViewModel,
+    menuOldPersonViewModel: MenuOldPersonViewModel,
+    activityViewModel: ActivityViewModel,
+    reminderViewModel: ReminderViewModel,
+    locatCareViewModel: LocatCareViewModel,
     internalViewModel: internalStorageViewModel = viewModel(),
 ) {
     val context = LocalContext.current
@@ -129,12 +137,15 @@ fun MenuOldPersonScreen(
         notificationPermissionState.launchMultiplePermissionRequest()
     }
 
-    // NavController interno para la navegación anidada
-    val internalNavController = rememberNavController()
+
+    //escucah activamente al cambio
+    val recompositionKey by menuOldPersonViewModel.cambio
+
+
 
 
     // Implementación del shake detector
-    DisposableEffect(internalNavController) {
+    DisposableEffect(navController) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
         val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
@@ -167,9 +178,9 @@ fun MenuOldPersonScreen(
 
                         lastShakeTime = currentTime
                         // Navegación directa a SOS
-                        internalNavController.navigate(Screen.SosScreen.route) {
+                        navController.navigate(Screen.SosScreen.route) {
                             // Opcional: limpia el back stack
-                            popUpTo(internalNavController.graph.startDestinationId)
+                            popUpTo(navController.graph.startDestinationId)
                             launchSingleTop = true
                         }
                     }
@@ -199,7 +210,7 @@ fun MenuOldPersonScreen(
     }
 
     Scaffold(
-        bottomBar = { BottomNavigationBar(internalNavController) },
+        bottomBar = { BottomNavigationBar(menuOldPersonViewModel) },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Surface(
@@ -212,46 +223,69 @@ fun MenuOldPersonScreen(
                 if (huellaEqualsUser) {
                     Log.i("MenuOldPersonScreen", "Huella coincide con el usuario")
                     // Carga el grafo de navegación interno
-                    InternalNavegationStack(
-                        navController = internalNavController,
-                        rootNavController = navController,
-                        authViewModel = authViewModel
-                    )
 
                     // Card flotante con datos de huella solo si ambas condiciones son true
-                    if (mostrarCard) {
-                        var huellaData: HuellaData = internalViewModel.leerJsonHuella(context)
-                        Card(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .align(Alignment.Center),
-                            elevation = CardDefaults.cardElevation(8.dp),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = "Datos de Huella",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(text = "Contraseña: ${huellaData.contra}")
-                                Text(text = "Correo: ${huellaData.correo}")
+//                    if (mostrarCard) {
+//                        var huellaData: HuellaData = internalViewModel.leerJsonHuella(context)
+//                        Card(
+//                            modifier = Modifier
+//                                .padding(16.dp)
+//                                .align(Alignment.Center),
+//                            elevation = CardDefaults.cardElevation(8.dp),
+//                            shape = RoundedCornerShape(16.dp)
+//                        ) {
+//                            Column(
+//                                modifier = Modifier.padding(16.dp),
+//                                horizontalAlignment = Alignment.CenterHorizontally,
+//                                verticalArrangement = Arrangement.spacedBy(8.dp)
+//                            ) {
+//                                Text(
+//                                    text = "Datos de Huella",
+//                                    style = MaterialTheme.typography.titleMedium,
+//                                    fontWeight = FontWeight.Bold
+//                                )
+//                                Text(text = "Contraseña: ${huellaData.contra}")
+//                                Text(text = "Correo: ${huellaData.correo}")
+//
+//                                Button(
+//                                    onClick = { mostrarCard = false },
+//                                    colors = ButtonDefaults.buttonColors(
+//                                        containerColor = MaterialTheme.colorScheme.error
+//                                    )
+//                                ) {
+//                                    Text("Descartar", color = MaterialTheme.colorScheme.onError)
+//                                }
+//                            }
+//                        }
+//                    }else{
 
-                                Button(
-                                    onClick = { mostrarCard = false },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.error
-                                    )
-                                ) {
-                                    Text("Descartar", color = MaterialTheme.colorScheme.onError)
-                                }
+                        key(recompositionKey) {
+                            if(menuOldPersonViewModel.leerApartado() == "Menu"){
+
+                                MainScreen(navController, authViewModel)
+
+                            }else if(menuOldPersonViewModel.leerApartado() == "Ubicacion"){
+
+                                LocationCaretakerScreen(
+                                    locatCareViewModel = locatCareViewModel,
+                                    authViewModel = authViewModel,
+                                    navController = navController
+                                )
+
+                            }else if(menuOldPersonViewModel.leerApartado() == "Actividades"){
+
+                                ListActivitiesOldPersonScreen(activityViewModel,navController)
+
+                            }else if(menuOldPersonViewModel.leerApartado() == "Recordatorios"){
+
+                                ReminderListScreen(navController, reminderViewModel)
+
                             }
                         }
-                    }
+
+
+
+
                 } else {
                     // Pantalla de solicitud de huella
                     Column(
@@ -314,7 +348,6 @@ fun MenuOldPersonScreen(
 @Composable
 fun MainScreen(
     navController: NavController,
-    rootNavController: NavController,
     authViewModel: AuthViewModel
 ) {
     // Observar el estado del usuario. Si cambia a null, navegar.
@@ -463,14 +496,10 @@ fun MenuCard(
 
 
 @Composable
-fun BottomNavigationBar(navController: NavController) {
+fun BottomNavigationBar(menuOldPersonViewModel: MenuOldPersonViewModel){
+
+
     // Observar la entrada actual del back stack
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    // Función interna para verificar si la ruta está seleccionada
-    fun isSelected(route: String) = currentRoute == route
-
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface
@@ -492,8 +521,11 @@ fun BottomNavigationBar(navController: NavController) {
                     maxLines = 1
                 )
             },
-            selected = isSelected(Screen.MainScreen.route),
-            onClick = { navController.navigate(Screen.MainScreen.route) },
+            selected = menuOldPersonViewModel.apartado == "Menu" ,
+            onClick = {
+                menuOldPersonViewModel.cambiarApartado("Menu")
+                menuOldPersonViewModel.generarCambio()
+            },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,
@@ -522,8 +554,11 @@ fun BottomNavigationBar(navController: NavController) {
                     maxLines = 1
                 )
             },
-            selected = isSelected(Screen.LocationCaretaker.route),
-            onClick = { navController.navigate(Screen.LocationCaretaker.route) },
+            selected = menuOldPersonViewModel.apartado == "Ubicacion" ,
+            onClick = {
+                menuOldPersonViewModel.cambiarApartado("Ubicacion")
+                menuOldPersonViewModel.generarCambio()
+                      },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,
@@ -552,8 +587,11 @@ fun BottomNavigationBar(navController: NavController) {
                     maxLines = 1
                 )
             },
-            selected = isSelected(Screen.ActivityList.route),
-            onClick = { navController.navigate(Screen.ActivityList.route) },
+            selected = menuOldPersonViewModel.apartado == "Actividades" ,
+            onClick = {
+                menuOldPersonViewModel.cambiarApartado("Actividades")
+                menuOldPersonViewModel.generarCambio()
+                      },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,
@@ -582,8 +620,11 @@ fun BottomNavigationBar(navController: NavController) {
                     maxLines = 1
                 )
             },
-            selected = isSelected(Screen.ReminderList.route),
-            onClick = { navController.navigate(Screen.ReminderList.route) },
+            selected = menuOldPersonViewModel.apartado == "Recordatorios" ,
+            onClick = {
+                menuOldPersonViewModel.cambiarApartado("Recordatorios")
+                menuOldPersonViewModel.generarCambio()
+                      },
             alwaysShowLabel = true,
             colors = NavigationBarItemDefaults.colors(
                 indicatorColor = MaterialTheme.colorScheme.secondary,
