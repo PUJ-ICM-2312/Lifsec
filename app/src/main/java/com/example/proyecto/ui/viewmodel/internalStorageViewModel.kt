@@ -45,7 +45,7 @@ class internalStorageViewModel : ViewModel() {
         return archivo.exists()
     }
 
-    fun huellaIgualAUser(context: Context, correo: String, contra: String): Boolean {
+    fun huellaIgualAUser(context: Context, correo: String?): Boolean {
         android.util.Log.d("internalStorageViewModel", "Verificando si existe el archivo JSON de huella")
         if (!existeJson(context)) {
             android.util.Log.d("internalStorageViewModel", "El archivo huella.json no existe")
@@ -53,7 +53,7 @@ class internalStorageViewModel : ViewModel() {
         }
         val huellaData: HuellaData = leerJsonHuella(context)
         android.util.Log.d("internalStorageViewModel", "Datos leídos: correo=${huellaData.correo}, contra=${huellaData.contra}")
-        val resultado = (huellaData.correo == correo && huellaData.contra == contra)
+        val resultado = (huellaData.correo == correo)
         android.util.Log.d("internalStorageViewModel", "¿Coincide la huella con el usuario? $resultado")
         return resultado
     }

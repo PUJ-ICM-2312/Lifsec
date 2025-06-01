@@ -113,7 +113,7 @@ fun MenuOldPersonScreen(
     var huellaEqualsUser by remember(currentUser?.uid) {
         mutableStateOf(
             currentUser?.let {
-                internalViewModel.huellaIgualAUser(context, authViewModel.email, authViewModel.password)
+                internalViewModel.huellaIgualAUser(context, authViewModel.currentUser.value?.email )
             } ?: false
         )
     }
