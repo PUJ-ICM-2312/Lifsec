@@ -96,7 +96,7 @@ fun MenuOldPersonScreen(
     activityViewModel: ActivityViewModel,
     reminderViewModel: ReminderViewModel,
     locatCareViewModel: LocatCareViewModel,
-    internalViewModel: internalStorageViewModel = viewModel(),
+    internalViewModel: internalStorageViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val currentUser by authViewModel.currentUser.collectAsState()

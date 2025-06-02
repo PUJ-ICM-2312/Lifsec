@@ -134,7 +134,7 @@ fun NavegationStack() {
         }
 
         composable (Screen.ConfigScreenElder.route){
-            ConfigurationScreenElder(navController, authViewModel)
+            ConfigurationScreenElder(navController, authViewModel, repUsuarios)
         }
 
         composable (Screen.CaretakersConfigScreen.route) {
