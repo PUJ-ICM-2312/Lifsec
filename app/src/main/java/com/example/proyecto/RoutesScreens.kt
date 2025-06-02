@@ -8,6 +8,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.proyecto.data.FirestoreProvider
+import com.example.proyecto.data.RepositorioUsuarios
 import com.example.proyecto.ui.LogScreen
 import com.example.proyecto.ui.caretakerScreen.MenuCaretakersScreen
 import com.example.proyecto.ui.elderlyScreens.MenuOldPersonScreen
@@ -67,6 +69,7 @@ fun NavegationStack() {
     val activityViewModel: ActivityViewModel = viewModel()
     val menuOldPersonViewModel: MenuOldPersonViewModel = viewModel()
     val context = LocalContext.current
+    val repUsuarios: RepositorioUsuarios = RepositorioUsuarios(FirestoreProvider.instance)
 
     val sharedViewModel: SharedImageViewModel = viewModel()
     val reminderViewModel: ReminderViewModel = viewModel()
@@ -131,11 +134,11 @@ fun NavegationStack() {
         }
 
         composable (Screen.ConfigScreenElder.route){
-            ConfigurationScreenElder(navController)
+            ConfigurationScreenElder(navController, authViewModel)
         }
 
         composable (Screen.CaretakersConfigScreen.route) {
-            CaretakersConfigScreen(navController)
+            CaretakersConfigScreen(navController, authViewModel, repUsuarios)
         }
 
         composable (Screen.AppPlanScreen.route) {

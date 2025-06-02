@@ -22,16 +22,40 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.proyecto.data.Cuidador
+import com.example.proyecto.data.RepositorioUsuarios
+import com.example.proyecto.ui.viewmodel.AuthViewModel
 
 // Pantalla de Lista de Cuidadores
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CaretakersConfigScreen(navController: NavController) {
+fun CaretakersConfigScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel,
+    repositorioUsuarios: RepositorioUsuarios
+) {
+    val currentAnciano = authViewModel.currentAnciano
+    var cuidadores by remember { mutableStateOf<List<Cuidador>>(emptyList()) }
+
+    // Cargar cuidadores usando el Flow de RepositorioUsuarios
+    LaunchedEffect(currentAnciano) {
+        currentAnciano?.let { anciano ->
+            repositorioUsuarios.getCuidadoresByIdsFlow(anciano.cuidadoresIds).collect { lista ->
+                cuidadores = lista
+            }
+        }
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
@@ -40,25 +64,22 @@ fun CaretakersConfigScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            items((1..5).toList()) { index ->
+            items(cuidadores) { cuidador ->
                 CaretakerListItem(
-                    number = index,
-                    icon = Icons.Default.Person,
+                    cuidador = cuidador,
                     modifier = Modifier.padding(8.dp)
                 )
-                if(index < 5) {
-                    Divider(
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                        thickness = 1.dp
-                    )
-                }
+                Divider(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    thickness = 1.dp
+                )
             }
         }
     }
 }
 
 @Composable
-private fun CaretakerListItem(number: Int, icon: ImageVector, modifier: Modifier = Modifier) {
+private fun CaretakerListItem(cuidador: Cuidador, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
@@ -69,19 +90,25 @@ private fun CaretakerListItem(number: Int, icon: ImageVector, modifier: Modifier
         ListItem(
             headlineContent = {
                 Text(
-                    "Cuidador $number",
+                    cuidador.nombre,
                     style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            },
+            supportingContent = {
+                Text(
+                    cuidador.email,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             },
             leadingContent = {
                 Icon(
-                    imageVector = icon,
+                    imageVector = Icons.Default.Person,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
-            },
-            modifier = Modifier.clickable { /* Navegación aquí */ }
+            }
         )
     }
 }
