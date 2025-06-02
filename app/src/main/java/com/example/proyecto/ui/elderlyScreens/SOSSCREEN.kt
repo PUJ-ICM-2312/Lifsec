@@ -22,12 +22,14 @@ import kotlinx.coroutines.launch
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto.Screen
 import com.example.proyecto.ui.viewmodel.AuthViewModel
+import com.example.proyecto.ui.viewmodel.MenuOldPersonViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SOSScreen(
     navController: NavController,
     authViewModel: AuthViewModel,
+    menuOldPersonViewModel: MenuOldPersonViewModel
 ) {
     var emergencyType by remember { mutableStateOf(TextFieldValue("")) }
     var emergencyMessage by remember { mutableStateOf(TextFieldValue("")) }
@@ -64,7 +66,9 @@ fun SOSScreen(
                     scope.launch {
                         snackbarHostState.showSnackbar("¡Mensaje de emergencia enviado!")
                     }
-                    navController.navigate(Screen.LocationCaretaker.route)
+                    menuOldPersonViewModel.cambiarApartado("Ubicacion")
+
+                    navController.navigate(Screen.MenuOldPerson.route)
                 },
             contentAlignment = Alignment.Center
         ) {
