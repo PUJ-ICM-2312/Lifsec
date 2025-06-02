@@ -43,6 +43,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.R
 import com.example.proyecto.Screen
+import com.example.proyecto.data.Anciano
+import com.example.proyecto.data.Cuidador
 import com.example.proyecto.data.HuellaData
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.example.proyecto.ui.viewmodel.internalStorageViewModel
@@ -57,16 +59,49 @@ fun LogScreen(
 ) {
 
 
-
+    val currentEntity by authViewModel.currentEntity.collectAsState()
     // Observar el estado del usuario. Si cambia a != null, navegar.
     val currentUser by authViewModel.currentUser.collectAsState()
-    LaunchedEffect(currentUser) {
-        if (currentUser != null) {
-            Log.d("LogScreen", "Usuario autenticado: ${currentUser?.email}")
-            navController.navigate(Screen.MenuOldPerson.route) {
-                popUpTo(Screen.Login.route) { inclusive = true }
-                launchSingleTop = true
+    val isLoading by authViewModel.isLoadingData.collectAsState()
+    LaunchedEffect(currentEntity,currentEntity,isLoading) {
+        Log.d("LogScreen", "Usuario autenticado: ${currentUser?.email}")
+        when {
+            isLoading -> {
+                Log.d("ComparacionEntity", "cargando el authviewmodel")
             }
+            currentEntity is Anciano -> {
+                Log.d("ComparacionEntity", "Usuario autenticado: ${currentUser?.email} como anciano")
+                navController.navigate(Screen.MenuOldPerson.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+            currentEntity is Cuidador -> {
+                Log.d("ComparacionEntity", "Usuario autenticado: ${currentUser?.email} como cuidador")
+                navController.navigate(Screen.PersonSelector.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+            else -> {
+                Log.d("ComparacionEntity", "Usuario autenticado: ${currentUser?.email} pero no se sabe si es cuidador o anciano")
+            }
+        }
+
+        if (currentUser != null) {
+
+            Log.d("LogScreen", "Usuario autenticado: ${currentUser?.email}")
+            if(currentEntity is Anciano){
+
+            } else if(currentEntity is Cuidador){
+
+
+            }else{
+
+
+            }
+
+
         } else {
             Log.d("LogScreen", "Usuario no autenticado")
         }

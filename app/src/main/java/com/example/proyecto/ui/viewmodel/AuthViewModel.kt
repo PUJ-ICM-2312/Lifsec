@@ -36,7 +36,10 @@ class AuthViewModel: ViewModel() {
     private val _currentUser = MutableStateFlow(auth.currentUser)
     private val _userType = MutableStateFlow(UserType.NONE)
     private val _emergencia = MutableStateFlow(false)
+    private val _isLoading = MutableStateFlow(true)
 
+    val isLoadingData: StateFlow<Boolean> = _isLoading
+    val currentEntity: StateFlow<Usuario?> = _currentEntity
     val currentUser: StateFlow<FirebaseUser?> = _currentUser
     val userType: StateFlow<UserType> = _userType.asStateFlow()
     val emergencia: StateFlow<Boolean> = _emergencia.asStateFlow()
@@ -197,8 +200,8 @@ class AuthViewModel: ViewModel() {
             }
     }
 
-    private fun loadUserData(uid: String) {
-        isLoading = true
+    fun loadUserData(uid: String) {
+        _isLoading.value = true
         firestore.collection("ancianos").document(uid).get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
@@ -214,7 +217,9 @@ class AuthViewModel: ViewModel() {
                         )
                         setCurrentEntity(anciano)
                     }
+                    _isLoading.value = false
                 } else {
+                    // No es anciano, buscar en cuidadores
                     firestore.collection("cuidadores").document(uid).get()
                         .addOnSuccessListener { cuidadorDoc ->
                             if (cuidadorDoc.exists()) {
@@ -229,14 +234,20 @@ class AuthViewModel: ViewModel() {
                                     )
                                     setCurrentEntity(cuidador)
                                 }
+                            } else {
+                                Log.w("AuthViewModel", "No se encontró el usuario con UID: $uid en ancianos ni cuidadores")
                             }
+                            _isLoading.value = false
+                        }
+                        .addOnFailureListener {
+                            _isLoading.value = false
+                            Log.e("AuthViewModel", "Error buscando cuidador: ${it.message}")
                         }
                 }
-                isLoading = false
             }
             .addOnFailureListener {
-                isLoading = false
-                Log.e("AuthViewModel", "Error cargando datos: ${it.message}")
+                _isLoading.value = false
+                Log.e("AuthViewModel", "Error buscando anciano: ${it.message}")
             }
     }
 
