@@ -89,7 +89,7 @@ fun NavegationStack() {
 //        composable (route = Screen.PersonSelector.route) { UserListScreen(navController) }
 //        composable(route = Screen.Registry.route) { RegistryScreen(navController, authViewModel) }
 
-        composable(Screen.PersonSelector.route) { UserListScreen(navController) }
+        composable(Screen.PersonSelector.route) { UserListScreen(navController,authViewModel,internalStorageViewModel) }
         composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController,menuCareTakerViewModel, authViewModel,activityViewModel) }
 
 
@@ -153,9 +153,7 @@ fun NavegationStack() {
             MenuOldPersonScreen(navController, authViewModel, menuOldPersonViewModel,activityViewModel,reminderViewModel,locatCareViewModel)
         }
 
-        composable(route = Screen.PersonSelector.route) {
-            UserListScreen(navController)
-        }
+
 
         composable(route = Screen.Registry.route) {
             RegistryScreen(navController, authViewModel)
