@@ -36,7 +36,7 @@ import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun RemindersCaretakerScreen(navController: NavController) {
+fun RemindersCaretakerScreen() {
     Scaffold (
         topBar = {
             Surface(

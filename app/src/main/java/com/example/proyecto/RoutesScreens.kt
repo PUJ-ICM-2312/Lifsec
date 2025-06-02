@@ -30,6 +30,7 @@ import com.example.proyecto.ui.elderlyScreens.SOSScreen
 import com.example.proyecto.ui.viewmodel.ActivityViewModel
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.example.proyecto.ui.viewmodel.LocatCareViewModel
+import com.example.proyecto.ui.viewmodel.MenuCareTakerViewModel
 import com.example.proyecto.ui.viewmodel.MenuOldPersonViewModel
 import com.example.proyecto.ui.viewmodel.ReminderViewModel
 import com.example.proyecto.ui.viewmodel.SharedImageViewModel
@@ -67,7 +68,7 @@ fun NavegationStack() {
     val activityViewModel: ActivityViewModel = viewModel()
     val menuOldPersonViewModel: MenuOldPersonViewModel = viewModel()
     val context = LocalContext.current
-
+    val menuCareTakerViewModel: MenuCareTakerViewModel= viewModel()
     val sharedViewModel: SharedImageViewModel = viewModel()
     val reminderViewModel: ReminderViewModel = viewModel()
 
@@ -85,10 +86,8 @@ fun NavegationStack() {
 //        composable(route = Screen.Registry.route) { RegistryScreen(navController, authViewModel) }
 
         composable(Screen.PersonSelector.route) { UserListScreen(navController) }
-        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController) }
-        composable(Screen.LocationOldPerson.route) { LocationOldPersonScreen(navController, authViewModel) }
-        composable(Screen.RemindersCaretaker.route) { RemindersCaretakerScreen(navController) }
-        composable(Screen.ActivitiesCaretaker.route) { ActivitiesCaretaker(navController, activityViewModel) }
+        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController,menuCareTakerViewModel, authViewModel,activityViewModel) }
+
 
         composable(Screen.MainScreen.route) {
             MainScreen(
@@ -145,9 +144,6 @@ fun NavegationStack() {
             LogScreen(navController, authViewModel, internalStorageViewModel)
         }
 
-        composable(Screen.MenuCaretaker.route) {
-            MenuCaretakersScreen(navController)
-        }
 
         composable(route = Screen.MenuOldPerson.route) {
             MenuOldPersonScreen(navController, authViewModel, menuOldPersonViewModel,activityViewModel,reminderViewModel,locatCareViewModel)
