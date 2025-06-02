@@ -31,26 +31,37 @@ class RepositorioUsuarios (
     */
 
     // Obtener la lista de cuidadores asociados a un anciano
-    fun getCuidadoresByIdsFlow(ids: List<String>): Flow<List<Cuidador>> = callbackFlow {
-        val cuidadoresLista = mutableListOf<Cuidador>()
-        val listeners = mutableListOf<ListenerRegistration>()
-
-        ids.forEach { id ->
-            val listener = cuidadores.document(id).addSnapshotListener { snapshot, error ->
+    fun getCuidadoresPorAncianoIdFlow(ancianoId: String): Flow<List<Cuidador>> = callbackFlow {
+        // Observar el documento del anciano
+        val ancianoListener = ancianos.document(ancianoId)
+            .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error) // Cierra el Flow si hay un error
+                    close(error)
                     return@addSnapshotListener
                 }
-                snapshot?.toObject(Cuidador::class.java)?.let { cuidador ->
-                    cuidadoresLista.add(cuidador)
-                    trySend(cuidadoresLista.toList()) // Emite la lista actualizada
+
+                // Obtener la lista actualizada de IDs de cuidadores
+                val cuidadoresIds = snapshot?.toObject(Anciano::class.java)?.cuidadoresIds ?: emptyList()
+                val cuidadoresLista = mutableListOf<Cuidador>()
+
+                // Limpiar listeners anteriores si existieran
+                trySend(emptyList())
+
+                // Crear nuevos listeners para cada cuidador
+                cuidadoresIds.forEach { id ->
+                    cuidadores.document(id)
+                        .get()
+                        .addOnSuccessListener { documento ->
+                            documento.toObject(Cuidador::class.java)?.let { cuidador ->
+                                cuidadoresLista.add(cuidador)
+                                trySend(cuidadoresLista.toList())
+                            }
+                        }
                 }
             }
-            listeners.add(listener)
-        }
 
         awaitClose {
-            listeners.forEach { it.remove() } // Remueve todos los listeners al cerrar el Flow
+            ancianoListener.remove()
         }
     }
 
@@ -75,6 +86,59 @@ class RepositorioUsuarios (
 
         awaitClose {
             listeners.forEach { it.remove() } // Remueve todos los listeners al cerrar el Flow
+        }
+    }
+
+    suspend fun buscarCuidadorPorEmail(email: String): String {
+        return try {
+            val snapshot = cuidadores
+                .whereEqualTo("email", email)
+                .get()
+                .await()
+
+            snapshot.documents.firstOrNull()?.id ?: ""
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    suspend fun agregarCuidadorAnciano(ancianoId: String, cuidadorId: String): Boolean {
+        return try {
+            val ancianoRef = ancianos.document(ancianoId)
+            val cuidadorRef = cuidadores.document(cuidadorId)
+
+            // Obtener documentos
+            val ancianoDoc = ancianoRef.get().await()
+            val cuidadorDoc = cuidadorRef.get().await()
+
+            if (ancianoDoc.exists() && cuidadorDoc.exists()) {
+                val anciano = ancianoDoc.toObject(Anciano::class.java)
+                val cuidador = cuidadorDoc.toObject(Cuidador::class.java)
+
+                val cuidadoresIds = anciano?.cuidadoresIds?.toMutableList() ?: mutableListOf()
+                val ancianosIds = cuidador?.ancianosIds?.toMutableList() ?: mutableListOf()
+
+                // Verificar si la relación ya existe
+                if (!cuidadoresIds.contains(cuidadorId) && !ancianosIds.contains(ancianoId)) {
+                    // Actualizar ambas listas
+                    cuidadoresIds.add(cuidadorId)
+                    ancianosIds.add(ancianoId)
+
+                    // Actualizar ambos documentos en una transacción
+                    firestore.runTransaction { transaction ->
+                        transaction.update(ancianoRef, "cuidadoresIds", cuidadoresIds)
+                        transaction.update(cuidadorRef, "ancianosIds", ancianosIds)
+                    }.await()
+
+                    true
+                } else {
+                    false // La relación ya existe
+                }
+            } else {
+                false // Alguno de los documentos no existe
+            }
+        } catch (e: Exception) {
+            false
         }
     }
 }
