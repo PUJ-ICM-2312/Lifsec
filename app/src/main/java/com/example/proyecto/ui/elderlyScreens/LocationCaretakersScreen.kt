@@ -12,9 +12,20 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyecto.R
+import com.example.proyecto.Screen
 import com.example.proyecto.ui.showNotification
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.example.proyecto.ui.viewmodel.LocatCareViewModel
@@ -60,6 +72,7 @@ import kotlinx.coroutines.launch
 import kotlin.random.Random
 import com.google.maps.android.SphericalUtil
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun LocationCaretakerScreen(
     locatCareViewModel: LocatCareViewModel = viewModel(),
@@ -175,91 +188,142 @@ fun LocationCaretakerScreen(
         return
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        GoogleMap(
-            contentPadding = PaddingValues(top = 150.dp),
-            properties = MapProperties(
-                mapStyleOptions = if (isSystemInDarkTheme()) MapStyleOptions.loadRawResourceStyle(context, R.raw.dark_map_style) else null,
-                isMyLocationEnabled = true
-            ),
-            uiSettings = MapUiSettings(myLocationButtonEnabled = true, zoomControlsEnabled = true),
-            cameraPositionState = uiLocState.cameraPositionState
+    Scaffold (
+        topBar = {
+            LocationTopBar(
+                isEmergency = isEmergency,
+                navController = navController
+            )
+        },
+        modifier = Modifier.fillMaxSize()
+    ) { paddingValues ->
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
         ) {
-            // Mi ubicación
-            uiLocState.location?.let { currentLocation ->
-                // Creamos un ícono personalizado a partir de un recurso drawable
-                val userIcon = remember(context) { // Recordamos para eficiencia
-                    BitmapDescriptorFactory.fromResource(R.drawable.caretaker)
-                    // Si el recurso no existe, usa el marcador predeterminado
-                        ?: BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+            GoogleMap(
+                properties = MapProperties(
+                    mapStyleOptions = if (isSystemInDarkTheme()) MapStyleOptions.loadRawResourceStyle(
+                        context,
+                        R.raw.dark_map_style
+                    ) else null,
+                    isMyLocationEnabled = true
+                ),
+                uiSettings = MapUiSettings(
+                    myLocationButtonEnabled = true,
+                    zoomControlsEnabled = true
+                ),
+                cameraPositionState = uiLocState.cameraPositionState
+            ) {
+                // Mi ubicación
+                uiLocState.location?.let { currentLocation ->
+                    // Creamos un ícono personalizado a partir de un recurso drawable
+                    val userIcon = remember(context) { // Recordamos para eficiencia
+                        BitmapDescriptorFactory.fromResource(R.drawable.caretaker)
+                        // Si el recurso no existe, usa el marcador predeterminado
+                            ?: BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                    }
+
+                    Marker(
+                        state = remember { MarkerState(position = currentLocation) },
+                        title = "Mi ubicación",
+                        snippet = "Estoy aquí",
+                        icon = userIcon
+                    )
                 }
 
-                Marker(
-                    state = remember { MarkerState(position = currentLocation) },
-                    title = "Mi ubicación",
-                    snippet = "Estoy aquí",
-                    icon = userIcon
-                )
-            }
+                // Cuidadores y sus rutas
+                uiLocState.caretakerMarkers.forEachIndexed { index, markerState ->
 
-            // Cuidadores y sus rutas
-            uiLocState.caretakerMarkers.forEachIndexed { index, markerState ->
+                    // Visualizamos los cuidadores
+                    val caretakerIcon = remember(context) {
+                        BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
+                    }
 
-                // Visualizamos los cuidadores
-                val caretakerIcon = remember(context) {
-                    BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
-                }
+                    Marker(
+                        state = markerState,
+                        title = "Cuidador #${index + 1}",
+                        snippet = addressCache[markerState] ?: "Obteniendo dirección…",
+                        icon = caretakerIcon
+                    )
 
-                Marker(
-                    state = markerState,
-                    title = "Cuidador #${index + 1}",
-                    snippet = addressCache[markerState] ?: "Obteniendo dirección…",
-                    icon = caretakerIcon
-                )
+                    // Si hay emergencia, mostramos la ruta almacenada en el estado
+                    if (isEmergency && uiLocState.location != null) {
+                        // Obtenemos la ruta y color del estado
+                        val routePoints = remainingRoutes[markerState] ?: emptyList()
+                        val routeColor = uiLocState.caretakerRouteColors[markerState] ?: Color.Blue
 
-                // Si hay emergencia, mostramos la ruta almacenada en el estado
-                if (isEmergency && uiLocState.location != null) {
-                    // Obtenemos la ruta y color del estado
-                    val routePoints = remainingRoutes[markerState] ?: emptyList()
-                    val routeColor = uiLocState.caretakerRouteColors[markerState] ?: Color.Blue
+                        if (routePoints.isNotEmpty()) {
+                            // Dibujamos solo la ruta restante
+                            Polyline(
+                                points = routePoints,
+                                clickable = false,
+                                width = 8f,
+                                color = routeColor
+                            )
 
-                    if (routePoints.isNotEmpty()) {
-                        // Dibujamos solo la ruta restante
-                        Polyline(
-                            points = routePoints,
-                            clickable = false,
-                            width = 8f,
-                            color = routeColor
-                        )
-
-                        // Animamos el marcador a lo largo de la ruta
-                        LaunchedEffect(isEmergency, key2 = markerState) {
-                            val initialRoute = uiLocState.caretakerRoutes[markerState] ?: emptyList()
-                            if (initialRoute.isNotEmpty()) {
-                                animateMarkerAlongRoute(
-                                    markerState = markerState,
-                                    route = initialRoute,
-                                    onCompleted = handleCaretakerArrival,
-                                    onRouteUpdate = { remaining ->
-                                        // Actualizamos la ruta restante en el mapa
-                                        remainingRoutes[markerState] = remaining
-                                    }
-                                )
+                            // Animamos el marcador a lo largo de la ruta
+                            LaunchedEffect(isEmergency, key2 = markerState) {
+                                val initialRoute =
+                                    uiLocState.caretakerRoutes[markerState] ?: emptyList()
+                                if (initialRoute.isNotEmpty()) {
+                                    animateMarkerAlongRoute(
+                                        markerState = markerState,
+                                        route = initialRoute,
+                                        onCompleted = handleCaretakerArrival,
+                                        onRouteUpdate = { remaining ->
+                                            // Actualizamos la ruta restante en el mapa
+                                            remainingRoutes[markerState] = remaining
+                                        }
+                                    )
+                                }
                             }
                         }
+                    } else {
+                        // Si no hay emergencia, animamos el marcador con movimiento aleatorio
+                        AnimatedMarker(
+                            markerState = markerState,
+                            baseLocation = uiLocState.location ?: markerState.position,
+                            durationMs = 30000,
+                            isEmergency = isEmergency
+                        )
                     }
-                } else {
-                    // Si no hay emergencia, animamos el marcador con movimiento aleatorio
-                    AnimatedMarker(
-                        markerState = markerState,
-                        baseLocation = uiLocState.location ?: markerState.position,
-                        durationMs = 30000,
-                        isEmergency = isEmergency
-                    )
                 }
             }
         }
     }
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LocationTopBar(
+    isEmergency: Boolean,
+    navController: NavController
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = if (isEmergency) "EMERGENCIA ACTIVA" else "Ubicación",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.background,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = { navController.navigate(Screen.MenuOldPerson.route) }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Volver al menú",
+                    tint = MaterialTheme.colorScheme.background
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.outline
+        )
+    )
 }
 
 suspend fun animateMarkerAlongRoute(
