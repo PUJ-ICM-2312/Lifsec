@@ -55,8 +55,9 @@ fun ConfigurationScreenElder(
     var conectado by remember { mutableStateOf(authViewModel.currentAnciano?.conectado ?: false) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(authViewModel.currentAnciano) {
+    LaunchedEffect(authViewModel.currentEntity) {
         conectado = authViewModel.currentAnciano?.conectado ?: false
+        Log.d("ConfigScreen", "Conectado: ${authViewModel.currentEntity.value?.conectado}")
     }
 
     Scaffold(

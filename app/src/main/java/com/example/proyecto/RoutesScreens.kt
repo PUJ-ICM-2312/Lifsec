@@ -77,7 +77,7 @@ fun NavegationStack() {
     val reminderViewModel: ReminderViewModel = viewModel()
 
     val sharedImageViewModel: SharedImageViewModel = viewModel()
-    val locatCareViewModel: LocatCareViewModel = viewModel(factory = LocatCareViewModelFactory(context))
+    val locatCareViewModel: LocatCareViewModel = viewModel(factory = LocatCareViewModelFactory(context, authViewModel, repUsuarios))
 
 
     //Para navegacion entre pantallas

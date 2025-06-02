@@ -1,26 +1,19 @@
 package com.example.proyecto.ui.elderlyScreens
 
+import android.Manifest
 import android.annotation.SuppressLint
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.os.Build
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,13 +37,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyecto.R
-import com.example.proyecto.Screen
+import com.example.proyecto.data.location.LocationHandler
 import com.example.proyecto.ui.showNotification
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.example.proyecto.ui.viewmodel.LocatCareViewModel
@@ -65,7 +56,6 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
-import com.google.maps.android.compose.rememberMarkerState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -84,8 +74,7 @@ fun LocationCaretakerScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var hasPermission by remember { mutableStateOf(false) }
-    LocationPermissionHandler { hasPermission = true }
+    val locationHandler = remember { LocationHandler(context) }
 
     // Control para rastrear los cuidadores que han llegado a su destino
     var caretakersArrived by rememberSaveable { mutableIntStateOf(0) }
@@ -113,27 +102,58 @@ fun LocationCaretakerScreen(
         }
     }
 
-    var locationCallback: LocationCallback? by remember { mutableStateOf(null) }
-    DisposableEffect(hasPermission) {
-        if (hasPermission) {
-            locationCallback = locatCareViewModel.registerLocationUpdates { newLocation ->
-                Log.i("Location", "New location: $newLocation")
-            }
-        }
-        onDispose {
-            locationCallback?.let { locatCareViewModel.unregisterLocationUpdates(it) }
+    LaunchedEffect(uiLocState.cuidadores) {
+        locatCareViewModel.processUserLocations(uiLocState.cuidadores)
+    }
+
+    // Configuramos el launcher para solicitar permisos
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        locatCareViewModel.onPermissionResult(granted)
+    }
+
+    // Verificar permisos al iniciar la pantalla
+    LaunchedEffect(Unit) {
+        if (!locatCareViewModel.handleLocationPermission(context)) {
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
-    // Animar cámara solo una vez
-    var isInitialCameraMoveDone by remember { mutableStateOf(false) }
+    // Iniciar/detener actualizaciones de ubicación según el permiso y el estado de conexión
+    LaunchedEffect(uiLocState.isPermissionGranted, uiLocState.currentEntity) {
+        when {
+            uiLocState.currentEntity == null -> {
+                Log.d("MapScreen", "Esperando entidad...")
+            }
+            !uiLocState.isPermissionGranted -> {
+                Log.d("MapScreen", "Esperando permisos...")
+            }
+            uiLocState.currentEntity?.conectado == true -> {
+                Log.i("MapScreen", "Iniciando actualizaciones - Usuario: ${uiLocState.currentEntity!!.nombre}")
+                locatCareViewModel.startLocationUpdates(locationHandler)
+            }
+            else -> {
+                Log.i("MapScreen", "Deteniendo actualizaciones - Usuario desconectado")
+                locatCareViewModel.stopLocationUpdate(locationHandler)
+            }
+        }
+    }
+    // Animar cámara cuando cambie la ubicación
     LaunchedEffect(uiLocState.location) {
-        uiLocState.location?.takeIf { !isInitialCameraMoveDone }?.let { loc ->
+        uiLocState.location?.let { loc ->
             uiLocState.cameraPositionState.animate(
                 update = CameraUpdateFactory.newLatLngZoom(loc, 15f),
                 durationMs = 1000
             )
-            isInitialCameraMoveDone = true
+            locatCareViewModel.setInitialCameraMoveDone(true)
+        }
+    }
+
+    // Limpieza al salir de la pantalla
+    DisposableEffect(Unit) {
+        onDispose {
+            locatCareViewModel.stopLocationUpdate(locationHandler)
         }
     }
 
@@ -145,38 +165,7 @@ fun LocationCaretakerScreen(
         }
     }
 
-    // Control de emergencia - carga rutas cuando el estado de emergencia cambia
-    LaunchedEffect(isEmergency, uiLocState.location) {
-        if (isEmergency && uiLocState.location != null) {
-            locatCareViewModel.loadAllCaretakerRoutes(uiLocState.location)
-            uiLocState.caretakerMarkers.forEach { markerState ->
-                uiLocState.caretakerRoutes[markerState]?.takeIf { it.isNotEmpty() }?.let { route ->
-                    remainingRoutes[markerState] = route
-                }
-            }
-        } else {
-            locatCareViewModel.clearAllRoutes()
-            remainingRoutes.clear()
-        }
-    }
-
-    //Lanzamos un solo efecto que, cada minuto, recalcule todas las direcciones
-    LaunchedEffect(uiLocState.caretakerMarkers) {
-        while (isActive) {
-            uiLocState.caretakerMarkers.forEach { markerState ->
-                // llama a tu función de geocodificación
-                val addr = locatCareViewModel.getAddressFromLatLng(
-                    context,
-                    markerState.position.latitude,
-                    markerState.position.longitude
-                )
-                addressCache[markerState] = addr
-            }
-            delay(60_000L) // 1 minuto
-        }
-    }
-
-    if (!hasPermission) {
+    if (!uiLocState.isPermissionGranted) {
         Text(
             "Se requiere permiso de ubicación para usar el mapa.",
             modifier = Modifier
@@ -218,15 +207,10 @@ fun LocationCaretakerScreen(
             ) {
                 // Mi ubicación
                 uiLocState.location?.let { currentLocation ->
-                    // Creamos un ícono personalizado a partir de un recurso drawable
-                    val userIcon = remember(context) { // Recordamos para eficiencia
-                        BitmapDescriptorFactory.fromResource(R.drawable.caretaker)
-                        // Si el recurso no existe, usa el marcador predeterminado
-                            ?: BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
-                    }
+                    val userIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
 
                     Marker(
-                        state = remember { MarkerState(position = currentLocation) },
+                        state = MarkerState(position = currentLocation),
                         title = "Mi ubicación",
                         snippet = "Estoy aquí",
                         icon = userIcon

@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Looper
+import android.util.Log
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -79,7 +80,9 @@ class LocationHandler(private val context: Context) {
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 result.locations.forEach { location ->
-                    callback(LatLng(location.latitude, location.longitude))
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    Log.i("LocationHandler", "Ubicación recibida: $latLng") // Log adicional
+                    callback(latLng)
                 }
             }
         }

@@ -1,13 +1,17 @@
 package com.example.proyecto.data
 
+import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import android.util.Log
 
 // Carga a ancianos y cuidadores de firestore
 class RepositorioUsuarios (
@@ -150,6 +154,24 @@ class RepositorioUsuarios (
                 .await()
         } catch (e: Exception) {
             throw Exception("Error al actualizar estado de conexión: ${e.message}")
+        }
+    }
+
+    suspend fun actualizarUbicacionAnciano(uid: String, latLng: LatLng) {
+        val geo = GeoPoint(latLng.latitude, latLng.longitude)
+        try {
+            ancianos.document(uid)
+                .update(
+                    mapOf(
+                        "latLng" to geo,
+                        "timestamp" to FieldValue.serverTimestamp()
+                    )
+                )
+                .await()
+            Log.i("RepositorioUsuarios", "Ubicación actualizada correctamente en Firebase: $latLng")
+        } catch (e: Exception) {
+            Log.e("RepositorioUsuarios", "Error al actualizar ubicación en Firebase: ${e.message}")
+            throw Exception("Error al actualizar ubicación: ${e.message}")
         }
     }
 }
