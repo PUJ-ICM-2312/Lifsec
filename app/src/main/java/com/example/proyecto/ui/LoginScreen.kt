@@ -1,6 +1,7 @@
 package com.example.proyecto.ui
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
@@ -61,16 +62,16 @@ fun LogScreen(
     val currentUser by authViewModel.currentUser.collectAsState()
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
-            android.util.Log.d("LogScreen", "Usuario autenticado: ${currentUser?.email}")
-            // Navegar a la pantalla principal de anciano o cuidador según sea necesario.
-            navController.navigate(route = Screen.MenuOldPerson.route) {
-                popUpTo("login_screen") { inclusive = true }
+            Log.d("LogScreen", "Usuario autenticado: ${currentUser?.email}")
+            navController.navigate(Screen.MenuOldPerson.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
                 launchSingleTop = true
             }
         } else {
-            android.util.Log.d("LogScreen", "Usuario no autenticado")
+            Log.d("LogScreen", "Usuario no autenticado")
         }
     }
+
 
     // Limpiar mensaje de feedback cuando la pantalla se recompone en el caso que ya no aplique
     DisposableEffect(authViewModel.feedbackMessage) {

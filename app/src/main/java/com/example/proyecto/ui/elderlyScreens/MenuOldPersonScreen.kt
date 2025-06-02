@@ -117,6 +117,14 @@ fun MenuOldPersonScreen(
         return
     }
 
+    // Verifica que currentEntity esté configurado correctamente
+    LaunchedEffect(authViewModel.currentAnciano) {
+        if (authViewModel.currentAnciano == null && authViewModel.isAnciano()) {
+            Log.i("MenuOldPersonScreen", "Cargando datos del usuario...")
+            authViewModel.getCurrentState()
+        }
+    }
+
     // Solo verificar la huella si hay usuario activo
     var huellaEqualsUser by remember(currentUser?.uid) {
         mutableStateOf(
@@ -640,4 +648,3 @@ fun BottomNavigationBar(menuOldPersonViewModel: MenuOldPersonViewModel){
         }
     }
 }
-

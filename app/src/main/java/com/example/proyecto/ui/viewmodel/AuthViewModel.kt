@@ -240,61 +240,56 @@ class AuthViewModel: ViewModel() {
 
         isLoading = true
 
-        try {
-            auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        val firebaseUser = task.result?.user
-                        firebaseUser?.let { user ->
-                            // Buscar en ambas colecciones usando el uid
-                            firestore.collection("ancianos").document(user.uid).get()
-                                .addOnSuccessListener { document ->
-                                    if (document.exists()) {
-                                        val anciano = document.toObject(Anciano::class.java)
-                                        setCurrentEntity(anciano)
-                                        isLoading = false
-                                        onSuccess()
-                                    } else {
-                                        firestore.collection("cuidadores").document(user.uid).get()
-                                            .addOnSuccessListener { document ->
-                                                if (document.exists()) {
-                                                    val cuidador = document.toObject(Cuidador::class.java)
-                                                    setCurrentEntity(cuidador)
-                                                    isLoading = false
-                                                    onSuccess()
-                                                } else {
-                                                    isLoading = false
-                                                    onError("No se pudo encontrar la entidad con el UID proporcionado.")
-                                                }
-                                            }
-                                            .addOnFailureListener { e ->
-                                                isLoading = false
-                                                onError("Error al buscar cuidador: ${e.message}")
-                                            }
-                                    }
-                                }
-                                .addOnFailureListener { e ->
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val firebaseUser = task.result?.user
+                    firebaseUser?.let { user ->
+                        _currentUser.value = user // Actualiza el estado de currentUser
+                        firestore.collection("ancianos").document(user.uid).get()
+                            .addOnSuccessListener { document ->
+                                if (document.exists()) {
+                                    val anciano = document.toObject(Anciano::class.java)
+                                    setCurrentEntity(anciano) // Actualiza currentEntity
                                     isLoading = false
-                                    onError("Error al buscar anciano: ${e.message}")
+                                    onSuccess()
+                                } else {
+                                    firestore.collection("cuidadores").document(user.uid).get()
+                                        .addOnSuccessListener { document ->
+                                            if (document.exists()) {
+                                                val cuidador = document.toObject(Cuidador::class.java)
+                                                setCurrentEntity(cuidador) // Actualiza currentEntity
+                                                isLoading = false
+                                                onSuccess()
+                                            } else {
+                                                isLoading = false
+                                                onError("No se pudo encontrar la entidad con el UID proporcionado.")
+                                            }
+                                        }
+                                        .addOnFailureListener { e ->
+                                            isLoading = false
+                                            onError("Error al buscar cuidador: ${e.message}")
+                                        }
                                 }
-                        }
-                    } else {
-                        isLoading = false
-                        val errorMessage = when (task.exception?.message) {
-                            "The supplied auth credential is incorrect, malformed or has expired." ->
-                                "Error de autenticación. Por favor, intente nuevamente."
-                            "A network error (such as timeout, interrupted connection or unreachable host) has occurred." ->
-                                "Error de conexión. Verifique su conexión a internet."
-                            else -> task.exception?.message ?: "Error al iniciar sesión"
-                        }
-                        onError(errorMessage)
-                        password = ""
+                            }
+                            .addOnFailureListener { e ->
+                                isLoading = false
+                                onError("Error al buscar anciano: ${e.message}")
+                            }
                     }
+                } else {
+                    isLoading = false
+                    val errorMessage = when (task.exception?.message) {
+                        "The supplied auth credential is incorrect, malformed or has expired." ->
+                            "Error de autenticación. Por favor, intente nuevamente."
+                        "A network error (such as timeout, interrupted connection or unreachable host) has occurred." ->
+                            "Error de conexión. Verifique su conexión a internet."
+                        else -> task.exception?.message ?: "Error al iniciar sesión"
+                    }
+                    onError(errorMessage)
+                    password = ""
                 }
-        } catch (e: Exception) {
-            isLoading = false
-            onError("Error inesperado: ${e.message}")
-        }
+            }
     }
 
     // Método para verificar el estado de la conexión
