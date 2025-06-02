@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyecto.data.Anciano
 import com.example.proyecto.data.Cuidador
+import com.example.proyecto.data.FirestoreProvider
 import com.example.proyecto.data.Usuario
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -31,7 +32,7 @@ class AuthViewModel: ViewModel() {
     }
 
     private val auth: FirebaseAuth = Firebase.auth
-    private val firestore: FirebaseFirestore = Firebase.firestore
+    private val firestore: FirebaseFirestore = FirestoreProvider.instance
     private val _currentEntity = MutableStateFlow<Usuario?>(null)
     private val _currentUser = MutableStateFlow(auth.currentUser)
     private val _userType = MutableStateFlow(UserType.NONE)

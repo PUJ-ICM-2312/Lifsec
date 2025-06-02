@@ -25,10 +25,14 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.Screen
 import com.example.proyecto.ui.theme.ProyectoTheme
+import com.example.proyecto.ui.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConfigurationScreenElder(navController: NavController) {
+fun ConfigurationScreenElder(
+    navController: NavController,
+    authViewModel: AuthViewModel
+) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
@@ -106,7 +110,7 @@ fun ConfigurationScreenElder(navController: NavController) {
 @Composable
 fun ConfigurationScreenElderPreview() {
     ProyectoTheme {
-        ConfigurationScreenElder(navController = rememberNavController())
+        ConfigurationScreenElder(navController = rememberNavController(), authViewModel = AuthViewModel())
     }
 }
 
