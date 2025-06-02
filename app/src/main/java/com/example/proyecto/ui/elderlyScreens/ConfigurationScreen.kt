@@ -1,5 +1,6 @@
 package com.example.proyecto.ui.elderlyScreens
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,17 +24,94 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.TopAppBar
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import com.example.proyecto.Screen
+import com.example.proyecto.data.RepositorioUsuarios
 import com.example.proyecto.ui.theme.ProyectoTheme
 import com.example.proyecto.ui.viewmodel.AuthViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfigurationScreenElder(
     navController: NavController,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    repositorioUsuarios: RepositorioUsuarios
 ) {
+    var conectado by remember { mutableStateOf(authViewModel.currentAnciano?.conectado ?: false) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(authViewModel.currentAnciano) {
+        conectado = authViewModel.currentAnciano?.conectado ?: false
+    }
+
     Scaffold(
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigate(Screen.MenuOldPerson.route) }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Regresar"
+                        )
+                    }
+                },
+                title = { Text(if (conectado) "Conectado" else "Desconectado") },
+                actions = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Switch(
+                            checked = conectado,
+                            onCheckedChange = { newValue ->
+                                scope.launch {
+                                    authViewModel.currentAnciano?.let { anciano ->
+                                        try {
+                                            repositorioUsuarios.actualizarEstadoConexion(
+                                                usuarioId = anciano.userID,
+                                                esAnciano = true,
+                                                conectado = newValue
+                                            )
+                                            conectado = newValue
+                                            Log.d("ConfigScreen", "Usuario ID: ${anciano.userID}, Conectado: $newValue")
+                                        } catch (e: Exception) {
+                                            Log.e("ConfigScreen", "Error al actualizar estado: ${e.message}")
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                        IconButton(onClick = {
+                            authViewModel.signOut()
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.ExitToApp,
+                                contentDescription = "Cerrar sesión"
+                            )
+                        }
+                    }
+                }
+            )
+        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
@@ -42,7 +120,7 @@ fun ConfigurationScreenElder(
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            // Primer elemento de lista - Cuidadores
+            // Lista de Cuidadores Card
             Card(
                 modifier = Modifier.padding(vertical = 8.dp),
                 shape = RoundedCornerShape(12.dp),
@@ -73,7 +151,7 @@ fun ConfigurationScreenElder(
 
             Spacer(modifier = Modifier.padding(8.dp))
 
-            // Segundo elemento de lista - Plan
+            // Plan de aplicación Card
             Card(
                 modifier = Modifier.padding(vertical = 8.dp),
                 shape = RoundedCornerShape(12.dp),
@@ -110,7 +188,7 @@ fun ConfigurationScreenElder(
 @Composable
 fun ConfigurationScreenElderPreview() {
     ProyectoTheme {
-        ConfigurationScreenElder(navController = rememberNavController(), authViewModel = AuthViewModel())
+        ConfigurationScreenElder(navController = rememberNavController(), authViewModel = AuthViewModel(), repositorioUsuarios = RepositorioUsuarios())
     }
 }
 

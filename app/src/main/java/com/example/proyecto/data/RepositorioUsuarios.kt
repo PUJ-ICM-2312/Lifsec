@@ -141,6 +141,17 @@ class RepositorioUsuarios (
             false
         }
     }
+
+    suspend fun actualizarEstadoConexion(usuarioId: String, esAnciano: Boolean, conectado: Boolean) {
+        val coleccion = if (esAnciano) ancianos else cuidadores
+        try {
+            coleccion.document(usuarioId)
+                .update("conectado", conectado)
+                .await()
+        } catch (e: Exception) {
+            throw Exception("Error al actualizar estado de conexión: ${e.message}")
+        }
+    }
 }
 
 object FirestoreProvider {
