@@ -311,15 +311,7 @@ fun LocationTopBar(
                 modifier = Modifier.fillMaxWidth()
             )
         },
-        navigationIcon = {
-            IconButton(onClick = { navController.navigate(Screen.MenuOldPerson.route) }) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Volver al menú",
-                    tint = MaterialTheme.colorScheme.background
-                )
-            }
-        },
+
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.outline
         )

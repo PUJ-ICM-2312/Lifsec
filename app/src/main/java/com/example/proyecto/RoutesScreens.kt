@@ -113,7 +113,7 @@ fun NavegationStack() {
         composable(Screen.ActivityList.route) { ListActivitiesOldPersonScreen(activityViewModel,navController) }
 
         composable(Screen.SosScreen.route) {
-            SOSScreen(navController, authViewModel)
+            SOSScreen(navController, authViewModel,menuOldPersonViewModel)
         }
 
         composable(Screen.CreateReminder.route) {
