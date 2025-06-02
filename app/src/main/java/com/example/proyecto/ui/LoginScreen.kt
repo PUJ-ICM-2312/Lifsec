@@ -88,23 +88,7 @@ fun LogScreen(
             }
         }
 
-        if (currentUser != null) {
 
-            Log.d("LogScreen", "Usuario autenticado: ${currentUser?.email}")
-            if(currentEntity is Anciano){
-
-            } else if(currentEntity is Cuidador){
-
-
-            }else{
-
-
-            }
-
-
-        } else {
-            Log.d("LogScreen", "Usuario no autenticado")
-        }
     }
 
 

@@ -100,6 +100,7 @@ fun MenuOldPersonScreen(
 ) {
     val context = LocalContext.current
     val currentUser by authViewModel.currentUser.collectAsState()
+    val currentEntity by authViewModel.currentEntity.collectAsState()
 
     // Si el usuario no está autenticado, no mostrar nada y navegar a Login
     if (currentUser == null) {
@@ -128,10 +129,11 @@ fun MenuOldPersonScreen(
     // Solo verificar la huella si hay usuario activo
     var huellaEqualsUser by remember(currentUser?.uid) {
         mutableStateOf(
-            currentUser?.let {
-                internalViewModel.huellaIgualAUser(context, authViewModel.currentUser.value?.email )
+            currentEntity?.let {
+                internalViewModel.huellaIgualAUser(context, authViewModel.currentEntity.value?.email )
             } ?: false
         )
+
     }
     var mostrarCard by remember { mutableStateOf(true) }
     val notificationPermissionState = rememberMultiplePermissionsState(

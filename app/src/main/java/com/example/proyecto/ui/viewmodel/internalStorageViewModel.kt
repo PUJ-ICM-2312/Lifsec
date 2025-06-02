@@ -52,6 +52,8 @@ class internalStorageViewModel : ViewModel() {
             return false
         }
         val huellaData: HuellaData = leerJsonHuella(context)
+        android.util.Log.d("internalStorageViewModel", "Datos recibidos por parametros: correo=${correo}")
+
         android.util.Log.d("internalStorageViewModel", "Datos leídos: correo=${huellaData.correo}, contra=${huellaData.contra}")
         val resultado = (huellaData.correo == correo)
         android.util.Log.d("internalStorageViewModel", "¿Coincide la huella con el usuario? $resultado")
