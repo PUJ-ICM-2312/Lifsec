@@ -59,9 +59,9 @@ fun RegistryForm(
     navController: NavController,
     authViewModel: AuthViewModel
 ) {
-    // Estados locales
     val email by remember { derivedStateOf { authViewModel.email } }
     val password by remember { derivedStateOf { authViewModel.password } }
+    val nombre by remember { derivedStateOf { authViewModel.nombre } }
     var confirmInput by remember { mutableStateOf("") }
     var isElderly by remember { mutableStateOf(false) }
 
@@ -74,6 +74,13 @@ fun RegistryForm(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
+        OutlinedTextField(
+            value = nombre,
+            onValueChange = { authViewModel.onNombreChange(it) },
+            label = { Text("Nombre") },
+            singleLine = true
+        )
+
         OutlinedTextField(
             value = email,
             onValueChange = { authViewModel.onEmailChange(it) },
@@ -91,7 +98,7 @@ fun RegistryForm(
             singleLine = true
         )
 
-        // Campo de confirmación de contraseña (solo verificación local)
+        // Campo de confirmación de contraseña
         OutlinedTextField(
             value = confirmInput,
             onValueChange = { confirmInput = it },
@@ -128,21 +135,25 @@ fun RegistryForm(
             onClick = {
                 if (password.length >= 6) {
                     if (email.contains("@") && !email.contains("@.") && email.contains(".co")) {
-                        authViewModel.registerUser(
-                            isAnciano = isElderly,
-                            onSuccess = {
-                                navController.navigate(
-                                    if (isElderly) Screen.MenuOldPerson.route
-                                    else Screen.PersonSelector.route
-                                ) {
-                                    // Limpiar el back stack
-                                    popUpTo("registry_screen") { inclusive = true }
+                        if (nombre.isNotBlank()) {
+                            authViewModel.registerUser(
+                                isAnciano = isElderly,
+                                onSuccess = {
+                                    navController.navigate(
+                                        if (isElderly) Screen.MenuOldPerson.route
+                                        else Screen.PersonSelector.route
+                                    ) {
+                                        // Limpiar el back stack
+                                        popUpTo("registry_screen") { inclusive = true }
+                                    }
+                                },
+                                onError = { error ->
+                                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
                                 }
-                            },
-                            onError = { error ->
-                                Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-                            }
-                        )
+                            )
+                        } else {
+                            Toast.makeText(context, "Por favor ingrese un nombre", Toast.LENGTH_SHORT).show()
+                        }
                     } else {
                         Toast.makeText(context, "Por favor ingrese un correo válido", Toast.LENGTH_SHORT).show()
                     }
@@ -159,7 +170,7 @@ fun RegistryForm(
                 contentColor = MaterialTheme.colorScheme.primary
             ),
             enabled = !authViewModel.isLoading && email.isNotBlank() &&
-                    password.isNotBlank() && passwordsMatch
+                    password.isNotBlank() && passwordsMatch && nombre.isNotBlank()
         ) {
             if (authViewModel.isLoading) {
                 CircularProgressIndicator(

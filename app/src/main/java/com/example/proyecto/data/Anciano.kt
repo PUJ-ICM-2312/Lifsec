@@ -8,7 +8,9 @@ data class Anciano(
     override var nombre: String = "",
     override var password: String = "",
     override var latLng: GeoPoint = GeoPoint(0.0, 0.0),
-    var emergencia: Boolean = false
+    override var conectado: Boolean = false,
+    var emergencia: Boolean = false,
+    var cuidadoresIds: MutableList<String> = mutableListOf()
 ) : Usuario(userID, email, nombre, password, latLng) {
 
     val actividades: MutableList<Actividad> = mutableListOf()

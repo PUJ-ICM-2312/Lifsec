@@ -49,6 +49,8 @@ class AuthViewModel: ViewModel() {
         private set
     var password by mutableStateOf("")
         private set
+    var nombre by mutableStateOf("")
+        private set
     var isLoading by mutableStateOf(false)
         private set
     var feedbackMessage by mutableStateOf<String?>(null)
@@ -98,6 +100,11 @@ class AuthViewModel: ViewModel() {
         feedbackMessage = null
     }
 
+    fun onNombreChange(newNombre: String) {
+        nombre = newNombre
+        feedbackMessage = null
+    }
+
     fun getAuth(): FirebaseAuth = auth
 
     fun clearFeedbackMessage() {
@@ -124,6 +131,7 @@ class AuthViewModel: ViewModel() {
                 // Limpiar campos UI
                 email = ""
                 password = ""
+                nombre = ""
                 feedbackMessage = "Sesión cerrada."
 
                 Log.d("AuthViewModel", "SignOut completo - Estados reseteados")
@@ -135,7 +143,7 @@ class AuthViewModel: ViewModel() {
     }
 
     fun registerUser(isAnciano: Boolean, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        if (email.isBlank() || password.isBlank()) {
+        if (email.isBlank() || password.isBlank() || nombre.isBlank()) {
             onError("Los campos no pueden estar vacíos")
             return
         }
@@ -152,7 +160,7 @@ class AuthViewModel: ViewModel() {
                             Anciano(
                                 userID = user.uid,
                                 email = email,
-                                nombre = "",
+                                nombre = nombre,
                                 password = password,
                                 latLng = defaultLocation,
                                 emergencia = false
@@ -161,7 +169,7 @@ class AuthViewModel: ViewModel() {
                             Cuidador(
                                 userID = user.uid,
                                 email = email,
-                                nombre = "",
+                                nombre = nombre,
                                 password = password,
                                 latLng = defaultLocation
                             )
@@ -305,6 +313,7 @@ class AuthViewModel: ViewModel() {
         _currentEntity.value = null
         _userType.value = UserType.NONE
         password = ""  // Limpiar contraseña pero mantener email para conveniencia
+        nombre = ""
         feedbackMessage = null
     }
 
@@ -319,6 +328,7 @@ class AuthViewModel: ViewModel() {
         UserType: ${_userType.value}
         Email: $email
         Password: ${if (password.isNotEmpty()) "***" else "empty"}
+        Nombre: $nombre
     """.trimIndent())
     }
 }

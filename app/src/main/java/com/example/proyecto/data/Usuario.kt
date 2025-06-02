@@ -7,5 +7,6 @@ open class Usuario(
     open val email: String,
     open val nombre: String,
     open val password: String,
-    open val latLng: GeoPoint
+    open val latLng: GeoPoint,
+    open val conectado: Boolean = false
 )
