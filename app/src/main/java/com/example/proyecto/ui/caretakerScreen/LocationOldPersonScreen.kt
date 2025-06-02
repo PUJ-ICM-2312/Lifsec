@@ -27,7 +27,7 @@ import com.example.proyecto.ui.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationOldPersonScreen(navController: NavController, authViewModel: AuthViewModel ) {
+fun LocationOldPersonScreen( authViewModel: AuthViewModel ) {
     var showBottomSheet by remember { mutableStateOf(false) }
 
     Scaffold(
