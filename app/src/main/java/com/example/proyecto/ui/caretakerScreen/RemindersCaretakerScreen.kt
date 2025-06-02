@@ -37,32 +37,7 @@ import java.util.Locale
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RemindersCaretakerScreen() {
-    Scaffold (
-        topBar = {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .shadow(4.dp, shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)),
-                color = Color.Transparent
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Abuelo",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        }
-    ) { paddingValues ->
+    Scaffold { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
             ReminderCaretakerListScreen()
         }

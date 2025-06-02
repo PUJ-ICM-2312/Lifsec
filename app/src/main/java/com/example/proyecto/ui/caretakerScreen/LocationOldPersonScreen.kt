@@ -31,42 +31,7 @@ fun LocationOldPersonScreen( authViewModel: AuthViewModel ) {
     var showBottomSheet by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .shadow(4.dp, shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)),
-                color = Color.Transparent
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Abuelo",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
 
-                }
-                IconButton(
-                    onClick = { authViewModel.signOut() },
-                    modifier = Modifier.padding(end = 8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.ExitToApp,
-                        contentDescription = "Cerrar Sesión",
-                        tint = MaterialTheme.colorScheme.background
-                    )
-                }
-            }
-
-        }
     ) { paddingValues ->
         Box(
             modifier = Modifier

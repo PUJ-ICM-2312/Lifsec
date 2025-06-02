@@ -3,13 +3,18 @@ package com.example.proyecto.ui.caretakerScreen
 import android.Manifest
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -17,12 +22,17 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -49,6 +59,7 @@ fun MenuCaretakersScreen(
     activityViewModel: ActivityViewModel
 
 ) {
+
     val context = LocalContext.current
     val notificationPermissionState = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -63,6 +74,40 @@ fun MenuCaretakersScreen(
 
     val recompositionKey by menuCareTakerViewModel.cambio
 
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun TopBarHome(authViewModel: AuthViewModel) {
+        TopAppBar(
+            title = {
+                Text(
+                    text = "Abuelo",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontSize = 28.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.background
+                )
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.outline
+            ),
+            actions = {
+                // User icon button at the end (trailing)
+                IconButton(
+                    onClick = { authViewModel.signOut() },
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ExitToApp,
+                        contentDescription = "Cerrar Sesión",
+                        tint = MaterialTheme.colorScheme.background
+                    )
+                }
+            }
+        )
+    }
+
     Scaffold(
         bottomBar = { BottomNavigationBarCareTaker(navController,menuCareTakerViewModel) },
         containerColor = MaterialTheme.colorScheme.background
@@ -74,21 +119,27 @@ fun MenuCaretakersScreen(
             color = MaterialTheme.colorScheme.background
         ) {
 
-            key(recompositionKey) {
+            Column(modifier = Modifier.fillMaxSize()) {
 
-                if(menuCareTakerViewModel.leerApartado() == "Ubicacion"){
+                TopBarHome(authViewModel)
 
-                    LocationOldPersonScreen(authViewModel)
+                key(recompositionKey) {
 
-                }else if(menuCareTakerViewModel.leerApartado() == "Actividades"){
+                    if(menuCareTakerViewModel.leerApartado() == "Ubicacion"){
 
-                    ActivitiesCaretaker(navController, activityViewModel)
+                        LocationOldPersonScreen(authViewModel)
 
-                }else if(menuCareTakerViewModel.leerApartado() == "Recordatorios"){
+                    }else if(menuCareTakerViewModel.leerApartado() == "Actividades"){
 
-                    RemindersCaretakerScreen()
+                        ActivitiesCaretaker(navController, activityViewModel)
 
+                    }else if(menuCareTakerViewModel.leerApartado() == "Recordatorios"){
+
+                        RemindersCaretakerScreen()
+
+                    }
                 }
+
             }
 
         }
