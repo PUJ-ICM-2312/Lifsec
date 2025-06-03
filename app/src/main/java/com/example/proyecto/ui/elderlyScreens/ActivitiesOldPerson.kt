@@ -45,6 +45,8 @@ import android.net.Uri
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.example.proyecto.Screen
@@ -56,21 +58,28 @@ fun ListActivitiesOldPersonScreen(
     navController: NavController
 ) {
     val showDialog = remember { mutableStateOf(false) }
+    val recompositionKey by viewModel.cambio
+
 
 
     val context = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            items(viewModel.activities.size) { index ->
-                val activity = viewModel.activities[index]
-                ActivityCard(activity = activity)
+
+
+        key(recompositionKey) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                items(viewModel.activities.size) { index ->
+                    val activity = viewModel.activities[index]
+                    ActivityCard(activity = activity)
+                }
             }
         }
+
 
         // FAB
         androidx.compose.material3.FloatingActionButton(

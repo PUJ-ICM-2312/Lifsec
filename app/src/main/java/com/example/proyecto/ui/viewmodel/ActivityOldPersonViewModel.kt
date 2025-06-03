@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyecto.data.Actividad
@@ -27,6 +28,8 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.UUID
+import androidx.compose.runtime.State
+
 
 // Heredar de AndroidViewModel para obtener el contexto de la aplicación
 class ActivityViewModel(application: Application) : AndroidViewModel(application) {
@@ -35,6 +38,12 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
     private val storage: FirebaseStorage = Firebase.storage
     private val authViewModel = AuthViewModel()
 
+    private val _cambio = mutableStateOf(false)
+    val cambio: State<Boolean> = _cambio
+    fun generarCambio(){
+        _cambio.value = !_cambio.value
+
+    }
     private val _activities = mutableStateListOf<Actividad>()
     val activities: List<Actividad> get() = _activities
     // Constantes para los nombres de directorios y archivos usados en el almacenamiento local
