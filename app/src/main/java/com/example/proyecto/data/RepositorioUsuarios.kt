@@ -174,6 +174,57 @@ class RepositorioUsuarios (
             throw Exception("Error al actualizar ubicación: ${e.message}")
         }
     }
+
+    fun getCuidadoresConectadosPorAncianoIdFlow(ancianoId: String): Flow<List<Cuidador>> = callbackFlow {
+        var cuidadoresListener: ListenerRegistration? = null
+
+        val ancianoListener = ancianos.document(ancianoId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("RepositorioUsuarios", "Error al observar anciano: ${error.message}")
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                // Obtener la lista de IDs de cuidadores del anciano
+                val cuidadoresIds = snapshot?.toObject(Anciano::class.java)?.cuidadoresIds ?: emptyList()
+
+                if (cuidadoresIds.isEmpty()) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+
+                // Remover el listener anterior si existe
+                cuidadoresListener?.remove()
+
+                // Crear una consulta para observar los cuidadores conectados
+                val cuidadoresQuery = cuidadores
+                    .whereIn("userID", cuidadoresIds)
+                    .whereEqualTo("conectado", true)
+
+                // Crear nuevo listener para cuidadores
+                cuidadoresListener = cuidadoresQuery.addSnapshotListener { cuidadoresSnapshot, cuidadoresError ->
+                    if (cuidadoresError != null) {
+                        Log.e("RepositorioUsuarios", "Error al observar cuidadores: ${cuidadoresError.message}")
+                        return@addSnapshotListener
+                    }
+
+                    val cuidadoresConectados = cuidadoresSnapshot?.documents?.mapNotNull { doc ->
+                        doc.toObject(Cuidador::class.java)
+                    } ?: emptyList()
+
+                    Log.d("RepositorioUsuarios", "Cuidadores conectados encontrados: ${cuidadoresConectados.size}")
+                    trySend(cuidadoresConectados)
+                }
+            }
+
+        // Limpiar todos los listeners cuando se cierre el Flow
+        awaitClose {
+            Log.d("RepositorioUsuarios", "Cerrando listeners")
+            ancianoListener.remove()
+            cuidadoresListener?.remove()
+        }
+    }
 }
 
 object FirestoreProvider {

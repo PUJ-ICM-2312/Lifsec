@@ -71,6 +71,8 @@ fun LocationCaretakerScreen(
 ) {
     val uiLocState by locatCareViewModel.uiLocState.collectAsStateWithLifecycle()
     val isEmergency by authViewModel.emergencia.collectAsState()
+    val cuidadoresConectados by locatCareViewModel.cuidadoresConectados.collectAsState()
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -105,6 +107,15 @@ fun LocationCaretakerScreen(
     LaunchedEffect(uiLocState.cuidadores) {
         locatCareViewModel.processUserLocations(uiLocState.cuidadores)
     }
+
+    // Iniciar observación de cuidadores cuando tengamos el ID del anciano
+    LaunchedEffect(uiLocState.currentEntity?.userID) {
+        uiLocState.currentEntity?.userID?.let { ancianoId ->
+            locatCareViewModel.observarCuidadoresConectados(ancianoId)
+            Log.d("LocationScreen", "Iniciando observación de cuidadores para anciano: $ancianoId")
+        }
+    }
+
 
     // Configuramos el launcher para solicitar permisos
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -217,63 +228,79 @@ fun LocationCaretakerScreen(
                     )
                 }
 
-                // Cuidadores y sus rutas
-                uiLocState.caretakerMarkers.forEachIndexed { index, markerState ->
+                // Marcadores de cuidadores
+                cuidadoresConectados.forEach { cuidador ->
+                    val position = LatLng(cuidador.latLng.latitude, cuidador.latLng.longitude)
 
-                    // Visualizamos los cuidadores
                     val caretakerIcon = remember(context) {
                         BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
                     }
 
                     Marker(
-                        state = markerState,
-                        title = "Cuidador #${index + 1}",
-                        snippet = addressCache[markerState] ?: "Obteniendo dirección…",
+                        state = MarkerState(position),
+                        title = cuidador.nombre,
+                        snippet = "Cuidador conectado",
                         icon = caretakerIcon
                     )
+                }
+
+                // Cuidadores y sus rutas
+//                uiLocState.caretakerMarkers.forEachIndexed { index, markerState ->
+//
+//                    // Visualizamos los cuidadores
+//                    val caretakerIcon = remember(context) {
+//                        BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
+//                    }
+//
+//                    Marker(
+//                        state = markerState,
+//                        title = "Cuidador #${index + 1}",
+//                        snippet = addressCache[markerState] ?: "Obteniendo dirección…",
+//                        icon = caretakerIcon
+//                    )
 
                     // Si hay emergencia, mostramos la ruta almacenada en el estado
-                    if (isEmergency && uiLocState.location != null) {
-                        // Obtenemos la ruta y color del estado
-                        val routePoints = remainingRoutes[markerState] ?: emptyList()
-                        val routeColor = uiLocState.caretakerRouteColors[markerState] ?: Color.Blue
-
-                        if (routePoints.isNotEmpty()) {
-                            // Dibujamos solo la ruta restante
-                            Polyline(
-                                points = routePoints,
-                                clickable = false,
-                                width = 8f,
-                                color = routeColor
-                            )
-
-                            // Animamos el marcador a lo largo de la ruta
-                            LaunchedEffect(isEmergency, key2 = markerState) {
-                                val initialRoute =
-                                    uiLocState.caretakerRoutes[markerState] ?: emptyList()
-                                if (initialRoute.isNotEmpty()) {
-                                    animateMarkerAlongRoute(
-                                        markerState = markerState,
-                                        route = initialRoute,
-                                        onCompleted = handleCaretakerArrival,
-                                        onRouteUpdate = { remaining ->
-                                            // Actualizamos la ruta restante en el mapa
-                                            remainingRoutes[markerState] = remaining
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        // Si no hay emergencia, animamos el marcador con movimiento aleatorio
-                        AnimatedMarker(
-                            markerState = markerState,
-                            baseLocation = uiLocState.location ?: markerState.position,
-                            durationMs = 30000,
-                            isEmergency = isEmergency
-                        )
-                    }
-                }
+//                    if (isEmergency && uiLocState.location != null) {
+//                        // Obtenemos la ruta y color del estado
+//                        val routePoints = remainingRoutes[markerState] ?: emptyList()
+//                        val routeColor = uiLocState.caretakerRouteColors[markerState] ?: Color.Blue
+//
+//                        if (routePoints.isNotEmpty()) {
+//                            // Dibujamos solo la ruta restante
+//                            Polyline(
+//                                points = routePoints,
+//                                clickable = false,
+//                                width = 8f,
+//                                color = routeColor
+//                            )
+//
+//                            // Animamos el marcador a lo largo de la ruta
+//                            LaunchedEffect(isEmergency, key2 = markerState) {
+//                                val initialRoute =
+//                                    uiLocState.caretakerRoutes[markerState] ?: emptyList()
+//                                if (initialRoute.isNotEmpty()) {
+//                                    animateMarkerAlongRoute(
+//                                        markerState = markerState,
+//                                        route = initialRoute,
+//                                        onCompleted = handleCaretakerArrival,
+//                                        onRouteUpdate = { remaining ->
+//                                            // Actualizamos la ruta restante en el mapa
+//                                            remainingRoutes[markerState] = remaining
+//                                        }
+//                                    )
+//                                }
+//                            }
+//                        }
+//                    } else {
+//                        // Si no hay emergencia, animamos el marcador con movimiento aleatorio
+//                        AnimatedMarker(
+//                            markerState = markerState,
+//                            baseLocation = uiLocState.location ?: markerState.position,
+//                            durationMs = 30000,
+//                            isEmergency = isEmergency
+//                        )
+//                    }
+//                }
             }
         }
     }
@@ -369,50 +396,50 @@ suspend fun animateMarkerAlongRoute(
     onCompleted()
 }
 
-@Composable
-fun AnimatedMarker(
-    markerState: MarkerState,
-    baseLocation: LatLng,
-    durationMs: Int = 10000,
-    isEmergency: Boolean
-) {
-    // usamos rememberUpdatedState para leer siempre el último valor
-    val emergencyState by rememberUpdatedState(newValue = isEmergency)
-    val animLat = remember { Animatable(markerState.position.latitude.toFloat()) }
-    val animLng = remember { Animatable(markerState.position.longitude.toFloat()) }
-    val scope = rememberCoroutineScope()
-
-    // Usamos un estado estable para la posición para evitar parpadeos
-    val stablePosition = remember { mutableStateOf(markerState.position) }
-
-    LaunchedEffect(emergencyState) {
-        // Si hay emergencia no iniciamos el loop de movimiento aleatorio
-        if (emergencyState) return@LaunchedEffect
-
-        while (isActive && !emergencyState) {
-            val nextLat = (baseLocation.latitude + Random.nextDouble(-0.005, 0.005)).toFloat()
-            val nextLng = (baseLocation.longitude + Random.nextDouble(-0.005, 0.005)).toFloat()
-
-            scope.launch {
-                animLat.animateTo(nextLat, animationSpec = tween(durationMillis = durationMs))
-            }
-            scope.launch {
-                animLng.animateTo(nextLng, animationSpec = tween(durationMillis = durationMs))
-            }
-
-            delay(durationMs.toLong())
-        }
-    }
-
-    // Actualizamos el estado estable en cada recomposición
-    stablePosition.value = LatLng(
-        animLat.value.toDouble(),
-        animLng.value.toDouble()
-    )
-
-    // Actualizamos la posición del marker solo cuando cambia el valor estable
-    // Esto reduce la frecuencia de actualización y evita parpadeos
-    LaunchedEffect(stablePosition.value) {
-        markerState.position = stablePosition.value
-    }
-}
+//@Composable
+//fun AnimatedMarker(
+//    markerState: MarkerState,
+//    baseLocation: LatLng,
+//    durationMs: Int = 10000,
+//    isEmergency: Boolean
+//) {
+//    // usamos rememberUpdatedState para leer siempre el último valor
+//    val emergencyState by rememberUpdatedState(newValue = isEmergency)
+//    val animLat = remember { Animatable(markerState.position.latitude.toFloat()) }
+//    val animLng = remember { Animatable(markerState.position.longitude.toFloat()) }
+//    val scope = rememberCoroutineScope()
+//
+//    // Usamos un estado estable para la posición para evitar parpadeos
+//    val stablePosition = remember { mutableStateOf(markerState.position) }
+//
+//    LaunchedEffect(emergencyState) {
+//        // Si hay emergencia no iniciamos el loop de movimiento aleatorio
+//        if (emergencyState) return@LaunchedEffect
+//
+//        while (isActive && !emergencyState) {
+//            val nextLat = (baseLocation.latitude + Random.nextDouble(-0.005, 0.005)).toFloat()
+//            val nextLng = (baseLocation.longitude + Random.nextDouble(-0.005, 0.005)).toFloat()
+//
+//            scope.launch {
+//                animLat.animateTo(nextLat, animationSpec = tween(durationMillis = durationMs))
+//            }
+//            scope.launch {
+//                animLng.animateTo(nextLng, animationSpec = tween(durationMillis = durationMs))
+//            }
+//
+//            delay(durationMs.toLong())
+//        }
+//    }
+//
+//    // Actualizamos el estado estable en cada recomposición
+//    stablePosition.value = LatLng(
+//        animLat.value.toDouble(),
+//        animLng.value.toDouble()
+//    )
+//
+//    // Actualizamos la posición del marker solo cuando cambia el valor estable
+//    // Esto reduce la frecuencia de actualización y evita parpadeos
+//    LaunchedEffect(stablePosition.value) {
+//        markerState.position = stablePosition.value
+//    }
+//}

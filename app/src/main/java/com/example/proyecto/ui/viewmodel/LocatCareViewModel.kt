@@ -34,6 +34,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.random.Random
 import com.example.proyecto.data.RepositorioUsuarios
+import com.example.proyecto.data.Cuidador
 
 /**
  * ViewModel que controla la ubicación y genera los marcadores de cuidadores.
@@ -61,6 +62,9 @@ class LocatCareViewModel(
 
     // Mapa para almacenar las listas de puntos de recorrido para cada usuario
     private val userPathsMap = mutableMapOf<String, MutableList<LatLng>>()
+
+    private val _cuidadoresConectados = MutableStateFlow<List<Cuidador>>(emptyList())
+    val cuidadoresConectados: StateFlow<List<Cuidador>> = _cuidadoresConectados.asStateFlow()
 
     init {
         // Nos suscribimos a los cambios de la entidad en AuthViewModel
@@ -293,6 +297,32 @@ class LocatCareViewModel(
             loadRouteForCaretaker(marker, destination)
         }
     }*/
+
+    fun observarCuidadoresConectados(ancianoId: String) {
+        viewModelScope.launch {
+            try {
+                RepositorioUsuario.getCuidadoresConectadosPorAncianoIdFlow(ancianoId)
+                    .collect { cuidadores ->
+                        _cuidadoresConectados.value = cuidadores
+                        actualizarMarcadoresCuidadores(cuidadores)
+                    }
+            } catch (e: Exception) {
+                Log.e("LocatCareVM", "Error al observar cuidadores: ${e.message}")
+            }
+        }
+    }
+
+    private fun actualizarMarcadoresCuidadores(cuidadores: List<Cuidador>) {
+        val newMarkers = cuidadores.map { cuidador ->
+            MarkerState(
+                position = LatLng(
+                    cuidador.latLng.latitude,
+                    cuidador.latLng.longitude
+                )
+            )
+        }
+        _uiLocState.update { it.copy(caretakerMarkers = newMarkers) }
+    }
 
     /**
      * Limpia las rutas de los cuidadores
