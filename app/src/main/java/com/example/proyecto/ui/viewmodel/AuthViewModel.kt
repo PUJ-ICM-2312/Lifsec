@@ -64,10 +64,8 @@ class AuthViewModel: ViewModel() {
         viewModelScope.launch {
             auth.currentUser?.let { user ->
                 _currentUser.value = user
-                // Solo cargar datos si no tenemos una entidad actual
-                if (_currentEntity.value == null) {
-                    loadUserData(user.uid)
-                }
+                setupEntityListener(user.uid)
+                loadUserData(user.uid)
             }
         }
     }
@@ -208,15 +206,7 @@ class AuthViewModel: ViewModel() {
                 if (document.exists()) {
                     val anciano = document.toObject(Anciano::class.java)
                     if (anciano != null) {
-                        Log.d("AuthViewModel", """
-                        Anciano encontrado:
-                        userID: ${anciano.userID}
-                        nombre: ${anciano.nombre}
-                        email: ${anciano.email}
-                        latLng: ${anciano.latLng?.latitude}, ${anciano.latLng?.longitude}
-                        emergencia: ${anciano.emergencia}
-                        conectado: ${anciano.conectado}
-                    """.trimIndent())
+                        Log.d("AuthViewModel", "Anciano cargado - conectado: ${anciano.conectado}")
                         setCurrentEntity(anciano)
                     }
                     _isLoading.value = false
@@ -318,6 +308,21 @@ class AuthViewModel: ViewModel() {
                     }
                     onError(errorMessage)
                     password = ""
+                }
+            }
+    }
+
+    private fun setupEntityListener(uid: String) {
+        firestore.collection("ancianos").document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("AuthViewModel", "Error al escuchar cambios: ${error.message}")
+                    return@addSnapshotListener
+                }
+
+                snapshot?.toObject(Anciano::class.java)?.let { anciano ->
+                    Log.d("AuthViewModel", "Cambio detectado en anciano - conectado: ${anciano.conectado}")
+                    setCurrentEntity(anciano)
                 }
             }
     }

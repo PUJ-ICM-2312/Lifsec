@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -52,13 +53,9 @@ fun ConfigurationScreenElder(
     authViewModel: AuthViewModel,
     repositorioUsuarios: RepositorioUsuarios
 ) {
-    var conectado by remember { mutableStateOf(authViewModel.currentAnciano?.conectado ?: false) }
+    val currentEntity by authViewModel.currentEntity.collectAsState()
+    val conectado = currentEntity?.conectado ?: false
     val scope = rememberCoroutineScope()
-
-    LaunchedEffect(authViewModel.currentEntity) {
-        conectado = authViewModel.currentAnciano?.conectado ?: false
-        Log.d("ConfigScreen", "Conectado: ${authViewModel.currentEntity.value?.conectado}")
-    }
 
     Scaffold(
         topBar = {
@@ -89,7 +86,6 @@ fun ConfigurationScreenElder(
                                                 esAnciano = true,
                                                 conectado = newValue
                                             )
-                                            conectado = newValue
                                             Log.d("ConfigScreen", "Usuario ID: ${anciano.userID}, Conectado: $newValue")
                                         } catch (e: Exception) {
                                             Log.e("ConfigScreen", "Error al actualizar estado: ${e.message}")
