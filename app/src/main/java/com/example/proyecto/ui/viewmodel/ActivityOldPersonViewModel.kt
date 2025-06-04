@@ -74,7 +74,7 @@ class ActivityViewModel( ) : ViewModel() {
             loadLocalAndSync()
         }else{
             if(authViewModel.currentEntity.value is Cuidador)
-            Log.i("ActivityViewModel", "No es un anciano")
+                Log.i("ActivityViewModel", "No es un anciano")
             Log.i("ActivityViewModel", "Id que carga de amcianos: ${currentAnciano.value}")
             currentAnciano.value?.let { loadActivitiesForUser(it) }
             loadLocalAndSync()
