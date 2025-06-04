@@ -114,9 +114,26 @@ class AuthViewModel: ViewModel() {
     }
 
     fun setEmergencia(value: Boolean) {
-        currentAnciano?.let {
-            it.emergencia = value
-            _emergencia.value = value
+        viewModelScope.launch {
+            currentAnciano?.let { anciano ->
+                try {
+                    // Actualizar en Firestore
+                    firestore.collection("ancianos")
+                        .document(anciano.userID)
+                        .update("emergencia", value)
+                        .addOnSuccessListener {
+                            // Actualizar estado local
+                            anciano.emergencia = value
+                            _emergencia.value = value
+                            Log.d("AuthViewModel", "Emergencia actualizada: $value para anciano: ${anciano.userID}")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("AuthViewModel", "Error al actualizar emergencia: ${e.message}")
+                        }
+                } catch (e: Exception) {
+                    Log.e("AuthViewModel", "Error al establecer emergencia: ${e.message}")
+                }
+            }
         }
     }
 

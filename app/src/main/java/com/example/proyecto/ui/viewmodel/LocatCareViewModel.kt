@@ -36,6 +36,8 @@ import kotlin.random.Random
 import com.example.proyecto.data.RepositorioUsuarios
 import com.example.proyecto.data.Cuidador
 import com.example.proyecto.data.Anciano
+import kotlin.compareTo
+import kotlin.text.get
 
 /**
  * ViewModel que controla la ubicación y genera los marcadores de cuidadores.
@@ -212,6 +214,7 @@ class LocatCareViewModel(
                     .collect { cuidadores ->
                         _cuidadoresConectados.value = cuidadores
                         actualizarMarcadoresCuidadores(cuidadores)
+                        actualizarRutasCuidadores(cuidadores)
                     }
             } catch (e: Exception) {
                 Log.e("LocatCareVM", "Error al observar cuidadores: ${e.message}")
@@ -220,30 +223,123 @@ class LocatCareViewModel(
     }
 
     private fun actualizarMarcadoresCuidadores(cuidadores: List<Cuidador>) {
-        val newMarkers = cuidadores.map { cuidador ->
-            MarkerState(
-                position = LatLng(
-                    cuidador.latLng.latitude,
-                    cuidador.latLng.longitude
-                )
-            )
+        val currentRoutes = _uiLocState.value.caretakerRoutes
+        val currentColors = _uiLocState.value.caretakerRouteColors
+        val currentEntity = _uiLocState.value.currentEntity
+        val currentLocation = _uiLocState.value.location
+
+        viewModelScope.launch {
+            try {
+                val newMarkers = mutableMapOf<String, MarkerState>()
+                val newRoutes = currentRoutes.toMutableMap()
+                val newColors = currentColors.toMutableMap()
+
+                if (currentEntity?.emergencia == true && currentLocation != null) {
+                    cuidadores.forEach { cuidador ->
+                        val markerState = MarkerState(position = LatLng(cuidador.latLng.latitude, cuidador.latLng.longitude))
+                        newMarkers[cuidador.userID] = markerState
+
+                        val shouldUpdateRoute = !currentRoutes.containsKey(cuidador.userID)
+
+                        if (shouldUpdateRoute) {
+                            val route = RoutesService().getRoutePoints(markerState.position, currentLocation)
+                            if (route.isNotEmpty()) {
+                                newRoutes[cuidador.userID] = route
+                                newColors[cuidador.userID] = currentColors[cuidador.userID] ?: Color(
+                                    red = Random.nextInt(100, 256),
+                                    green = Random.nextInt(100, 256),
+                                    blue = Random.nextInt(100, 256)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                _uiLocState.update {
+                    it.copy(
+                        caretakerMarkers = newMarkers,
+                        caretakerRoutes = newRoutes,
+                        caretakerRouteColors = newColors
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("LocatCareVM", "Error al actualizar marcadores: ${e.message}")
+            }
         }
-        _uiLocState.update { it.copy(caretakerMarkers = newMarkers) }
     }
 
     /**
      * Limpia las rutas de los cuidadores
      */
     fun clearAllRoutes() {
-        _uiLocState.value = _uiLocState.value.copy(
-            caretakerRoutes = emptyMap()
-        )
+        _uiLocState.update {
+            it.copy(
+                caretakerRoutes = emptyMap(),
+                caretakerRouteColors = emptyMap()
+            )
+        }
     }
 
-    //TODO: Metodo para cargar de la BD los cuidadores y colocarlos en el mapa
+    /**
+     * Carga las rutas de los cuidadores hacia el anciano en caso de emergencia
+     */
+    private fun cargarRutasCuidadores() {
+        val currentEntity = _uiLocState.value.currentEntity ?: return
+        val currentLocation = _uiLocState.value.location ?: return
+
+        if (!currentEntity.emergencia) return
+
+        viewModelScope.launch {
+            try {
+                val routesService = RoutesService()
+                val newRoutes = mutableMapOf<String, List<LatLng>>()
+                val newRouteColors = _uiLocState.value.caretakerRouteColors.toMutableMap()
+
+                _uiLocState.value.caretakerMarkers.forEach { (userId, markerState) ->
+                    val origin = markerState.position
+                    val route = routesService.getRoutePoints(origin, currentLocation)
+                    if (route.isNotEmpty()) {
+                        newRoutes[userId] = route
+
+                        // Reutilizar el color existente o generar uno nuevo si no existe
+                        newRouteColors[userId] = newRouteColors[userId] ?: Color(
+                            red = Random.nextInt(100, 256),
+                            green = Random.nextInt(100, 256),
+                            blue = Random.nextInt(100, 256)
+                        )
+                    }
+                }
+
+                _uiLocState.update {
+                    it.copy(
+                        caretakerRoutes = newRoutes,
+                        caretakerRouteColors = newRouteColors
+                    )
+                }
+
+                Log.d("LocatCareVM", "Rutas cargadas para cuidadores: ${newRoutes.size}")
+            } catch (e: Exception) {
+                Log.e("LocatCareVM", "Error al cargar rutas de cuidadores: ${e.message}")
+            }
+        }
+    }
 
     init {
+        Log.d("LocatCareVM", "Init del ViewModel ejecutado")
+        viewModelScope.launch {
+            authViewModel.currentEntity.collect { entity ->
+                Log.d("LocatCareVM", "Cambio en currentEntity: $entity")
+                if (entity is Anciano && entity.emergencia) {
+                    Log.d("LocatCareVM", "Anciano en emergencia, cargando rutas de cuidadores")
+                    cargarRutasCuidadores()
+                } else {
+                    Log.d("LocatCareVM", "No hay emergencia, limpiando rutas")
+                    clearAllRoutes()
+                }
+            }
+        }
         setCameraPosition(LatLng(4.60971, -74.08175))
+        Log.d("LocatCareVM", "Posición de cámara inicial establecida")
     }
 
     fun setInitialCameraMoveDone(done: Boolean) {
@@ -266,39 +362,108 @@ class LocatCareViewModel(
 
         viewModelScope.launch {
             try {
-                // Filtrar cuidadores por distancia
                 val cuidadoresCercanos = _cuidadoresConectados.value.filter { cuidador ->
                     val distance = calculateDistance(
                         currentLocation.latitude, currentLocation.longitude,
                         cuidador.latLng.latitude, cuidador.latLng.longitude
                     )
-                    distance <= 2000 // 2km en metros
+                    distance <= 10000
                 }
 
-                actualizarMarcadoresCuidadores(cuidadoresCercanos)
+                // Primero obtener las rutas
+                val routesService = RoutesService()
+                val newRoutes = mutableMapOf<MarkerState, List<LatLng>>()
+                val newColors = mutableMapOf<MarkerState, Color>()
 
-                // Si el anciano está en emergencia, trazar rutas hacia su ubicación
                 if (currentEntity.emergencia) {
-                    val routesService = RoutesService()
-                    val newRoutes = mutableMapOf<MarkerState, List<LatLng>>()
-                    
                     cuidadoresCercanos.forEach { cuidador ->
                         val origin = LatLng(cuidador.latLng.latitude, cuidador.latLng.longitude)
-                        val route = routesService.getRoutePoints(origin, currentLocation)
                         val markerState = MarkerState(position = origin)
-                        newRoutes[markerState] = route
-                    }
+                        val route = routesService.getRoutePoints(origin, currentLocation)
 
-                    _uiLocState.update { it.copy(caretakerRoutes = newRoutes) }
+                        if (route.isNotEmpty()) {
+                            newRoutes[markerState] = route
+                            newColors[markerState] = Color(
+                                red = Random.nextInt(100, 256),
+                                green = Random.nextInt(100, 256),
+                                blue = Random.nextInt(100, 256)
+                            )
+                        }
+                    }
+                }
+
+                // Actualizar todo el estado de una vez
+                val newMarkers = cuidadoresCercanos.associate { cuidador ->
+                    cuidador.userID to MarkerState(position = LatLng(cuidador.latLng.latitude, cuidador.latLng.longitude))
+                }
+
+                _uiLocState.update { state ->
+                    state.copy(
+                        caretakerMarkers = newMarkers
+                    )
                 }
 
                 Log.d("LocatCareVM", "Cuidadores cercanos encontrados: ${cuidadoresCercanos.size}")
+                Log.d("LocatCareVM", "Rutas generadas: ${newRoutes.size}")
             } catch (e: Exception) {
-                Log.e("LocatCareVM", "Error al obtener cuidadores cercanos: ${e.message}")
+                Log.e("LocatCareVM", "Error: ${e.message}")
             }
         }
     }
 
+    fun actualizarRutasCuidadores(cuidadores: List<Cuidador>) {
+        val currentLocation = _uiLocState.value.location ?: return
+        val currentRoutes = _uiLocState.value.caretakerRoutes.toMutableMap()
+        val currentColors = _uiLocState.value.caretakerRouteColors.toMutableMap()
+
+        viewModelScope.launch {
+            try {
+                val routesService = RoutesService()
+
+                cuidadores.forEach { cuidador ->
+                    val userId = cuidador.userID
+                    val newPosition = LatLng(cuidador.latLng.latitude, cuidador.latLng.longitude)
+                    val previousMarkerState = _uiLocState.value.caretakerMarkers[userId]
+
+                    if (previousMarkerState != null) {
+                        val previousPosition = previousMarkerState.position
+                        val distance = calculateDistance(
+                            previousPosition.latitude, previousPosition.longitude,
+                            newPosition.latitude, newPosition.longitude
+                        )
+
+                        if (distance > 10) {
+                            // Eliminar la ruta anterior
+                            currentRoutes.remove(userId)
+                            currentColors.remove(userId)
+
+                            // Crear nueva ruta
+                            val newRoute = routesService.getRoutePoints(newPosition, currentLocation)
+                            if (newRoute.isNotEmpty()) {
+                                currentRoutes[userId] = newRoute
+                                currentColors[userId] = currentColors[userId] ?: Color(
+                                    red = Random.nextInt(100, 256),
+                                    green = Random.nextInt(100, 256),
+                                    blue = Random.nextInt(100, 256)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                _uiLocState.update {
+                    it.copy(
+                        caretakerRoutes = currentRoutes,
+                        caretakerRouteColors = currentColors
+                    )
+                }
+
+                Log.d("LocatCareVM", "Rutas actualizadas para cuidadores")
+            } catch (e: Exception) {
+                Log.e("LocatCareVM", "Error al actualizar rutas de cuidadores: ${e.message}")
+            }
+        }
+    }
     /**
      * Calcula la distancia entre dos puntos usando la fórmula de Haversine
      * @return distancia en metros

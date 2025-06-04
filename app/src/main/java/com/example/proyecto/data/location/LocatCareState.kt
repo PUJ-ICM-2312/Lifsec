@@ -14,8 +14,8 @@ data class LocatCareState(
     val cameraPositionState: CameraPositionState = CameraPositionState(),
     val isInitialCameraMoveDone: Boolean = false,
     val cuidadores: List<Cuidador> = emptyList(),
-    val caretakerMarkers: List<MarkerState> = emptyList(),
-    val caretakerRoutes: Map<MarkerState, List<LatLng>> = emptyMap(),
-    val caretakerRouteColors: Map<MarkerState, Color> = emptyMap(),
+    val caretakerMarkers: Map<String, MarkerState> = emptyMap(),
+    val caretakerRoutes: Map<String, List<LatLng>> = emptyMap(),
+    val caretakerRouteColors: Map<String, Color> = emptyMap(),
     val currentEntity: Anciano? = null
 )

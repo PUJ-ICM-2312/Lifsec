@@ -245,62 +245,33 @@ fun LocationCaretakerScreen(
                 }
 
                 // Cuidadores y sus rutas
-//                uiLocState.caretakerMarkers.forEachIndexed { index, markerState ->
-//
-//                    // Visualizamos los cuidadores
-//                    val caretakerIcon = remember(context) {
-//                        BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
-//                    }
-//
-//                    Marker(
-//                        state = markerState,
-//                        title = "Cuidador #${index + 1}",
-//                        snippet = addressCache[markerState] ?: "Obteniendo dirección…",
-//                        icon = caretakerIcon
-//                    )
+                uiLocState.caretakerMarkers.forEach { (userId, markerState) ->
+                    val caretakerIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
 
-                    // Si hay emergencia, mostramos la ruta almacenada en el estado
-//                    if (isEmergency && uiLocState.location != null) {
-//                        // Obtenemos la ruta y color del estado
-//                        val routePoints = remainingRoutes[markerState] ?: emptyList()
-//                        val routeColor = uiLocState.caretakerRouteColors[markerState] ?: Color.Blue
-//
-//                        if (routePoints.isNotEmpty()) {
-//                            // Dibujamos solo la ruta restante
-//                            Polyline(
-//                                points = routePoints,
-//                                clickable = false,
-//                                width = 8f,
-//                                color = routeColor
-//                            )
-//
-//                            // Animamos el marcador a lo largo de la ruta
-//                            LaunchedEffect(isEmergency, key2 = markerState) {
-//                                val initialRoute =
-//                                    uiLocState.caretakerRoutes[markerState] ?: emptyList()
-//                                if (initialRoute.isNotEmpty()) {
-//                                    animateMarkerAlongRoute(
-//                                        markerState = markerState,
-//                                        route = initialRoute,
-//                                        onCompleted = handleCaretakerArrival,
-//                                        onRouteUpdate = { remaining ->
-//                                            // Actualizamos la ruta restante en el mapa
-//                                            remainingRoutes[markerState] = remaining
-//                                        }
-//                                    )
-//                                }
-//                            }
-//                        }
-//                    } else {
-//                        // Si no hay emergencia, animamos el marcador con movimiento aleatorio
-//                        AnimatedMarker(
-//                            markerState = markerState,
-//                            baseLocation = uiLocState.location ?: markerState.position,
-//                            durationMs = 30000,
-//                            isEmergency = isEmergency
-//                        )
-//                    }
-//                }
+                    Marker(
+                        state = markerState,
+                        title = "Cuidador",
+                        snippet = "Ruta hacia el anciano",
+                        icon = caretakerIcon
+                    )
+
+                    // Mostrar la ruta si hay emergencia
+                    if (isEmergency) {
+                        val routePoints = uiLocState.caretakerRoutes[userId] ?: emptyList()
+                        val routeColor = uiLocState.caretakerRouteColors[userId] ?: Color.Blue
+
+                        if (routePoints.isNotEmpty()) {
+                            Polyline(
+                                points = routePoints,
+                                clickable = false,
+                                width = 8f,
+                                color = routeColor
+                            )
+                        } else {
+                            Log.w("LocationScreen", "No hay puntos de ruta para el cuidador: ${markerState.position}")
+                        }
+                    }
+                }
             }
         }
     }
