@@ -3,6 +3,7 @@ package com.example.proyecto.data.location
 import androidx.compose.ui.graphics.Color
 import com.example.proyecto.data.Cuidador
 import com.example.proyecto.data.Usuario
+import com.example.proyecto.data.Anciano
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MarkerState
@@ -16,5 +17,5 @@ data class LocatCareState(
     val caretakerMarkers: List<MarkerState> = emptyList(),
     val caretakerRoutes: Map<MarkerState, List<LatLng>> = emptyMap(),
     val caretakerRouteColors: Map<MarkerState, Color> = emptyMap(),
-    val currentEntity: Usuario? = null
+    val currentEntity: Anciano? = null
 )

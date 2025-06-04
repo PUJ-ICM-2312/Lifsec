@@ -54,8 +54,12 @@ fun ConfigurationScreenElder(
     repositorioUsuarios: RepositorioUsuarios
 ) {
     val currentEntity by authViewModel.currentEntity.collectAsState()
-    val conectado = currentEntity?.conectado ?: false
+    var conectado by remember { mutableStateOf(currentEntity?.conectado ?: false) }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(currentEntity?.conectado) {
+        conectado = currentEntity?.conectado ?: false
+    }
 
     Scaffold(
         topBar = {
@@ -78,6 +82,7 @@ fun ConfigurationScreenElder(
                         Switch(
                             checked = conectado,
                             onCheckedChange = { newValue ->
+                                conectado = newValue // Actualizar estado local inmediatamente
                                 scope.launch {
                                     authViewModel.currentAnciano?.let { anciano ->
                                         try {
@@ -88,6 +93,8 @@ fun ConfigurationScreenElder(
                                             )
                                             Log.d("ConfigScreen", "Usuario ID: ${anciano.userID}, Conectado: $newValue")
                                         } catch (e: Exception) {
+                                            // Si hay error, revertir el estado local
+                                            conectado = !newValue
                                             Log.e("ConfigScreen", "Error al actualizar estado: ${e.message}")
                                         }
                                     }
