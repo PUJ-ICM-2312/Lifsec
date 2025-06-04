@@ -12,7 +12,6 @@ class RoutesService {
     //Colocar API directions
     private val apiKey = "API"
 
-
     suspend fun getRoutePoints(origin: LatLng, destination: LatLng): List<LatLng> {
         return withContext(Dispatchers.IO) {
             try {
@@ -29,7 +28,6 @@ class RoutesService {
 
             } catch (e: Exception) {
                 Log.e("DirectionsAPI", "Error fetching directions", e)
-                e.printStackTrace()
                 emptyList()
             }
         }
