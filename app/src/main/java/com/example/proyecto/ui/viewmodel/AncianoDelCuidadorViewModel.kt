@@ -1,5 +1,6 @@
 package com.example.proyecto.ui.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,6 +8,7 @@ import com.example.proyecto.data.Anciano
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +16,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import org.json.JSONObject
+import java.io.File
 
 class AncianoDelCuidadorViewModel: ViewModel() {
 
@@ -34,7 +38,29 @@ class AncianoDelCuidadorViewModel: ViewModel() {
     private val _emailIsLoading = MutableStateFlow(false)
     val emailIsLoading: StateFlow<Boolean> = _emailIsLoading
 
-    var currentAnciano: Anciano? = null
+    private val _currentAnciano = MutableStateFlow<String?>(null)
+    val currentAnciano: StateFlow<String?> = _currentAnciano.asStateFlow()
+
+    fun guardarAncianoActualEnJson(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val json = JSONObject().apply {
+                    put("currentAncianoId", _currentAnciano.value)
+                }
+
+                val file = File(context.filesDir, "ancianoActual.json")
+                file.writeText(json.toString())
+
+                Log.i("AncianoViewModel", "Anciano guardado en ${file.absolutePath}")
+            } catch (e: Exception) {
+                Log.e("AncianoViewModel", "Error guardando JSON: ${e.message}", e)
+            }
+        }
+    }
+
+    fun setCurrentAnciano(id: String?) {
+        _currentAnciano.value = id
+    }
 
     suspend fun isEmailDeAnciano(email: String): Boolean {
         _emailIsLoading.value = true
@@ -69,7 +95,8 @@ class AncianoDelCuidadorViewModel: ViewModel() {
 
             if (!snapshot.isEmpty) {
                 val document = snapshot.documents.first()
-                document.id
+                Log.e("AncianoViewModel", "id del anciano encontrado: (${document.id})")
+                document.id // retorna el ID del documento del anciano
             } else {
                 null
             }

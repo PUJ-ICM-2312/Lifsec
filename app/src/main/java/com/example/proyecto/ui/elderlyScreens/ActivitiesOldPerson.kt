@@ -46,6 +46,7 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.platform.LocalContext
@@ -62,10 +63,13 @@ fun ListActivitiesOldPersonScreen(
 ) {
     val showDialog = remember { mutableStateOf(false) }
     val recompositionKey by viewModel.cambio
-
-
-
     val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        Log.i("ListActivitiesOldPersonScreen", "LaunchedEffect")
+        viewModel.relaunch()
+        viewModel.cargarAncianoActualDesdeJson(context)
+    }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
 

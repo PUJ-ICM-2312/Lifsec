@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,7 +49,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,26 +57,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.R
 import com.example.proyecto.Screen
 import com.example.proyecto.data.Anciano
 import com.example.proyecto.data.Cuidador
-import com.example.proyecto.ui.viewmodel.ActivityViewModel
 import com.example.proyecto.ui.viewmodel.AncianoDelCuidadorViewModel
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.example.proyecto.ui.viewmodel.internalStorageViewModel
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
-import kotlinx.parcelize.Parcelize
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -136,6 +128,7 @@ fun UserListScreen(
 
     // 4) Cada vez que cambie el tamaño de la lista, recargamos el ViewModel
     LaunchedEffect(listaIdsAncianos.size) {
+
         if (listaIdsAncianos.isNotEmpty()) {
             ancianoDelCuidadorViewModel.setAncianoIds(listaIdsAncianos)
         }
@@ -365,12 +358,16 @@ fun HeaderG(authViewModel: AuthViewModel ) {
 //Composable para crear item en la lista, se usa ListItem de Material3
 @Composable
 fun UserListItem(grandP: Anciano, navController: NavController, ancianoDelCuidadorViewModel: AncianoDelCuidadorViewModel) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
                 // Navega a la pantalla principal del cuidador
-                ancianoDelCuidadorViewModel.currentAnciano = grandP
+                Log.i("UserListItem", "Navegando a MenuCaretaker con ${grandP.nombre}")
+                Log.i("UserListItem", "Navegando a MenuCaretaker con ${grandP.userID}")
+                ancianoDelCuidadorViewModel.setCurrentAnciano(grandP.userID)
+                ancianoDelCuidadorViewModel.guardarAncianoActualEnJson(context)
                 navController.navigate(Screen.MenuCaretaker.route)
             }
     ) {
@@ -392,7 +389,7 @@ fun UserListItem(grandP: Anciano, navController: NavController, ancianoDelCuidad
             },
             supportingContent = {
                 Text(
-                    text = "${grandP.email} años",
+                    text = "${grandP.email} ",
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
