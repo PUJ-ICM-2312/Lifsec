@@ -35,6 +35,7 @@ import java.util.Locale
 import kotlin.random.Random
 import com.example.proyecto.data.RepositorioUsuarios
 import com.example.proyecto.data.Cuidador
+import com.example.proyecto.data.Anciano
 
 /**
  * ViewModel que controla la ubicación y genera los marcadores de cuidadores.
@@ -54,8 +55,8 @@ class LocatCareViewModel(
     private val _uiLocState = MutableStateFlow(LocatCareState())
     val uiLocState: StateFlow<LocatCareState> = _uiLocState.asStateFlow()
 
-    private val _currentEntity = MutableStateFlow<Usuario?>(null)
-    val currentEntity: StateFlow<Usuario?> = _currentEntity.asStateFlow()
+    private val _currentEntity = MutableStateFlow<Anciano?>(null)
+    val currentEntity: StateFlow<Anciano?> = _currentEntity.asStateFlow()
 
     // callback para manejar actualizaciones de ubicación
     private var locationCallback: LocationCallback? = null
@@ -67,12 +68,23 @@ class LocatCareViewModel(
     val cuidadoresConectados: StateFlow<List<Cuidador>> = _cuidadoresConectados.asStateFlow()
 
     init {
-        // Nos suscribimos a los cambios de la entidad en AuthViewModel
         viewModelScope.launch {
             authViewModel.currentEntity.collect { entity ->
-                Log.d("LocatCareVM", "Entidad actual cambiada: $entity")
-                _uiLocState.update { currentState ->
-                    currentState.copy(currentEntity = entity)
+                if (entity is Anciano) {
+                    Log.d("LocatCareVM", "Entidad actual cambiada: $entity")
+                    _uiLocState.update { currentState ->
+                        currentState.copy(currentEntity = entity)
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            authViewModel.currentEntity.collect { entity ->
+                if (entity is Anciano && entity.emergencia) {
+                    obtenerCuidadoresCercanos()
+                } else {
+                    clearAllRoutes()
                 }
             }
         }
@@ -165,8 +177,6 @@ class LocatCareViewModel(
         }
     }
 
-
-
     /**
      * Procesa las ubicaciones de los usuarios para detectar cambios
      * y actualizar sus paths correspondientes
@@ -185,68 +195,6 @@ class LocatCareViewModel(
         }
     }
 
-/*
-    @SuppressLint("MissingPermission")
-    fun registerLocationUpdates(callback: (LatLng) -> Unit): LocationCallback {
-        val locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            5000
-        ).build()
-
-        val locationCallback = object : LocationCallback() {
-            override fun onLocationResult(result: LocationResult) {
-                result.locations.lastOrNull()?.let { location ->
-                    val latLng = LatLng(location.latitude, location.longitude)
-
-                    // Generar marcadores de cuidadores una sola vez
-                    val currentMarkers = _uiLocState.value.caretakerMarkers
-                    val newMarkers = if (currentMarkers.isEmpty()) {
-                        val base = latLng
-                        List(caretakersCount) {
-                            MarkerState(
-                                position = LatLng(
-                                    base.latitude + Random.nextDouble(-0.005, 0.005),
-                                    base.longitude + Random.nextDouble(-0.005, 0.005)
-                                )
-                            )
-                        }
-                    } else currentMarkers
-
-                    // Si tenemos nuevos marcadores, también generamos colores para ellos
-                    val currentColors = _uiLocState.value.caretakerRouteColors
-                    val newColors = if (currentMarkers.isEmpty()) {
-                        // Generar colores aleatorios para cada marcador
-                        newMarkers.associate { marker ->
-                            marker to Color(
-                                Random.nextFloat().coerceIn(0.1f, 0.9f),
-                                Random.nextFloat().coerceIn(0.1f, 0.9f),
-                                Random.nextFloat().coerceIn(0.1f, 0.9f)
-                            )
-                        }
-                    } else currentColors
-
-                    // Actualizar el estado con ubicación y marcadores
-                    _uiLocState.value = _uiLocState.value.copy(
-                        location = latLng,
-                        caretakerMarkers = newMarkers,
-                        caretakerRouteColors = newColors
-                    )
-
-                    callback(latLng)
-                }
-            }
-        }
-
-        fusedLocationClient.requestLocationUpdates(
-            locationRequest,
-            locationCallback,
-            Looper.getMainLooper()
-        )
-
-        return locationCallback
-    }
-*/
-
     fun setCameraPosition(newLatLng: LatLng) {
         _uiLocState.update { currentState ->
             currentState.copy(
@@ -256,47 +204,6 @@ class LocatCareViewModel(
             )
         }
     }
-
-/*    fun unregisterLocationUpdates(locationCallback: LocationCallback) {
-        fusedLocationClient.removeLocationUpdates(locationCallback)
-    }
-
-    *//**
-     * Trae la ruta deserializada de google maps entre dos puntos.
-     *//*
-    suspend fun getRouteBetweenPoints(origin: LatLng, destination: LatLng): List<LatLng> {
-        return routesService.getRoutePoints(origin, destination)
-    }*/
-
-    /**
-     * Carga y guarda la ruta para un cuidador específico
-     */
-/*    fun loadRouteForCaretaker(markerState: MarkerState, destination: LatLng?) {
-        if (destination == null) return
-
-        viewModelScope.launch {
-            val route = routesService.getRoutePoints(markerState.position, destination)
-
-            // Actualizamos el mapa de rutas con la nueva ruta
-            val updatedRoutes = _uiLocState.value.caretakerRoutes.toMutableMap()
-            updatedRoutes[markerState] = route
-
-            _uiLocState.value = _uiLocState.value.copy(
-                caretakerRoutes = updatedRoutes
-            )
-        }
-    }*/
-
-    /**
-     * Carga rutas para todos los cuidadores
-     */
-/*    fun loadAllCaretakerRoutes(destination: LatLng?) {
-        if (destination == null) return
-
-        for (marker in _uiLocState.value.caretakerMarkers) {
-            loadRouteForCaretaker(marker, destination)
-        }
-    }*/
 
     fun observarCuidadoresConectados(ancianoId: String) {
         viewModelScope.launch {
@@ -335,26 +242,9 @@ class LocatCareViewModel(
 
     //TODO: Metodo para cargar de la BD los cuidadores y colocarlos en el mapa
 
-
     init {
         setCameraPosition(LatLng(4.60971, -74.08175))
     }
-
-    /**
-     * Convierte coordenadas en dirección en texto.
-     */
-/*    fun getAddressFromLatLng(context: Context, latitude: Double, longitude: Double): String? {
-        val geocoder = Geocoder(context, Locale.getDefault())
-        return try {
-            val addresses: List<Address> = geocoder.getFromLocation(latitude, longitude, 1) ?: emptyList()
-            if (addresses.isNotEmpty()) {
-                addresses[0].getAddressLine(0)
-            } else null
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }*/
 
     fun setInitialCameraMoveDone(done: Boolean) {
         _uiLocState.update { it.copy(isInitialCameraMoveDone = done) }
@@ -365,5 +255,68 @@ class LocatCareViewModel(
      */
     override fun onCleared() {
         super.onCleared()
+    }
+
+    /**
+     * Obtiene los cuidadores cercanos dentro de un radio de 2km y traza rutas si hay emergencia
+     */
+    fun obtenerCuidadoresCercanos() {
+        val currentEntity = _uiLocState.value.currentEntity ?: return
+        val currentLocation = _uiLocState.value.location ?: return
+
+        viewModelScope.launch {
+            try {
+                // Filtrar cuidadores por distancia
+                val cuidadoresCercanos = _cuidadoresConectados.value.filter { cuidador ->
+                    val distance = calculateDistance(
+                        currentLocation.latitude, currentLocation.longitude,
+                        cuidador.latLng.latitude, cuidador.latLng.longitude
+                    )
+                    distance <= 2000 // 2km en metros
+                }
+
+                actualizarMarcadoresCuidadores(cuidadoresCercanos)
+
+                // Si el anciano está en emergencia, trazar rutas hacia su ubicación
+                if (currentEntity.emergencia) {
+                    val routesService = RoutesService()
+                    val newRoutes = mutableMapOf<MarkerState, List<LatLng>>()
+                    
+                    cuidadoresCercanos.forEach { cuidador ->
+                        val origin = LatLng(cuidador.latLng.latitude, cuidador.latLng.longitude)
+                        val route = routesService.getRoutePoints(origin, currentLocation)
+                        val markerState = MarkerState(position = origin)
+                        newRoutes[markerState] = route
+                    }
+
+                    _uiLocState.update { it.copy(caretakerRoutes = newRoutes) }
+                }
+
+                Log.d("LocatCareVM", "Cuidadores cercanos encontrados: ${cuidadoresCercanos.size}")
+            } catch (e: Exception) {
+                Log.e("LocatCareVM", "Error al obtener cuidadores cercanos: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Calcula la distancia entre dos puntos usando la fórmula de Haversine
+     * @return distancia en metros
+     */
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val earthRadius = 6371000 // Radio de la Tierra en metros
+        val lat1Rad = Math.toRadians(lat1)
+        val lat2Rad = Math.toRadians(lat2)
+        val deltaLat = Math.toRadians(lat2 - lat1)
+        val deltaLon = Math.toRadians(lon2 - lon1)
+
+        val sinDeltaLatSquared = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2)
+        val cosLat1RadCosLat2Rad = Math.cos(lat1Rad) * Math.cos(lat2Rad)
+        val sinDeltaLonSquared = Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2)
+        
+        val haversine = sinDeltaLatSquared + cosLat1RadCosLat2Rad * sinDeltaLonSquared
+        val angularDistance = 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine))
+
+        return earthRadius * angularDistance // Distancia en metros
     }
 }
