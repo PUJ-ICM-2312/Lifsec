@@ -220,4 +220,9 @@ class LocatOldPerViewModel(
     override fun onCleared() {
         super.onCleared()
     }
+
+    fun cancelarServicio(locationHandler: LocationHandler) {
+        stopLocationUpdate(locationHandler) // Detiene las actualizaciones de ubicación
+        Log.d("LocatOldPerVM", "Servicio cancelado y recursos liberados")
+    }
 }

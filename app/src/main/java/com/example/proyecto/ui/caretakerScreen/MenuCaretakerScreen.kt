@@ -4,6 +4,7 @@ import android.Manifest
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,6 +62,8 @@ import kotlinx.coroutines.launch
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import com.example.proyecto.data.location.LocationHandler
 
 @OptIn(ExperimentalPermissionsApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -72,8 +76,9 @@ fun MenuCaretakersScreen(
     locatOldPerViewModel: LocatOldPerViewModel,
     repositorioUsuarios: RepositorioUsuarios
 ) {
-
+    val currentUser by authViewModel.currentUser.collectAsState()
     val context = LocalContext.current
+    val locationHandler = remember { LocationHandler(context) }
     val notificationPermissionState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.POST_NOTIFICATIONS,
@@ -83,6 +88,26 @@ fun MenuCaretakersScreen(
 
     LaunchedEffect(Unit) {
         notificationPermissionState.launchMultiplePermissionRequest()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            locatOldPerViewModel.stopLocationUpdate(locationHandler)
+        }
+    }
+
+    // Si el usuario no está autenticado, navegar a Login
+    if (currentUser == null) {
+        LaunchedEffect(Unit) {
+            Log.i("MenuOldPersonScreen", "Usuario no autenticado, navegando a Login")
+            navController.navigate(Screen.Login.route) {
+                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+            }
+        }
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Verificando autenticación...")
+        }
+        return
     }
 
     val recompositionKey by menuCareTakerViewModel.cambio
