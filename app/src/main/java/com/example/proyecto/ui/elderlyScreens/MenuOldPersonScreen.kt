@@ -91,12 +91,12 @@ import kotlin.math.sqrt
 @Composable
 fun MenuOldPersonScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = viewModel(),
-    menuOldPersonViewModel: MenuOldPersonViewModel = viewModel(),
-    activityViewModel: ActivityViewModel = viewModel(),
-    reminderViewModel: ReminderViewModel = viewModel(),
-    locatCareViewModel: LocatCareViewModel = viewModel(),
-    internalViewModel: internalStorageViewModel = viewModel()
+    authViewModel: AuthViewModel ,
+    menuOldPersonViewModel: MenuOldPersonViewModel  ,
+    activityViewModel: ActivityViewModel ,
+    reminderViewModel: ReminderViewModel ,
+    locatCareViewModel: LocatCareViewModel ,
+    internalViewModel: internalStorageViewModel
 ) {
     val context = LocalContext.current
     val currentUser by authViewModel.currentUser.collectAsState()

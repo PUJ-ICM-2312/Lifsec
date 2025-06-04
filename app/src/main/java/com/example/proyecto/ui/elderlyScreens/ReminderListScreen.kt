@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,12 +31,20 @@ fun ReminderListScreen(
     navController: NavController,
     viewModel: ReminderViewModel
 ) {
-    val reminders = viewModel.reminders
+    val context = LocalContext.current
+
+    // 1) Lanza efectos al componer: carga anciano guardado y recarga recordatorios
+    LaunchedEffect(Unit) {
+        viewModel.cargarAncianoActualDesdeJson(context)
+        viewModel.relaunch()
+    }
+
+    // 2) Observa la lista de recordatorios desde el ViewModel
+    val reminders by remember { derivedStateOf { viewModel.recordatorios } }
+
     Column {
-        TopBarReminder(
-            navController = navController,
-            onAddClick = { navController.navigate(Screen.CreateReminder.route) }
-        )
+        TopBarReminder(navController = navController)
+
 
         LazyColumn(
             modifier = Modifier
@@ -55,17 +64,13 @@ fun ReminderListScreen(
 fun ReminderListItem(reminder: Recordatorio) {
     Card(
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
                 text = reminder.titulo,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.SemiBold
-                )
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
             )
             Text(
                 text = reminder.fecha,
@@ -87,24 +92,14 @@ fun ReminderListItem(reminder: Recordatorio) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBarReminder(
-    navController: NavController,
-    caretakerCount: Int = 4,
-    onSearchClick: () -> Unit = {},
-    onAddClick: () -> Unit = {}
+
+    navController: NavController
 ) {
     CenterAlignedTopAppBar(
-        navigationIcon = {
-            IconButton(onClick = onSearchClick) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Buscar",
-                    tint = MaterialTheme.colorScheme.background
-                )
-            }
-        },
+
         title = {
             Text(
-                text = "Cuidadores Activos: $caretakerCount",
+                text = "Recordatorios",
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp),
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.background,
@@ -112,7 +107,7 @@ fun TopBarReminder(
             )
         },
         actions = {
-            IconButton(onClick = onAddClick) {
+            IconButton(onClick = { navController.navigate(Screen.CreateReminder.route) }) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Agregar",

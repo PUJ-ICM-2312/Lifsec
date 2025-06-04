@@ -122,7 +122,7 @@ fun NavegationStack() {
         }
 
         composable(Screen.CreateReminder.route) {
-            CreateReminderScreen(navController, reminderViewModel, authViewModel)
+            CreateReminderScreen(navController, reminderViewModel)
         }
 
         composable(Screen.CreateActivity.route) {
@@ -151,7 +151,7 @@ fun NavegationStack() {
 
 
         composable(route = Screen.MenuOldPerson.route) {
-            MenuOldPersonScreen(navController, authViewModel, menuOldPersonViewModel,activityViewModel,reminderViewModel,locatCareViewModel)
+            MenuOldPersonScreen(navController, authViewModel, menuOldPersonViewModel,activityViewModel,reminderViewModel,locatCareViewModel, internalStorageViewModel)
         }
 
 
