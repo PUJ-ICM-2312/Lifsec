@@ -13,6 +13,5 @@ data class Anciano(
     var cuidadoresIds: MutableList<String> = mutableListOf()
 ) : Usuario(userID, email, nombre, password, latLng) {
 
-    val actividades: MutableList<Actividad> = mutableListOf()
     val Recordatorio: MutableList<Recordatorio> = mutableListOf()
 }

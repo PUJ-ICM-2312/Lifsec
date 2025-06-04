@@ -12,6 +12,4 @@ data class Cuidador(
     var ancianosIds: MutableList<String> = mutableListOf()
 ) : Usuario(userID, email, nombre, password, latLng) {
 
-    // Lista de ancianos asignados a este cuidador
-    var ancianosACargo: MutableList<Anciano> = mutableListOf()
 }
