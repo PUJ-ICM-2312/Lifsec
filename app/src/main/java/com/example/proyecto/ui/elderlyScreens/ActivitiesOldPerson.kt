@@ -43,12 +43,14 @@ import com.example.proyecto.ui.viewmodel.ActivityViewModel
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
+import coil3.compose.rememberAsyncImagePainter
 import com.example.proyecto.Screen
 
 
@@ -150,9 +152,11 @@ fun ActivityCard(activity: Actividad) {
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            if (activity.imagen != null) {
+            if (activity.imagenUrl != null && activity.imagenUrl.isNotEmpty()) {
+                Log.i("activityCard", "imagenUrl: ${activity.imagenUrl}")
+
                 Image(
-                    painter = androidx.compose.ui.graphics.painter.BitmapPainter(activity.imagen!!.asImageBitmap()),
+                    painter = rememberAsyncImagePainter(model = activity.imagenUrl),
                     contentDescription = "Activity Image",
                     modifier = Modifier
                         .fillMaxWidth()

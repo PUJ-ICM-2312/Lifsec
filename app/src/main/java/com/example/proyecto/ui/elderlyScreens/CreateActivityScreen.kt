@@ -1,11 +1,22 @@
 package com.example.proyecto.ui.elderlyScreens
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,26 +28,30 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.proyecto.Screen
 import com.example.proyecto.R
-import com.example.proyecto.data.Actividad
 import com.example.proyecto.ui.viewmodel.ActivityViewModel
 import com.example.proyecto.ui.viewmodel.SharedImageViewModel
 
 @Composable
-fun CreateActivityScreen(navController: NavController, sharedImageViewModel: SharedImageViewModel,  activityViewModel : ActivityViewModel  ) {
+fun CreateActivityScreen(
+    navController: NavController,
+    sharedImageViewModel: SharedImageViewModel,
+    activityViewModel: ActivityViewModel
+) {
     var activityText by remember { mutableStateOf("") }
     var locationText by remember { mutableStateOf("") }
-    var additionalInfoText by remember { mutableStateOf<String>("") }
+    var additionalInfoText by remember { mutableStateOf("") }
     var imageSelected by remember { mutableStateOf<Bitmap?>(null) }
 
+    val url by activityViewModel.ultimaImagenUrl.collectAsState()
+    val isLoading by activityViewModel.isLoading.collectAsState()
 
     imageSelected = sharedImageViewModel.capturedImage
-    LaunchedEffect(imageSelected){
 
+    LaunchedEffect(imageSelected) {
         activityText = sharedImageViewModel.actividad
         locationText = sharedImageViewModel.ubicacion
         additionalInfoText = sharedImageViewModel.infoAdicional
     }
-
 
     Box(
         modifier = Modifier
@@ -56,7 +71,7 @@ fun CreateActivityScreen(navController: NavController, sharedImageViewModel: Sha
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "Crear Actividad",
+                    text = "Crear Actividad",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -69,50 +84,47 @@ fun CreateActivityScreen(navController: NavController, sharedImageViewModel: Sha
                     sharedImageViewModel.actividad = activityText
                 }
 
-                InputField(label = "¿Donde fue?", value = locationText) {
+                InputField(label = "¿Dónde fue?", value = locationText) {
                     locationText = it
-                    sharedImageViewModel.ubicacion =  locationText
+                    sharedImageViewModel.ubicacion = locationText
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
-                    "Agregar foto",
+                    text = "Agregar foto",
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+
                 Box(
                     modifier = Modifier
                         .size(140.dp)
-                        .clickable { navController.navigate(Screen.CamaraActivityScreen.route)}
+                        .clickable { navController.navigate(Screen.CamaraActivityScreen.route) }
                         .padding(8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (imageSelected==null){
+                    if (imageSelected == null) {
                         Image(
                             painter = painterResource(id = R.drawable.ic_placeholder),
                             contentDescription = "Seleccionar imagen",
                             modifier = Modifier.size(100.dp)
                         )
-                    }else{
-
+                    } else {
                         Image(
                             bitmap = imageSelected!!.asImageBitmap(),
                             contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxSize()
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
-
                 }
 
-                InputField(label = "Información adicional (opcional)", value = additionalInfoText!!) {
+                InputField(label = "Información adicional (opcional)", value = additionalInfoText) {
                     additionalInfoText = it
-                    if (additionalInfoText != "") {
+                    if (additionalInfoText.isNotBlank()) {
                         sharedImageViewModel.infoAdicional = additionalInfoText
                     }
                 }
-
-
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -122,14 +134,20 @@ fun CreateActivityScreen(navController: NavController, sharedImageViewModel: Sha
                 ) {
                     Button(
                         onClick = {
-
-                            activityViewModel.addActivity(activityText,locationText, imageSelected ,additionalInfoText)
-                            sharedImageViewModel.capturedImage = null
-                            sharedImageViewModel.actividad = ""
-                            sharedImageViewModel.ubicacion = ""
-                            sharedImageViewModel.infoAdicional = ""
-                            navController.popBackStack()
+                            activityViewModel.guardarActividadCompleta(
+                                imagen = imageSelected,
+                                actividad = activityText,
+                                ubicacion = locationText,
+                                infoAdicional = additionalInfoText.takeIf { it.isNotBlank() }
+                            ) {
+                                sharedImageViewModel.capturedImage = null
+                                sharedImageViewModel.actividad = ""
+                                sharedImageViewModel.ubicacion = ""
+                                sharedImageViewModel.infoAdicional = ""
+                                navController.popBackStack()
+                            }
                         },
+                        enabled = !isLoading,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier
                             .weight(1f)
@@ -137,6 +155,7 @@ fun CreateActivityScreen(navController: NavController, sharedImageViewModel: Sha
                     ) {
                         Text("Guardar", color = MaterialTheme.colorScheme.onPrimary)
                     }
+
                     OutlinedButton(
                         onClick = { navController.popBackStack() },
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
@@ -149,6 +168,21 @@ fun CreateActivityScreen(navController: NavController, sharedImageViewModel: Sha
                 }
             }
         }
+
+        if (isLoading) {
+            AlertDialog(
+                onDismissRequest = {},
+                title = { Text("Guardando actividad...") },
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Por favor espera...")
+                    }
+                },
+                confirmButton = {}
+            )
+        }
     }
 }
 
@@ -160,11 +194,7 @@ fun InputField(label: String, value: String, onValueChange: (String) -> Unit) {
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                cursorColor = MaterialTheme.colorScheme.primary
-            )
-            )
-        }
+
+        )
+    }
 }
