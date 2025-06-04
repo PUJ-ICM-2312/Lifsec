@@ -52,6 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import coil3.compose.rememberAsyncImagePainter
 import com.example.proyecto.Screen
+import coil.compose.AsyncImage
 
 
 @Composable
@@ -155,8 +156,8 @@ fun ActivityCard(activity: Actividad) {
             if (activity.imagenUrl != null && activity.imagenUrl.isNotEmpty()) {
                 Log.i("activityCard", "imagenUrl: ${activity.imagenUrl}")
 
-                Image(
-                    painter = rememberAsyncImagePainter(model = activity.imagenUrl),
+                AsyncImage(
+                    model = activity.imagenUrl,
                     contentDescription = "Activity Image",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -169,5 +170,4 @@ fun ActivityCard(activity: Actividad) {
         }
     }
 }
-
 
