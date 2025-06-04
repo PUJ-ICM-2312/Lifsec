@@ -91,7 +91,7 @@ fun NavegationStack() {
 
 
         composable(Screen.PersonSelector.route) { UserListScreen(navController,authViewModel,internalStorageViewModel,ancianoDelCuidadorViewModel) }
-        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController,menuCareTakerViewModel, authViewModel,activityViewModel, locatOldPerViewModel, repUsuarios) }
+        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController,menuCareTakerViewModel, authViewModel,activityViewModel, locatOldPerViewModel, repUsuarios, reminderViewModel) }
 
 
         composable(Screen.MainScreen.route) {

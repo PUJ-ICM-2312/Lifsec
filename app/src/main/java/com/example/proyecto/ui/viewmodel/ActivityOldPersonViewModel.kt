@@ -70,10 +70,12 @@ class ActivityViewModel() : ViewModel() {
         if (authViewModel.currentEntity.value is Anciano) {
             Log.i("ActivityViewModel", "es un anciano")
             auth.currentUser?.let { loadActivitiesForUser(it.uid) }
-        } else {
-            if (authViewModel.currentEntity.value is Cuidador)
+        } else if (authViewModel.currentEntity.value is Cuidador){
                 Log.i("ActivityViewModel", "No es un anciano")
             currentAnciano.value?.let { loadActivitiesForUser(it) }
+        }
+        else{
+            Log.i("ActivityViewModel", "No es un anciano ni un cuidador")
         }
     }
 

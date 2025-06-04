@@ -46,6 +46,7 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -66,8 +67,9 @@ fun ListActivitiesOldPersonScreen(
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         Log.i("ListActivitiesOldPersonScreen", "LaunchedEffect")
-        viewModel.relaunch()
         viewModel.cargarAncianoActualDesdeJson(context)
+        viewModel.relaunch()
+
     }
 
 
@@ -89,8 +91,8 @@ fun ListActivitiesOldPersonScreen(
 
 
         // FAB
-        androidx.compose.material3.FloatingActionButton(
-            onClick = { showDialog.value = true },
+        FloatingActionButton(
+            onClick = {  navController.navigate(Screen.CreateActivity.route )},
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
@@ -99,12 +101,9 @@ fun ListActivitiesOldPersonScreen(
             Text("+", color = Color.White, fontSize = 24.sp)
         }
 
-        // Diálogo
-        if (showDialog.value) {
-            navController.navigate(Screen.CreateActivity.route)
-            showDialog.value = false
+
         }
-    }
+
 }
 
 
@@ -149,7 +148,7 @@ fun ActivityCard(activity: Actividad) {
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                     Text(
-                        text = "hace 5 mins",
+                        text = " ${activity.infoAdicional}",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )

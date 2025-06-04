@@ -64,6 +64,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import com.example.proyecto.data.location.LocationHandler
+import com.example.proyecto.ui.viewmodel.ReminderViewModel
 
 @OptIn(ExperimentalPermissionsApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -74,7 +75,8 @@ fun MenuCaretakersScreen(
     authViewModel: AuthViewModel,
     activityViewModel: ActivityViewModel,
     locatOldPerViewModel: LocatOldPerViewModel,
-    repositorioUsuarios: RepositorioUsuarios
+    repositorioUsuarios: RepositorioUsuarios,
+    reminderViewModel: ReminderViewModel
 ) {
     val currentUser by authViewModel.currentUser.collectAsState()
     val context = LocalContext.current
@@ -202,7 +204,7 @@ fun MenuCaretakersScreen(
 
                     }else if(menuCareTakerViewModel.leerApartado() == "Recordatorios"){
 
-                        RemindersCaretakerScreen()
+                        RemindersCaretakerScreen(reminderViewModel )
 
                     }
                 }

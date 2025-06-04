@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -22,47 +23,50 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import java.time.LocalDateTime
+import com.example.proyecto.data.Recordatorio
+import com.example.proyecto.ui.viewmodel.ReminderViewModel
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun RemindersCaretakerScreen() {
+fun RemindersCaretakerScreen(
+    reminderViewModel: ReminderViewModel
+) {
     Scaffold { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            ReminderCaretakerListScreen()
+            ReminderCaretakerListScreen(reminderViewModel)
         }
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ReminderCaretakerListScreen() {
-    val reminders = listOf(
-        ReminderCaretaker("Asegurarse de que haya tomado su medicina", LocalDateTime.now()),
-        ReminderCaretaker("Aplicar cremas y tratamientos", LocalDateTime.now().plusHours(2)),
-        ReminderCaretaker("Revisar la presion arterial / azucar", LocalDateTime.now().plusDays(1))
-    )
+fun ReminderCaretakerListScreen(
+    viewModel: ReminderViewModel
+) {
+    // 1) Colecta la lista de recordatorios desde el ViewModel
+    val recordatorios = viewModel.recordatorios
 
-    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         Text(
             text = "Recordatorios",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(16.dp)
         )
+
         LazyColumn(modifier = Modifier.padding(8.dp)) {
-            items(reminders.size) { index ->
-                ReminderCaretakerListItem(reminders[index])
+            items(recordatorios) { recordatorio ->
+                ReminderCaretakerListItem(recordatorio)
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -71,23 +75,27 @@ fun ReminderCaretakerListScreen() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ReminderCaretakerListItem(reminder: ReminderCaretaker) {
+fun ReminderCaretakerListItem(recordatorio: Recordatorio) {
     Card(
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
     ) {
         Row(
-            modifier = Modifier.padding(12.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = reminder.title,
+                    text = recordatorio.titulo,
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Text(
-                    text = formatDateTimeCaretaker(reminder.date),
+                    text = formatFechaCaretaker(recordatorio.fecha),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -95,13 +103,20 @@ fun ReminderCaretakerListItem(reminder: ReminderCaretaker) {
     }
 }
 
+/**
+ * Convierte la fecha (String) almacenada en el recordatorio
+ * a un formato de tipo "EEEE d 'de' MMMM yyyy" en español.
+ * Si recordatorio.fecha ya es "dd/MM/yyyy", primero parsea y luego formatea.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
-data class ReminderCaretaker(val title: String, val date: LocalDateTime)
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun formatDateTimeCaretaker(dateTime: LocalDateTime): String {
-    val formatter = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM yyyy, h:mm a", Locale("es", "ES"))
-    return dateTime.format(formatter)
+fun formatFechaCaretaker(fechaStr: String): String {
+    return try {
+        val formatterIn = DateTimeFormatter.ofPattern("d/M/yyyy", Locale("es", "ES"))
+        val formatterOut = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM yyyy", Locale("es", "ES"))
+        val date = LocalDate.parse(fechaStr, formatterIn)
+        date.format(formatterOut)
+    } catch (e: Exception) {
+        // En caso de que el formato no coincida, devolver el string tal cual
+        fechaStr
+    }
 }
-
-

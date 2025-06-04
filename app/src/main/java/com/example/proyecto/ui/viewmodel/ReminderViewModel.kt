@@ -34,7 +34,7 @@ class ReminderViewModel : ViewModel() {
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _recordatorios = mutableStateListOf<Recordatorio>()
-    val recordatorios: List<Recordatorio> get() = _recordatorios
+    val recordatorios: List<Recordatorio>  = _recordatorios
 
     private val _cambio = mutableStateOf(false)
     val cambio: State<Boolean> = _cambio
