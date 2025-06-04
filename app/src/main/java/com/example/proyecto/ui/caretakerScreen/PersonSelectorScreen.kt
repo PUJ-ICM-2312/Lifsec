@@ -99,21 +99,6 @@ fun UserListScreen(
         mutableStateListOf<String>().apply { addAll(cuidador.ancianosIds) }
     }
 
-
-    // 2) Usuario no autenticado → redirigir
-    if (currentUser == null) {
-        LaunchedEffect(Unit) {
-            Log.i("UserListScreen", "Usuario no autenticado, navegando a Login")
-            navController.navigate(Screen.Login.route) {
-                popUpTo(navController.graph.startDestinationId) { inclusive = true }
-            }
-        }
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Verificando autenticación...")
-        }
-        return
-    }
-
     // 3) Huella (no cambia aquí)
     var huellaEqualsUser by remember(currentUser?.uid) {
         mutableStateOf(
@@ -323,7 +308,7 @@ fun UserListScreen(
 // Composable para crear el header de la lista
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HeaderG(authViewModel: AuthViewModel ) {
+fun HeaderG(authViewModel: AuthViewModel) {
     TopAppBar(
         title = {
             Text(
@@ -337,22 +322,8 @@ fun HeaderG(authViewModel: AuthViewModel ) {
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.outline
-        ),
-        actions = {
-            // User icon button at the end (trailing)
-            IconButton(
-                onClick = { authViewModel.signOut() },
-                modifier = Modifier.padding(end = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.ExitToApp,
-                    contentDescription = "Cerrar Sesión",
-                    tint = MaterialTheme.colorScheme.background
-                )
-            }
-        }
+        )
     )
-
 }
 
 //Composable para crear item en la lista, se usa ListItem de Material3
