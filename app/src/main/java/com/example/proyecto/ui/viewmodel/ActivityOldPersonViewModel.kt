@@ -42,6 +42,7 @@ class ActivityViewModel() : ViewModel() {
     private val storage: FirebaseStorage = Firebase.storage
     private val authViewModel = AuthViewModel()
 
+
     private val _ultimaImagenUrl = MutableStateFlow<String?>(null)
     val ultimaImagenUrl: StateFlow<String?> = _ultimaImagenUrl
 
@@ -56,6 +57,8 @@ class ActivityViewModel() : ViewModel() {
 
     private val _currentAnciano = MutableStateFlow<String?>(null)
     val currentAnciano: StateFlow<String?> = _currentAnciano.asStateFlow()
+
+
 
     fun cambio() {
         Log.i("cambio", "se cambio")
