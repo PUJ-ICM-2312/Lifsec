@@ -64,10 +64,8 @@ class AuthViewModel: ViewModel() {
         viewModelScope.launch {
             auth.currentUser?.let { user ->
                 _currentUser.value = user
-                // Solo cargar datos si no tenemos una entidad actual
-                if (_currentEntity.value == null) {
-                    loadUserData(user.uid)
-                }
+                setupEntityListener(user.uid)
+                loadUserData(user.uid)
             }
         }
     }
@@ -206,16 +204,9 @@ class AuthViewModel: ViewModel() {
         firestore.collection("ancianos").document(uid).get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
-                    val data = document.data
-                    if (data != null) {
-                        val anciano = Anciano(
-                            userID = data["userID"] as? String ?: "",
-                            email = data["email"] as? String ?: "",
-                            nombre = data["nombre"] as? String ?: "",
-                            password = data["password"] as? String ?: "",
-                            latLng = data["latLng"] as? GeoPoint ?: GeoPoint(0.0, 0.0),
-                            emergencia = data["emergencia"] as? Boolean ?: false
-                        )
+                    val anciano = document.toObject(Anciano::class.java)
+                    if (anciano != null) {
+                        Log.d("AuthViewModel", "Anciano cargado - conectado: ${anciano.conectado}")
                         setCurrentEntity(anciano)
                     }
                     _isLoading.value = false
@@ -224,15 +215,14 @@ class AuthViewModel: ViewModel() {
                     firestore.collection("cuidadores").document(uid).get()
                         .addOnSuccessListener { cuidadorDoc ->
                             if (cuidadorDoc.exists()) {
-                                val data = cuidadorDoc.data
-                                if (data != null) {
-                                    val cuidador = Cuidador(
-                                        userID = data["userID"] as? String ?: "",
-                                        email = data["email"] as? String ?: "",
-                                        nombre = data["nombre"] as? String ?: "",
-                                        password = data["password"] as? String ?: "",
-                                        latLng = data["latLng"] as? GeoPoint ?: GeoPoint(0.0, 0.0)
-                                    )
+                                val cuidador = cuidadorDoc.toObject(Cuidador::class.java)
+                                if (cuidador != null) {
+                                    Log.d("AuthViewModel", """
+                                        Cuidador cargado:
+                                        userID: ${cuidador.userID}
+                                        nombre: ${cuidador.nombre}
+                                        conectado: ${cuidador.conectado}
+                                    """.trimIndent())
                                     setCurrentEntity(cuidador)
                                 }
                             } else {
@@ -270,6 +260,14 @@ class AuthViewModel: ViewModel() {
                             .addOnSuccessListener { document ->
                                 if (document.exists()) {
                                     val anciano = document.toObject(Anciano::class.java)
+                                    Log.d("AuthViewModel", """
+                                    Anciano encontrado: ${anciano?.userID}
+                                    Nombre: ${anciano?.nombre}
+                                    Email: ${anciano?.email}
+                                    LatLng: ${anciano?.latLng?.latitude}, ${anciano?.latLng?.longitude}
+                                    Emergencia: ${anciano?.emergencia}
+                                    Conexión: ${anciano?.conectado}
+                                    """.trimIndent())
                                     setCurrentEntity(anciano) // Actualiza currentEntity
                                     isLoading = false
                                     onSuccess()
@@ -308,6 +306,21 @@ class AuthViewModel: ViewModel() {
                     }
                     onError(errorMessage)
                     password = ""
+                }
+            }
+    }
+
+    private fun setupEntityListener(uid: String) {
+        firestore.collection("ancianos").document(uid)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("AuthViewModel", "Error al escuchar cambios: ${error.message}")
+                    return@addSnapshotListener
+                }
+
+                snapshot?.toObject(Anciano::class.java)?.let { anciano ->
+                    Log.d("AuthViewModel", "Cambio detectado en anciano - conectado: ${anciano.conectado}")
+                    setCurrentEntity(anciano)
                 }
             }
     }

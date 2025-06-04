@@ -1,95 +1,126 @@
 package com.example.proyecto.ui.caretakerScreen
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material3.*
+import android.Manifest
+import android.annotation.SuppressLint
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.example.proyecto.R
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto.data.location.LocationHandler
 import com.example.proyecto.ui.viewmodel.AuthViewModel
+import com.example.proyecto.ui.viewmodel.LocatOldPerViewModel
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
 
-@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun LocationOldPersonScreen( authViewModel: AuthViewModel ) {
-    var showBottomSheet by remember { mutableStateOf(false) }
+fun LocationOldPersonScreen(
+    locatOldPerViewModel: LocatOldPerViewModel = viewModel(),
+    authViewModel: AuthViewModel
+) {
+    val uiLocState by locatOldPerViewModel.uiLocState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    Scaffold(
+    val locationHandler = remember { LocationHandler(context) }
 
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.locationoldpersonfromcaretaker),
-                contentDescription = "Mock ubicación de cuidadores",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+    // Configuramos el launcher para solicitar permisos
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        locatOldPerViewModel.onPermissionResult(granted)
+    }
 
-            // Botón "Cómo Llegar"
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-                    .clickable { showBottomSheet = true }
-                    .background(Color.Gray.copy(alpha = 0.8f), shape = RoundedCornerShape(12.dp))
-                    .padding(12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Cómo Llegar", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+    // Verificar permisos al iniciar la pantalla
+    LaunchedEffect(Unit) {
+        if (!locatOldPerViewModel.handleLocationPermission(context)) {
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    // Iniciar/detener actualizaciones de ubicación según el permiso y el estado de conexión
+    LaunchedEffect(uiLocState.isPermissionGranted, uiLocState.currentEntity) {
+        when {
+            uiLocState.currentEntity == null -> {
+                Log.d("MapScreen", "Esperando entidad...")
+            }
+            !uiLocState.isPermissionGranted -> {
+                Log.d("MapScreen", "Esperando permisos...")
+            }
+            uiLocState.currentEntity?.conectado == true -> {
+                Log.i("MapScreen", "Iniciando actualizaciones - Usuario: ${uiLocState.currentEntity!!.nombre}")
+                locatOldPerViewModel.startLocationUpdates(locationHandler)
+            }
+            else -> {
+                Log.i("MapScreen", "Deteniendo actualizaciones - Usuario desconectado")
+                locatOldPerViewModel.stopLocationUpdate(locationHandler)
             }
         }
     }
 
-    // Mostrar BottomSheet con el mapa
-    if (showBottomSheet) {
-        MapBottomSheet(onDismiss = { showBottomSheet = false })
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MapBottomSheet(onDismiss: () -> Unit) {
-    ModalBottomSheet (
-        onDismissRequest = { onDismiss() },
-        containerColor = Color.White,
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp).fillMaxHeight(0.81f).verticalScroll(
-                rememberScrollState()
-            ),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("Ubicación en el mapa", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(12.dp))
-            Image(
-                painter = painterResource(id = R.drawable.comollegar), // Asegúrate de agregar esta imagen en res/drawable
-                contentDescription = "Mapa de ubicación",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth().height(450.dp)
+    // Animar cámara cuando cambie la ubicación
+    LaunchedEffect(uiLocState.location) {
+        uiLocState.location?.let { loc ->
+            uiLocState.cameraPositionState.animate(
+                update = CameraUpdateFactory.newLatLngZoom(loc, 15f),
+                durationMs = 1000
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(onClick = { onDismiss() }) {
-                Text("Cerrar")
+            locatOldPerViewModel.setInitialCameraMoveDone(true)
+        }
+    }
+
+    Scaffold(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            GoogleMap(
+                properties = MapProperties(
+                    isMyLocationEnabled = true
+                ),
+                uiSettings = MapUiSettings(
+                    myLocationButtonEnabled = true,
+                    zoomControlsEnabled = true
+                ),
+                cameraPositionState = uiLocState.cameraPositionState
+            ) {
+                // Mi ubicación (Cuidador)
+                uiLocState.location?.let { currentLocation ->
+                    val caretakerIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
+
+                    Marker(
+                        state = MarkerState(position = currentLocation),
+                        title = "Mi ubicación",
+                        snippet = "Estoy aquí",
+                        icon = caretakerIcon
+                    )
+                }
+
+                // Marcadores de ancianos
+                uiLocState.oldPersonMarkers.forEach { markerState ->
+                    val oldPersonIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                    val anciano = uiLocState.ancianos.find { 
+                        it.latLng?.let { latLng ->
+                            LatLng(latLng.latitude, latLng.longitude) == markerState.position
+                        } == true
+                    }
+
+                    Marker(
+                        state = markerState,
+                        title = anciano?.nombre ?: "Anciano",
+                        snippet = "Última ubicación conocida",
+                        icon = oldPersonIcon
+                    )
+                }
             }
         }
     }
