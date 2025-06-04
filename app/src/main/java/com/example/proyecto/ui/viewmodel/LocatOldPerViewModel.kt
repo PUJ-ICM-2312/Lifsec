@@ -37,9 +37,13 @@ class LocatOldPerViewModel(
     init {
         viewModelScope.launch {
             authViewModel.currentEntity.collect { entity ->
-                Log.d("LocatOldPerVM", "Entidad actual cambiada: $entity")
-                _uiLocState.update { currentState ->
-                    currentState.copy(currentEntity = entity as? Cuidador)
+                if (entity is Cuidador) {
+                    Log.d("LocatOldPerVM", "Cuidador actual: ${entity.nombre}")
+                    _uiLocState.update { currentState ->
+                        currentState.copy(currentEntity = entity)
+                    }
+                    // Cargar ancianos cuando se actualiza el cuidador
+                    observarAncianosConectados(entity.userID)
                 }
             }
         }
@@ -63,11 +67,16 @@ class LocatOldPerViewModel(
         _uiLocState.update { it.copy(isPermissionGranted = granted) }
     }
 
+    /**
+     * Observa ancianos conectados y actualiza sus ubicaciones
+     */
     fun observarAncianosConectados(cuidadorId: String) {
         viewModelScope.launch {
             try {
+                Log.d("LocatOldPerVM", "Observando ancianos del cuidador: $cuidadorId")
                 repositorioUsuarios.getAncianosConectadosPorCuidadorIdFlow(cuidadorId)
                     .collect { ancianos ->
+                        Log.d("LocatOldPerVM", "Ancianos encontrados: ${ancianos.size}")
                         _uiLocState.update { it.copy(ancianos = ancianos) }
                         actualizarMarcadoresAncianos(ancianos)
                     }
@@ -78,14 +87,17 @@ class LocatOldPerViewModel(
     }
 
     private fun actualizarMarcadoresAncianos(ancianos: List<Usuario>) {
-        val newMarkers = ancianos.map { anciano ->
-            MarkerState(
-                position = LatLng(
-                    anciano.latLng.latitude,
-                    anciano.latLng.longitude
+        val newMarkers = ancianos.mapNotNull { anciano ->
+            if (anciano.latLng != null) {
+                MarkerState(
+                    position = LatLng(
+                        anciano.latLng.latitude,
+                        anciano.latLng.longitude
+                    )
                 )
-            )
+            } else null
         }
+        Log.d("LocatOldPerVM", "Actualizando ${newMarkers.size} marcadores de ancianos")
         _uiLocState.update { it.copy(oldPersonMarkers = newMarkers) }
     }
 

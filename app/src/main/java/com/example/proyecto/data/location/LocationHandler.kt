@@ -73,8 +73,8 @@ class LocationHandler(private val context: Context) {
             Priority.PRIORITY_HIGH_ACCURACY,
             5000 // Intervalo de actualización en ms
         ).setWaitForAccurateLocation(true) // Optional: wait for a more accurate location initially
-            .setMinUpdateIntervalMillis(2000) // Optional: minimum interval
-            .setMaxUpdateDelayMillis(10000)    // Optional: maximum batching delay
+            .setMinUpdateIntervalMillis(1000) // Optional: minimum interval
+            .setMaxUpdateDelayMillis(5000)    // Optional: maximum batching delay
             .build()
 
         val locationCallback = object : LocationCallback() {

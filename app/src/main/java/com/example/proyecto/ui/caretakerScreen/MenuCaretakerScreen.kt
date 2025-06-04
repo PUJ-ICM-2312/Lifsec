@@ -2,6 +2,7 @@ package com.example.proyecto.ui.caretakerScreen
 
 import android.Manifest
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,13 +22,18 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -38,6 +44,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.proyecto.Screen
+import com.example.proyecto.data.RepositorioUsuarios
 import com.example.proyecto.ui.elderlyScreens.ListActivitiesOldPersonScreen
 import com.example.proyecto.ui.elderlyScreens.LocationCaretakerScreen
 import com.example.proyecto.ui.elderlyScreens.MainScreen
@@ -49,6 +56,10 @@ import com.example.proyecto.ui.viewmodel.MenuCareTakerViewModel
 
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlinx.coroutines.launch
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 @OptIn(ExperimentalPermissionsApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -58,7 +69,8 @@ fun MenuCaretakersScreen(
     menuCareTakerViewModel: MenuCareTakerViewModel,
     authViewModel: AuthViewModel,
     activityViewModel: ActivityViewModel,
-    locatOldPerViewModel: LocatOldPerViewModel
+    locatOldPerViewModel: LocatOldPerViewModel,
+    repositorioUsuarios: RepositorioUsuarios
 ) {
 
     val context = LocalContext.current
@@ -75,6 +87,13 @@ fun MenuCaretakersScreen(
 
     val recompositionKey by menuCareTakerViewModel.cambio
 
+    val currentEntity by authViewModel.currentEntity.collectAsState()
+
+    val conectadoState = remember(currentEntity?.conectado) {
+        mutableStateOf(currentEntity?.conectado ?: false)
+    }
+
+    val scope = rememberCoroutineScope()
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -105,6 +124,28 @@ fun MenuCaretakersScreen(
                         tint = MaterialTheme.colorScheme.background
                     )
                 }
+                Switch(
+                    checked = conectadoState.value,
+                    onCheckedChange = { newValue ->
+                        conectadoState.value = newValue
+                        scope.launch {
+                            currentEntity?.let { entity ->
+                                try {
+                                    repositorioUsuarios.actualizarEstadoConexion(
+                                        usuarioId = entity.userID,
+                                        esAnciano = false,
+                                        conectado = newValue
+                                    )
+                                    Log.d("MenuCaretakersScreen", "Actualizado: ${entity.userID} -> $newValue")
+                                } catch (e: Exception) {
+                                    Log.e("MenuCaretakersScreen", "Error: ${e.message}")
+                                }
+                            } ?: Log.e("MenuCaretakersScreen", "currentEntity es null")
+                        }
+                    }
+                )
+
+
             }
         )
     }

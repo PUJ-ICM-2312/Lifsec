@@ -108,11 +108,16 @@ fun LocationOldPersonScreen(
                 // Marcadores de ancianos
                 uiLocState.oldPersonMarkers.forEach { markerState ->
                     val oldPersonIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                    val anciano = uiLocState.ancianos.find { 
+                        it.latLng?.let { latLng ->
+                            LatLng(latLng.latitude, latLng.longitude) == markerState.position
+                        } == true
+                    }
 
                     Marker(
                         state = markerState,
-                        title = "Anciano",
-                        snippet = "Ubicación del anciano",
+                        title = anciano?.nombre ?: "Anciano",
+                        snippet = "Última ubicación conocida",
                         icon = oldPersonIcon
                     )
                 }

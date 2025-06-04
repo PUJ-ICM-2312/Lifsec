@@ -282,7 +282,7 @@ class RepositorioUsuarios (
                     }
 
                     val ancianosConectados = ancianosSnapshot?.documents?.mapNotNull { doc ->
-                        doc.toObject(Usuario::class.java)
+                        doc.toObject(Anciano::class.java)
                     } ?: emptyList()
 
                     Log.d("RepositorioUsuarios", "Ancianos conectados encontrados: ${ancianosConectados.size}")
