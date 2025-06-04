@@ -14,9 +14,8 @@ data class LocatOldPerState(
     val isInitialCameraMoveDone: Boolean = false,
     val ancianos: List<Usuario> = emptyList(),
     val oldPersonMarkers: List<MarkerState> = emptyList(),
-    val oldPersonRoutes: Map<MarkerState, List<LatLng>> = emptyMap(),
-    val oldPersonRouteColors: Map<MarkerState, Color> = emptyMap(),
+    val caretakerRoute: List<LatLng> = emptyList(), // Ruta del cuidador
+    val caretakerRouteColor: Color? = null, // Color de la ruta del cuidador
     val currentEntity: Cuidador? = null,
-    val cuidadores: List<Cuidador> = emptyList(), // Lista de cuidadores no relacionados
-    val otherCaretakerMarkers: List<MarkerState> = emptyList() // Marcadores de cuidadores no relacionados
+    val cuidadores: List<Cuidador> = emptyList() // Lista de cuidadores no relacionados
 )

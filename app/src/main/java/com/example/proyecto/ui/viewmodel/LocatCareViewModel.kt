@@ -412,7 +412,8 @@ class LocatCareViewModel(
     }
 
     fun actualizarRutasCuidadores(cuidadores: List<Cuidador>) {
-        val currentLocation = _uiLocState.value.location ?: return
+        val currentEntity = _uiLocState.value.currentEntity ?: return
+        val currentLatLng = LatLng(currentEntity.latLng.latitude, currentEntity.latLng.longitude)
         val currentRoutes = _uiLocState.value.caretakerRoutes.toMutableMap()
         val currentColors = _uiLocState.value.caretakerRouteColors.toMutableMap()
 
@@ -422,26 +423,32 @@ class LocatCareViewModel(
 
                 cuidadores.forEach { cuidador ->
                     val userId = cuidador.userID
-                    val newPosition = LatLng(cuidador.latLng.latitude, cuidador.latLng.longitude)
-                    val previousMarkerState = _uiLocState.value.caretakerMarkers[userId]
+                    val cuidadorLatLng = LatLng(cuidador.latLng.latitude, cuidador.latLng.longitude)
+                    
+                    // Calcular distancia entre el cuidador y el anciano
+                    val distance = calculateDistance(
+                        cuidadorLatLng.latitude, cuidadorLatLng.longitude,
+                        currentLatLng.latitude, currentLatLng.longitude
+                    )
 
-                    if (previousMarkerState != null) {
-                        val previousPosition = previousMarkerState.position
-                        val distance = calculateDistance(
-                            previousPosition.latitude, previousPosition.longitude,
-                            newPosition.latitude, newPosition.longitude
-                        )
-
-                        if (distance > 10) {
-                            // Eliminar la ruta anterior
-                            currentRoutes.remove(userId)
-                            currentColors.remove(userId)
-
-                            // Crear nueva ruta
-                            val newRoute = routesService.getRoutePoints(newPosition, currentLocation)
-                            if (newRoute.isNotEmpty()) {
-                                currentRoutes[userId] = newRoute
-                                currentColors[userId] = currentColors[userId] ?: Color(
+                    if (distance <= 30) { // Si está a menos de 10 metros
+                        // Eliminar la ruta de este cuidador
+                        currentRoutes.remove(userId)
+                        currentColors.remove(userId)
+                        Log.i("LocatCareVM", "Cuidador $userId llegó al anciano. Ruta eliminada.")
+                        
+                        // Si no quedan más rutas, desactivar la emergencia
+                        if (currentRoutes.isEmpty()) {
+                            authViewModel.setEmergencia(false)
+                            Log.i("LocatCareVM", "Todos los cuidadores llegaron. Emergencia desactivada.")
+                        }
+                    } else {
+                        // Actualizar la ruta para este cuidador
+                        val newRoute = routesService.getRoutePoints(cuidadorLatLng, currentLatLng)
+                        if (newRoute.isNotEmpty()) {
+                            currentRoutes[userId] = newRoute
+                            if (!currentColors.containsKey(userId)) {
+                                currentColors[userId] = Color(
                                     red = Random.nextInt(100, 256),
                                     green = Random.nextInt(100, 256),
                                     blue = Random.nextInt(100, 256)
@@ -458,12 +465,13 @@ class LocatCareViewModel(
                     )
                 }
 
-                Log.d("LocatCareVM", "Rutas actualizadas para cuidadores")
+                Log.d("LocatCareVM", "Rutas actualizadas para cuidadores: ${currentRoutes.size}")
             } catch (e: Exception) {
                 Log.e("LocatCareVM", "Error al actualizar rutas de cuidadores: ${e.message}")
             }
         }
     }
+
     /**
      * Calcula la distancia entre dos puntos usando la fórmula de Haversine
      * @return distancia en metros

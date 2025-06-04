@@ -182,7 +182,7 @@ class LocatOldPerViewModel(
      * Limpia las rutas de los ancianos
      */
     fun clearAllRoutes() {
-        _uiLocState.update { it.copy(oldPersonRoutes = emptyMap()) }
+
     }
 
     fun setInitialCameraMoveDone(done: Boolean) {
