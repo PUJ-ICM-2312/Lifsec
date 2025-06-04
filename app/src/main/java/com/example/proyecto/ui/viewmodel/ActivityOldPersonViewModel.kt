@@ -1,7 +1,6 @@
 package com.example.proyecto.ui.viewmodel
 
 import android.app.Application
-import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
@@ -23,16 +22,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.IOException
 import java.util.UUID
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.proyecto.data.Anciano
 
 class ActivityViewModel(application: Application) : AndroidViewModel(application) {
     private val auth: FirebaseAuth = Firebase.auth
     private val firestore: FirebaseFirestore = Firebase.firestore
     private val storage: FirebaseStorage = Firebase.storage
     private val authViewModel = AuthViewModel()
+
 
     private val _ultimaImagenUrl = MutableStateFlow<String?>(null)
     val ultimaImagenUrl: StateFlow<String?> = _ultimaImagenUrl
@@ -46,13 +47,23 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
     private val _cambio = mutableStateOf(false)
     val cambio: State<Boolean> = _cambio
 
-    fun generarCambio() {
+    fun cambio() {
+        Log.i("cambio", "se cambio")
         _cambio.value = !_cambio.value
     }
 
 
+
     init {
-        loadLocalAndSync()
+        Log.i("ActivityViewModel", "init ${auth.currentUser?.uid}")
+        if(authViewModel.currentEntity.value is Anciano){
+            Log.i("ActivityViewModel", "es un anciano")
+            auth.currentUser?.let { loadActivitiesForUser(it.uid) }
+            loadLocalAndSync()
+        }else{
+            Log.i("ActivityViewModel", "No es un anciano")
+        }
+
     }
 
     private fun loadLocalAndSync() {
@@ -108,14 +119,6 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
         return imagen?.let { uploadImageToStorage(it) }
     }
 
-    fun procesarImagenYGuardarUrl(imagen: Bitmap?) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            val url = devolverUriPicture(imagen)
-            _ultimaImagenUrl.value = url
-            _isLoading.value = false
-        }
-    }
 
     fun addActivity(
         actividad: String,
@@ -123,6 +126,7 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
         imagenUrl: String?,
         infoAdicional: String?
     ) {
+        Log.i("ActivityViewModel", "Guardando actividad en firestore")
         authViewModel.getCurrentUserID()?.let { userID ->
             val newActivity = Actividad(
                 ancianoID = userID,
@@ -145,6 +149,7 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
         infoAdicional: String?,
         onComplete: () -> Unit
     ) {
+        Log.i("ActivityViewModel", "Guardando actividad completa")
         viewModelScope.launch {
             _isLoading.value = true
             val urlImagen = imagen?.let { devolverUriPicture(it) }
@@ -154,6 +159,48 @@ class ActivityViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    /**
+     * Carga todas las actividades en Firestore que pertenecen al usuario con el UID dado,
+     * y las guarda en la lista interna `_activities`.
+     */
+    fun loadActivitiesForUser(userId: String) {
+        viewModelScope.launch {
+            try {
+                // 1. Hacer la consulta a Firestore, filtrando por el campo "ancianoID"
+                val querySnapshot = firestore
+                    .collection("actividades")
+                    .whereEqualTo("ancianoID", userId)
+                    .get()
+                    .await()
+
+                // 2. Mapear cada documento a un objeto Actividad
+                val remoteList = querySnapshot.documents.mapNotNull { doc ->
+                    try {
+                        Actividad(
+                            ancianoID    = doc.getString("ancianoID") ?: "",
+                            actividad    = doc.getString("actividad") ?: "",
+                            ubicacion    = doc.getString("ubicacion") ?: "",
+                            infoAdicional = doc.getString("infoAdicional"),
+                            imagenUrl     = doc.getString("imagenUrl")
+                        )
+                    } catch (e: Exception) {
+                        Log.e("ActivityViewModel", "Error parseando actividad (ID=${doc.id}): ${e.message}", e)
+                        null
+                    }
+                }
+
+                // Invertir el orden: primero cargada → última en la lista, última cargada → primera en la lista, para que aparezcan en orden
+                val reversedList = remoteList.reversed()
+                // 3. Actualizar la lista interna `_activities` en el hilo principal
+                withContext(Dispatchers.Main) {
+                    _activities.clear()
+                    _activities.addAll(reversedList)
+                }
+            } catch (e: Exception) {
+                Log.e("ActivityViewModel", "Error cargando actividades para userId=$userId: ${e.message}", e)
+            }
+        }
+    }
 
 
 }

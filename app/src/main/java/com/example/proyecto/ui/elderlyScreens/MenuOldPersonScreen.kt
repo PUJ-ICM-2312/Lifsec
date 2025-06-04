@@ -91,27 +91,32 @@ import kotlin.math.sqrt
 @Composable
 fun MenuOldPersonScreen(
     navController: NavController,
-    authViewModel: AuthViewModel,
-    menuOldPersonViewModel: MenuOldPersonViewModel,
-    activityViewModel: ActivityViewModel,
-    reminderViewModel: ReminderViewModel,
-    locatCareViewModel: LocatCareViewModel,
+    authViewModel: AuthViewModel = viewModel(),
+    menuOldPersonViewModel: MenuOldPersonViewModel = viewModel(),
+    activityViewModel: ActivityViewModel = viewModel(),
+    reminderViewModel: ReminderViewModel = viewModel(),
+    locatCareViewModel: LocatCareViewModel = viewModel(),
     internalViewModel: internalStorageViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val currentUser by authViewModel.currentUser.collectAsState()
     val currentEntity by authViewModel.currentEntity.collectAsState()
 
-    // Si el usuario no está autenticado, no mostrar nada y navegar a Login
+    // 1) Cuando currentUser cambie, recargar actividades para ese uid
+    LaunchedEffect(currentUser) {
+        currentUser?.uid?.let { uid ->
+            activityViewModel.loadActivitiesForUser(uid)
+        }
+    }
+
+    // Si el usuario no está autenticado, navegar a Login
     if (currentUser == null) {
-        // Navegación segura fuera del árbol de composición
         LaunchedEffect(Unit) {
             Log.i("MenuOldPersonScreen", "Usuario no autenticado, navegando a Login")
             navController.navigate(Screen.Login.route) {
                 popUpTo(navController.graph.startDestinationId) { inclusive = true }
             }
         }
-        // Opcional: indicador de carga
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Verificando autenticación...")
         }
@@ -130,12 +135,12 @@ fun MenuOldPersonScreen(
     var huellaEqualsUser by remember(currentUser?.uid) {
         mutableStateOf(
             currentEntity?.let {
-                internalViewModel.huellaIgualAUser(context, authViewModel.currentEntity.value?.email )
+                internalViewModel.huellaIgualAUser(context, authViewModel.currentEntity.value?.email)
             } ?: false
         )
-
     }
     var mostrarCard by remember { mutableStateOf(true) }
+
     val notificationPermissionState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.POST_NOTIFICATIONS,
@@ -147,12 +152,8 @@ fun MenuOldPersonScreen(
         notificationPermissionState.launchMultiplePermissionRequest()
     }
 
-
-    //escucah activamente al cambio
+    // Escucha activa para recargar UI cuando menuOldPersonViewModel.cambio cambie
     val recompositionKey by menuOldPersonViewModel.cambio
-
-
-
 
     // Implementación del shake detector
     DisposableEffect(navController) {
@@ -164,8 +165,8 @@ fun MenuOldPersonScreen(
             private var lastX = 0f
             private var lastY = 0f
             private var lastZ = 0f
-            private val shakeThreshold = 800
-            private var lastShakeTime = 0L // Para evitar múltiples activaciones
+            private val shakeThreshold = 2000
+            private var lastShakeTime = 0L
 
             override fun onSensorChanged(event: SensorEvent) {
                 val currentTime = System.currentTimeMillis()
@@ -183,13 +184,9 @@ fun MenuOldPersonScreen(
                                 (z - lastZ).pow(2)
                     ) / diffTime * 10000
 
-                    // Agregamos debouncing (2 segundos entre shakes)
-                    if (speed > shakeThreshold && currentTime - lastShakeTime > 2000) {
-
+                    if (speed > shakeThreshold && currentTime - lastShakeTime > 4000) {
                         lastShakeTime = currentTime
-                        // Navegación directa a SOS
                         navController.navigate(Screen.SosScreen.route) {
-                            // Opcional: limpia el back stack
                             popUpTo(navController.graph.startDestinationId)
                             launchSingleTop = true
                         }
@@ -232,72 +229,23 @@ fun MenuOldPersonScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 if (huellaEqualsUser) {
                     Log.i("MenuOldPersonScreen", "Huella coincide con el usuario")
-                    // Carga el grafo de navegación interno
 
-                    // Card flotante con datos de huella solo si ambas condiciones son true
-//                    if (mostrarCard) {
-//                        var huellaData: HuellaData = internalViewModel.leerJsonHuella(context)
-//                        Card(
-//                            modifier = Modifier
-//                                .padding(16.dp)
-//                                .align(Alignment.Center),
-//                            elevation = CardDefaults.cardElevation(8.dp),
-//                            shape = RoundedCornerShape(16.dp)
-//                        ) {
-//                            Column(
-//                                modifier = Modifier.padding(16.dp),
-//                                horizontalAlignment = Alignment.CenterHorizontally,
-//                                verticalArrangement = Arrangement.spacedBy(8.dp)
-//                            ) {
-//                                Text(
-//                                    text = "Datos de Huella",
-//                                    style = MaterialTheme.typography.titleMedium,
-//                                    fontWeight = FontWeight.Bold
-//                                )
-//                                Text(text = "Contraseña: ${huellaData.contra}")
-//                                Text(text = "Correo: ${huellaData.correo}")
-//
-//                                Button(
-//                                    onClick = { mostrarCard = false },
-//                                    colors = ButtonDefaults.buttonColors(
-//                                        containerColor = MaterialTheme.colorScheme.error
-//                                    )
-//                                ) {
-//                                    Text("Descartar", color = MaterialTheme.colorScheme.onError)
-//                                }
-//                            }
-//                        }
-//                    }else{
-
-                        key(recompositionKey) {
-                            if(menuOldPersonViewModel.leerApartado() == "Menu"){
-
-                                MainScreen(navController, authViewModel)
-
-                            }else if(menuOldPersonViewModel.leerApartado() == "Ubicacion"){
-
-                                LocationCaretakerScreen(
-                                    locatCareViewModel = locatCareViewModel,
-                                    authViewModel = authViewModel,
-                                    navController = navController
-                                )
-
-                            }else if(menuOldPersonViewModel.leerApartado() == "Actividades"){
-
-                                ListActivitiesOldPersonScreen(activityViewModel,navController)
-
-                            }else if(menuOldPersonViewModel.leerApartado() == "Recordatorios"){
-
-                                ReminderListScreen(navController, reminderViewModel)
-
-                            }
+                    key(recompositionKey) {
+                        when (menuOldPersonViewModel.leerApartado()) {
+                            "Menu" -> MainScreen(navController, authViewModel)
+                            "Ubicacion" -> LocationCaretakerScreen(
+                                locatCareViewModel = locatCareViewModel,
+                                authViewModel = authViewModel,
+                                navController = navController
+                            )
+                            "Actividades" -> ListActivitiesOldPersonScreen(
+                                activityViewModel,
+                                navController
+                            )
+                            "Recordatorios" -> ReminderListScreen(navController, reminderViewModel)
                         }
-
-
-
-
+                    }
                 } else {
-                    // Pantalla de solicitud de huella
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -328,16 +276,22 @@ fun MenuOldPersonScreen(
                                 ) {
                                     Button(
                                         onClick = {
-                                            internalViewModel.guardarJsonHuella(context, authViewModel.email, authViewModel.password)
+                                            internalViewModel.guardarJsonHuella(
+                                                context,
+                                                authViewModel.currentEntity.value?.email ?: "",
+                                                authViewModel.password
+                                            )
                                             huellaEqualsUser = true
                                         }
                                     ) {
                                         Text(text = "Sí", fontSize = 14.sp)
                                     }
                                     Button(
-                                        onClick = { huellaEqualsUser = true
-                                                    mostrarCard = false
-                                                    authViewModel.getCurrentState()}
+                                        onClick = {
+                                            huellaEqualsUser = true
+                                            mostrarCard = false
+                                            authViewModel.getCurrentState()
+                                        }
                                     ) {
                                         Text(text = "No", fontSize = 14.sp)
                                     }
@@ -349,9 +303,6 @@ fun MenuOldPersonScreen(
             }
         }
     }
-
-
-
 }
 
 

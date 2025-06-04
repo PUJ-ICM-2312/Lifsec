@@ -144,7 +144,10 @@ fun CreateActivityScreen(
                                 sharedImageViewModel.actividad = ""
                                 sharedImageViewModel.ubicacion = ""
                                 sharedImageViewModel.infoAdicional = ""
+                                Log.i("CreateActivityScreen", "Imagen guardada con éxito")
+                                activityViewModel.cambio()
                                 navController.popBackStack()
+
                             }
                         },
                         enabled = !isLoading,
