@@ -1,9 +1,11 @@
 package com.example.proyecto.data
 
 import android.graphics.Bitmap
+import java.util.UUID
 
 
 data class Actividad(
+    val id: String = UUID.randomUUID().toString(),
     val ancianoID: String,
     val actividad: String,
     val ubicacion: String,

@@ -36,12 +36,11 @@ import com.example.proyecto.data.Cuidador
 import kotlinx.coroutines.flow.asStateFlow
 
 
-class ActivityViewModel( ) : ViewModel() {
+class ActivityViewModel() : ViewModel() {
     private val auth: FirebaseAuth = Firebase.auth
     private val firestore: FirebaseFirestore = Firebase.firestore
     private val storage: FirebaseStorage = Firebase.storage
     private val authViewModel = AuthViewModel()
-
 
     private val _ultimaImagenUrl = MutableStateFlow<String?>(null)
     val ultimaImagenUrl: StateFlow<String?> = _ultimaImagenUrl
@@ -58,91 +57,48 @@ class ActivityViewModel( ) : ViewModel() {
     private val _currentAnciano = MutableStateFlow<String?>(null)
     val currentAnciano: StateFlow<String?> = _currentAnciano.asStateFlow()
 
-
-
     fun cambio() {
         Log.i("cambio", "se cambio")
         _cambio.value = !_cambio.value
     }
 
-    fun relaunch(){
+    fun relaunch() {
         Log.i("ActivityViewModel", "relaunch $currentAnciano")
-        Log.i("ActivityViewModel", "Id que carga de amcianos: $currentAnciano")
-        if(authViewModel.currentEntity.value is Anciano){
+        if (authViewModel.currentEntity.value is Anciano) {
             Log.i("ActivityViewModel", "es un anciano")
             auth.currentUser?.let { loadActivitiesForUser(it.uid) }
-            loadLocalAndSync()
-        }else{
-            if(authViewModel.currentEntity.value is Cuidador)
-            Log.i("ActivityViewModel", "No es un anciano")
-            Log.i("ActivityViewModel", "Id que carga de amcianos: ${currentAnciano.value}")
+        } else {
+            if (authViewModel.currentEntity.value is Cuidador)
+                Log.i("ActivityViewModel", "No es un anciano")
             currentAnciano.value?.let { loadActivitiesForUser(it) }
-            loadLocalAndSync()
-
         }
     }
 
     init {
-
         Log.i("ActivityViewModel", "init ${auth.currentUser?.uid}")
-        if(authViewModel.currentEntity.value is Anciano){
-            Log.i("ActivityViewModel", "es un anciano")
+        if (authViewModel.currentEntity.value is Anciano) {
             auth.currentUser?.let { loadActivitiesForUser(it.uid) }
-            loadLocalAndSync()
-        }else if(authViewModel.currentEntity.value is Cuidador){
-            Log.i("ActivityViewModel", "No es un anciano")
-            if(!(currentAnciano.value==null || currentAnciano.value=="")){
-                Log.i("ActivityViewModel", "Id que carga de amcianos: $currentAnciano")
+        } else if (authViewModel.currentEntity.value is Cuidador) {
+            if (!(currentAnciano.value == null || currentAnciano.value == "")) {
                 currentAnciano.value?.let { loadActivitiesForUser(it) }
-                loadLocalAndSync()
-            }
-            else{
-                Log.i("ActivityViewModel", "No hay id de anciano pero entro como cuidador")
-            }
-        }else{
-            Log.i("ActivityViewModel", "No es un anciano ni un cuidador, es nulo")
-        }
-
-    }
-
-    private fun loadLocalAndSync() {
-
-        viewModelScope.launch(Dispatchers.IO) {
-            Log.i("ActivityViewModel", "entro a loadLocalAndSync")
-            syncActivitiesWithFirebase()
-        }
-    }
-
-    private suspend fun syncActivitiesWithFirebase() {
-        if(authViewModel.currentEntity.value is Anciano){
-            Log.i("ActivityViewModel", "entro a syncActivitiesWithFirebase")
-            authViewModel.getCurrentUserID()?.let { userId ->
-                _activities.forEach { actividad ->
-                    uploadActivityToFirebase(actividad)
-                }
-            }
-        }else{
-            Log.i("ActivityViewModel", "entro a syncActivitiesWithFirebase")
-            currentAnciano.let { userId ->
-                _activities.forEach { actividad ->
-                    uploadActivityToFirebase(actividad)
-                }
             }
         }
-
     }
 
     private suspend fun uploadActivityToFirebase(actividad: Actividad) {
         try {
             val activityMap = hashMapOf(
+                "id" to actividad.id,
                 "ancianoID" to actividad.ancianoID,
                 "actividad" to actividad.actividad,
                 "ubicacion" to actividad.ubicacion,
                 "infoAdicional" to actividad.infoAdicional,
-                "imagenUrl" to actividad.imagenUrl
+                "imagenUrl" to actividad.imagenUrl,
+                "imagenFilename" to actividad.imagenFilename
             )
             firestore.collection("actividades")
-                .add(activityMap)
+                .document(actividad.id)
+                .set(activityMap)
                 .await()
         } catch (e: Exception) {
             Log.e("ActivityViewModel", "Error sincronizando actividad: ${e.message}")
@@ -169,15 +125,13 @@ class ActivityViewModel( ) : ViewModel() {
         return imagen?.let { uploadImageToStorage(it) }
     }
 
-
     fun addActivity(
         actividad: String,
         ubicacion: String,
         imagenUrl: String?,
         infoAdicional: String?
     ) {
-        if(authViewModel.currentEntity.value is Anciano){
-            Log.i("ActivityViewModel", "Guardando actividad en firestore")
+        if (authViewModel.currentEntity.value is Anciano) {
             authViewModel.getCurrentUserID()?.let { userID ->
                 val newActivity = Actividad(
                     ancianoID = userID,
@@ -191,8 +145,7 @@ class ActivityViewModel( ) : ViewModel() {
                     _activities.add(newActivity)
                 }
             }
-        }else{
-            Log.i("ActivityViewModel", "Guardando actividad en firestore")
+        } else {
             currentAnciano.let { userID ->
                 val newActivity = userID?.let {
                     it.value?.let { it1 ->
@@ -206,44 +159,35 @@ class ActivityViewModel( ) : ViewModel() {
                     }
                 }
                 viewModelScope.launch {
-                    if (newActivity != null) {
-                        uploadActivityToFirebase(newActivity)
-                    }
-                    if (newActivity != null) {
-                        _activities.add(newActivity)
+                    newActivity?.let {
+                        uploadActivityToFirebase(it)
+                        _activities.add(it)
                     }
                 }
             }
-
         }
-
     }
 
     fun cargarAncianoActualDesdeJson(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val file = File(context.filesDir, "ancianoActual.json")
-
                 if (!file.exists()) {
                     Log.w("AncianoViewModel", "Archivo ancianoActual.json no encontrado.")
                     return@launch
                 }
-
                 val contenido = file.readText()
                 val json = JSONObject(contenido)
                 val id = json.optString("currentAncianoId", null)
-
                 withContext(Dispatchers.Main) {
                     _currentAnciano.value = id
                     Log.i("AncianoViewModel", "Anciano cargado desde JSON: $id")
                 }
-
             } catch (e: Exception) {
                 Log.e("AncianoViewModel", "Error leyendo JSON: ${e.message}", e)
             }
         }
     }
-
 
     fun guardarActividadCompleta(
         imagen: Bitmap?,
@@ -252,7 +196,6 @@ class ActivityViewModel( ) : ViewModel() {
         infoAdicional: String?,
         onComplete: () -> Unit
     ) {
-        Log.i("ActivityViewModel", "Guardando actividad completa")
         viewModelScope.launch {
             _isLoading.value = true
             val urlImagen = imagen?.let { devolverUriPicture(it) }
@@ -262,50 +205,39 @@ class ActivityViewModel( ) : ViewModel() {
         }
     }
 
-    /**
-     * Carga todas las actividades en Firestore que pertenecen al usuario con el UID dado,
-     * y las guarda en la lista interna `_activities`.
-     */
     fun loadActivitiesForUser(userId: String) {
         viewModelScope.launch {
             try {
-                // 1. Hacer la consulta a Firestore, filtrando por el campo "ancianoID"
                 val querySnapshot = firestore
                     .collection("actividades")
                     .whereEqualTo("ancianoID", userId)
                     .get()
                     .await()
 
-                // 2. Mapear cada documento a un objeto Actividad
                 val remoteList = querySnapshot.documents.mapNotNull { doc ->
                     try {
                         Actividad(
-                            ancianoID    = doc.getString("ancianoID") ?: "",
-                            actividad    = doc.getString("actividad") ?: "",
-                            ubicacion    = doc.getString("ubicacion") ?: "",
+                            id = doc.getString("id") ?: UUID.randomUUID().toString(),
+                            ancianoID = doc.getString("ancianoID") ?: "",
+                            actividad = doc.getString("actividad") ?: "",
+                            ubicacion = doc.getString("ubicacion") ?: "",
                             infoAdicional = doc.getString("infoAdicional"),
-                            imagenUrl     = doc.getString("imagenUrl")
+                            imagenUrl = doc.getString("imagenUrl"),
+                            imagenFilename = doc.getString("imagenFilename")
                         )
                     } catch (e: Exception) {
                         Log.e("ActivityViewModel", "Error parseando actividad (ID=${doc.id}): ${e.message}", e)
                         null
                     }
-                }
+                }.reversed()
 
-                // Invertir el orden: primero cargada → última en la lista, última cargada → primera en la lista, para que aparezcan en orden
-                val reversedList = remoteList.reversed()
-                // 3. Actualizar la lista interna `_activities` en el hilo principal
                 withContext(Dispatchers.Main) {
                     _activities.clear()
-                    _activities.addAll(reversedList)
+                    _activities.addAll(remoteList)
                 }
             } catch (e: Exception) {
                 Log.e("ActivityViewModel", "Error cargando actividades para userId=$userId: ${e.message}", e)
             }
         }
     }
-
-
 }
-
-
