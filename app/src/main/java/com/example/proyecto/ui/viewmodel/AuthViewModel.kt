@@ -218,12 +218,11 @@ class AuthViewModel: ViewModel() {
                                 val cuidador = cuidadorDoc.toObject(Cuidador::class.java)
                                 if (cuidador != null) {
                                     Log.d("AuthViewModel", """
-                                    Cuidador encontrado:
-                                    userID: ${cuidador.userID}
-                                    nombre: ${cuidador.nombre}
-                                    email: ${cuidador.email}
-                                    latLng: ${cuidador.latLng?.latitude}, ${cuidador.latLng?.longitude}
-                                """.trimIndent())
+                                        Cuidador cargado:
+                                        userID: ${cuidador.userID}
+                                        nombre: ${cuidador.nombre}
+                                        conectado: ${cuidador.conectado}
+                                    """.trimIndent())
                                     setCurrentEntity(cuidador)
                                 }
                             } else {
@@ -242,7 +241,6 @@ class AuthViewModel: ViewModel() {
                 Log.e("AuthViewModel", "Error buscando anciano: ${it.message}")
             }
     }
-
 
     fun signInAndLoadUser(onSuccess: () -> Unit, onError: (String) -> Unit) {
         if (email.isBlank() || password.isBlank()) {

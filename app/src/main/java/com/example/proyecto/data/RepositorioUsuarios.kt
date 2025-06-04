@@ -175,6 +175,24 @@ class RepositorioUsuarios (
         }
     }
 
+    suspend fun actualizarUbicacionCuidador(uid: String, latLng: LatLng) {
+        val geo = GeoPoint(latLng.latitude, latLng.longitude)
+        try {
+            cuidadores.document(uid)
+                .update(
+                    mapOf(
+                        "latLng" to geo,
+                        "timestamp" to FieldValue.serverTimestamp()
+                    )
+                )
+                .await()
+            Log.i("RepositorioUsuarios", "Ubicación del cuidador actualizada correctamente en Firebase: $latLng")
+        } catch (e: Exception) {
+            Log.e("RepositorioUsuarios", "Error al actualizar ubicación del cuidador en Firebase: ${e.message}")
+            throw Exception("Error al actualizar ubicación del cuidador: ${e.message}")
+        }
+    }
+
     fun getCuidadoresConectadosPorAncianoIdFlow(ancianoId: String): Flow<List<Cuidador>> = callbackFlow {
         var cuidadoresListener: ListenerRegistration? = null
 
@@ -223,6 +241,60 @@ class RepositorioUsuarios (
             Log.d("RepositorioUsuarios", "Cerrando listeners")
             ancianoListener.remove()
             cuidadoresListener?.remove()
+        }
+    }
+
+    /**
+     * Obtiene los ancianos conectados relacionados con un cuidador específico.
+     */
+    fun getAncianosConectadosPorCuidadorIdFlow(cuidadorId: String): Flow<List<Usuario>> = callbackFlow {
+        var ancianosListener: ListenerRegistration? = null
+
+        val cuidadorListener = cuidadores.document(cuidadorId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    Log.e("RepositorioUsuarios", "Error al observar cuidador: ${error.message}")
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                // Obtener la lista de IDs de ancianos del cuidador
+                val ancianosIds = snapshot?.toObject(Cuidador::class.java)?.ancianosIds ?: emptyList()
+
+                if (ancianosIds.isEmpty()) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+
+                // Remover el listener anterior si existe
+                ancianosListener?.remove()
+
+                // Crear una consulta para observar los ancianos conectados
+                val ancianosQuery = ancianos
+                    .whereIn("userID", ancianosIds)
+                    .whereEqualTo("conectado", true)
+
+                // Crear nuevo listener para ancianos
+                ancianosListener = ancianosQuery.addSnapshotListener { ancianosSnapshot, ancianosError ->
+                    if (ancianosError != null) {
+                        Log.e("RepositorioUsuarios", "Error al observar ancianos: ${ancianosError.message}")
+                        return@addSnapshotListener
+                    }
+
+                    val ancianosConectados = ancianosSnapshot?.documents?.mapNotNull { doc ->
+                        doc.toObject(Usuario::class.java)
+                    } ?: emptyList()
+
+                    Log.d("RepositorioUsuarios", "Ancianos conectados encontrados: ${ancianosConectados.size}")
+                    trySend(ancianosConectados)
+                }
+            }
+
+        // Limpiar todos los listeners cuando se cierre el Flow
+        awaitClose {
+            Log.d("RepositorioUsuarios", "Cerrando listeners")
+            cuidadorListener.remove()
+            ancianosListener?.remove()
         }
     }
 }

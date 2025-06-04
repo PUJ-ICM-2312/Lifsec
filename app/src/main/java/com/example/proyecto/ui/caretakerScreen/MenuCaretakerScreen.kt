@@ -44,6 +44,7 @@ import com.example.proyecto.ui.elderlyScreens.MainScreen
 import com.example.proyecto.ui.elderlyScreens.ReminderListScreen
 import com.example.proyecto.ui.viewmodel.ActivityViewModel
 import com.example.proyecto.ui.viewmodel.AuthViewModel
+import com.example.proyecto.ui.viewmodel.LocatOldPerViewModel
 import com.example.proyecto.ui.viewmodel.MenuCareTakerViewModel
 
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -56,8 +57,8 @@ fun MenuCaretakersScreen(
     navController: NavController,
     menuCareTakerViewModel: MenuCareTakerViewModel,
     authViewModel: AuthViewModel,
-    activityViewModel: ActivityViewModel
-
+    activityViewModel: ActivityViewModel,
+    locatOldPerViewModel: LocatOldPerViewModel
 ) {
 
     val context = LocalContext.current
@@ -127,7 +128,7 @@ fun MenuCaretakersScreen(
 
                     if(menuCareTakerViewModel.leerApartado() == "Ubicacion"){
 
-                        LocationOldPersonScreen(authViewModel)
+                        LocationOldPersonScreen(locatOldPerViewModel, authViewModel)
 
                     }else if(menuCareTakerViewModel.leerApartado() == "Actividades"){
 

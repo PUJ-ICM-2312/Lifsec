@@ -32,6 +32,8 @@ import com.example.proyecto.ui.elderlyScreens.SOSScreen
 import com.example.proyecto.ui.viewmodel.ActivityViewModel
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.example.proyecto.ui.viewmodel.LocatCareViewModel
+import com.example.proyecto.ui.viewmodel.LocatOldPerViewModel
+import com.example.proyecto.ui.viewmodel.LocatOldPerViewModelFactory
 import com.example.proyecto.ui.viewmodel.MenuCareTakerViewModel
 import com.example.proyecto.ui.viewmodel.MenuOldPersonViewModel
 import com.example.proyecto.ui.viewmodel.ReminderViewModel
@@ -78,6 +80,7 @@ fun NavegationStack() {
 
     val sharedImageViewModel: SharedImageViewModel = viewModel()
     val locatCareViewModel: LocatCareViewModel = viewModel(factory = LocatCareViewModelFactory(context, authViewModel, repUsuarios))
+    val locatOldPerViewModel: LocatOldPerViewModel = viewModel(factory = LocatOldPerViewModelFactory(context, authViewModel, repUsuarios))
 
 
     //Para navegacion entre pantallas
@@ -90,7 +93,7 @@ fun NavegationStack() {
 //        composable(route = Screen.Registry.route) { RegistryScreen(navController, authViewModel) }
 
         composable(Screen.PersonSelector.route) { UserListScreen(navController,authViewModel,internalStorageViewModel) }
-        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController,menuCareTakerViewModel, authViewModel,activityViewModel) }
+        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController,menuCareTakerViewModel, authViewModel,activityViewModel, locatOldPerViewModel) }
 
 
         composable(Screen.MainScreen.route) {
