@@ -30,6 +30,7 @@ import com.example.proyecto.ui.elderlyScreens.MainScreen
 import com.example.proyecto.ui.elderlyScreens.ReminderListScreen
 import com.example.proyecto.ui.elderlyScreens.SOSScreen
 import com.example.proyecto.ui.viewmodel.ActivityViewModel
+import com.example.proyecto.ui.viewmodel.AncianoDelCuidadorViewModel
 import com.example.proyecto.ui.viewmodel.AuthViewModel
 import com.example.proyecto.ui.viewmodel.LocatCareViewModel
 import com.example.proyecto.ui.viewmodel.LocatOldPerViewModel
@@ -73,6 +74,7 @@ fun NavegationStack() {
     val menuOldPersonViewModel: MenuOldPersonViewModel = viewModel()
     val context = LocalContext.current
     val menuCareTakerViewModel: MenuCareTakerViewModel= viewModel()
+    val ancianoDelCuidadorViewModel: AncianoDelCuidadorViewModel = viewModel()
     val repUsuarios: RepositorioUsuarios = RepositorioUsuarios(FirestoreProvider.instance)
 
     val sharedViewModel: SharedImageViewModel = viewModel()
@@ -86,13 +88,9 @@ fun NavegationStack() {
     //Para navegacion entre pantallas
     // Simplificamos la lógica inicial - siempre comenzamos en Login
     NavHost(navController = navController, startDestination = Screen.Login.route) {
-//        composable(route = Screen.Login.route) { LogScreen( navController, authViewModel,internalStorageViewModel) }
-//        composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController) }
-//        composable(route = Screen.MenuOldPerson.route) { MenuOldPersonScreen( navController, authViewModel ) }
-//        composable (route = Screen.PersonSelector.route) { UserListScreen(navController) }
-//        composable(route = Screen.Registry.route) { RegistryScreen(navController, authViewModel) }
 
-        composable(Screen.PersonSelector.route) { UserListScreen(navController,authViewModel,internalStorageViewModel) }
+
+        composable(Screen.PersonSelector.route) { UserListScreen(navController,authViewModel,internalStorageViewModel,ancianoDelCuidadorViewModel) }
         composable(Screen.MenuCaretaker.route) { MenuCaretakersScreen(navController,menuCareTakerViewModel, authViewModel,activityViewModel, locatOldPerViewModel, repUsuarios) }
 
 
